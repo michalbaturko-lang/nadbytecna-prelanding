@@ -109,6 +109,7 @@ function home(variant) {
 ${footer()}
 </div>
 <script src="/app.js" defer></script>
+<script src="/fluid.js" defer></script>
 ${analytics}
 </body>
 </html>
@@ -133,6 +134,7 @@ ${extra}
 ${footer()}
 </div>
 <script src="/app.js" defer></script>
+<script src="/fluid.js" defer></script>
 </body>
 </html>
 `;
@@ -239,6 +241,7 @@ function build(out, variant) {
     }
   }
   fs.copyFileSync(path.join(ROOT, "src/app.js"), path.join(out, "app.js"));
+  fs.copyFileSync(path.join(ROOT, "src/fluid.js"), path.join(out, "fluid.js"));
   write(path.join(out, "index.html"), home(variant));
   write(path.join(out, "potvrzeni/index.html"), simplePage({ page: "confirm", title: "Potvrzení e-mailu", h1: "Potvrď svůj e-mail", p: "Jedním kliknutím potvrdíš, že chceš vědět, co se chystá.", button: "Potvrdit e-mail" }));
   write(path.join(out, "dekujeme/index.html"), thanksPage({ slug: "dekujeme", title: "Děkujeme", h1: "Skoro tam jsi.", lead: "Ještě jedno kliknutí.", sub: "Pošleme ti e-mail. Klikni v něm na tlačítko a potvrď, že chceš vědět, co se chystá. Nic nepřišlo? Zkus složku Spam." }));
