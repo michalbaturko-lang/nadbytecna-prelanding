@@ -14,7 +14,7 @@
   if (!DATA) return;
 
   var SPLIT = parseFloat(img.getAttribute("data-split"));        // kde v logu začíná rukopis (podíl výšky)
-  var PHRASE = "s nic nezlomí!";
+  var PHRASE = "nás nic nezlomí!";
   var PINK = [0xD7, 0x1D, 0x62], GOLD = [0xA9, 0x80, 0x2F];
   var SY = 688;                                                   // posun rukopisu v lockupu (jednotky 2480 široké kresby)
   var CHAIN = true;                                               // po 2. přiblížení hned padá i zbytek
@@ -127,29 +127,36 @@
   // ---- finále: „ná“ + zlatá fráze ----
   function drawNa(now) {
     var t = now - seq.t0, s = easeIO(clamp01((t - seq.Tslide) / 1300)), b = easeIO(clamp01((t - seq.Tback) / 1100));
+    var xf = clamp01((t - seq.Txf) / 700), ex = clamp01((t - seq.Tfade) / 700);
     seq.k = s * (1 - b);
     var l = L.na;
     ctx.save();
     ctx.translate(seq.dx * seq.k, 0);
+    ctx.globalAlpha = 1 - xf * (1 - ex);                           // ručně kreslené „ná“ se v cíli plynule vymění za stejné písmo jako zbytek věty
     ctx.fillStyle = mix(PINK, GOLD, seq.k);
     ctx.fill(l.p);
     ctx.restore();
   }
   function drawPhrase(now) {
-    var t = now - seq.t0, p = clamp01((t - seq.Tunroll) / seq.Dunroll), ex = clamp01((t - seq.Tfade) / 700);
-    if (p <= 0 || ex >= 1) return;
-    var e = easeS(p), soft = 150;
-    var x0 = seq.tx, x1 = seq.tx + seq.tw;
-    var front = x0 - soft + e * (x1 - x0 + soft + 30);
+    var t = now - seq.t0, p = clamp01((t - seq.Tunroll) / seq.Dunroll), xf = clamp01((t - seq.Txf) / 700), ex = clamp01((t - seq.Tfade) / 700);
+    if (xf <= 0 || ex >= 1) return;
+    var e = easeS(p), soft = 150, x0 = seq.left + seq.naw, x1 = seq.left + seq.tw;
+    var front = x0 - soft + e * (x1 - x0 + 2 * soft + 30);
     tx.setTransform(1, 0, 0, 1, 0, 0); tx.clearRect(0, 0, tc.width, tc.height);
     setScript(tx);
     tx.font = seq.fsz + "px Damion, cursive"; tx.textBaseline = "alphabetic"; tx.fillStyle = mix(GOLD, GOLD, 0);
-    tx.fillText(PHRASE, seq.tx, seq.base + (1 - e) * 26);        // text se při rozvíjení lehce zvedá
-    tx.globalCompositeOperation = "destination-in";
-    var g = tx.createLinearGradient(front - soft, 0, front, 0);
-    g.addColorStop(0, "rgba(0,0,0,1)"); g.addColorStop(1, "rgba(0,0,0,0)");
-    tx.fillStyle = g; tx.fillRect(-100, -300, 2480 + 200, 1500);
-    tx.globalCompositeOperation = "source-over";
+    if (p > 0) {
+      tx.save(); tx.beginPath(); tx.rect(x0 - 2, -300, 2480, 1500); tx.clip();
+      tx.fillText(PHRASE, seq.left, seq.base + (1 - e) * 26);        // zbytek se při rozvíjení lehce zvedá
+      tx.restore();
+      tx.globalCompositeOperation = "destination-in";
+      var g = tx.createLinearGradient(front - soft, 0, front, 0);
+      g.addColorStop(0, "rgba(0,0,0,1)"); g.addColorStop(1, "rgba(0,0,0,0)");
+      tx.fillStyle = g; tx.fillRect(-300, -400, 3200, 2000);
+      tx.globalCompositeOperation = "source-over";
+      tx.fillStyle = mix(GOLD, GOLD, 0);
+    }
+    tx.save(); tx.globalAlpha = xf; tx.fillText("ná", seq.left, seq.base); tx.restore();
     ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha = 1 - ex; ctx.drawImage(tc, 0, 0); ctx.restore();
   }
 
@@ -196,13 +203,13 @@
       var d = Math.abs(L[id].cx - px) / 2480 * 900 + Math.random() * 50;
       dmax = Math.max(dmax, d); fallOne(id, d, now);
     });
-    var n = L.na, fsz = 430, tw, gap = -8;
-    tx.font = fsz + "px Damion, cursive"; tw = tx.measureText(PHRASE).width;
-    var nw = n.x1 - n.x0;
-    while (nw + gap + tw > 2480 * 0.96 && fsz > 40) { fsz -= 4; tx.font = fsz + "px Damion, cursive"; tw = tx.measureText(PHRASE).width; }
-    var total = nw + gap + tw, left = (2480 - total) / 2;
-    var Tslide = dmax + (WOB + 1.0) * 1000 + 250, Tunroll = Tslide + 900, Dunroll = 3400, Tfade = Tunroll + Dunroll + 3200, Tback = Tfade + 100;
-    seq = { t0: now, dx: left - n.x0, tx: left + nw + gap, tw: tw, fsz: fsz, base: 336, Tslide: Tslide, Tunroll: Tunroll, Dunroll: Dunroll, Tfade: Tfade, Tback: Tback, k: 0,
+    var n = L.na, fsz = 430, tw, naw;
+    function meas() { tx.font = fsz + "px Damion, cursive"; tw = tx.measureText(PHRASE).width; naw = tx.measureText("ná").width; }
+    meas();
+    while (tw > 2480 * 0.96 && fsz > 40) { fsz -= 4; meas(); }
+    var left = (2480 - tw) / 2;
+    var Tslide = dmax + (WOB + 1.0) * 1000 + 250, Txf = Tslide + 1500, Tunroll = Txf + 600, Dunroll = 3400, Tfade = Tunroll + Dunroll + 3200, Tback = Tfade + 800;
+    seq = { t0: now, dx: left - n.x0, left: left, tw: tw, naw: naw, fsz: fsz, base: 336, Tslide: Tslide, Txf: Txf, Tunroll: Tunroll, Dunroll: Dunroll, Tfade: Tfade, Tback: Tback, k: 0,
       end: Tback + 1100 + 300 };
     dirty = true;
     stage = 3;
