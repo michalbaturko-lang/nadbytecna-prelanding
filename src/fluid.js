@@ -82,38 +82,29 @@
   }
 
   function step() {
-    var R = Math.max(lw * 0.14, 46), R2 = R * R;
+    // Logo „uskakuje“: kus pod ukazatelem se hladce odsune pryč (skoro celek, ne zkroucení)
+    // a po odchodu ukazatele se s malým zhoupnutím vrátí.
+    var R = Math.max(lw * 0.26, 80), A = Math.max(lw * 0.06, 20);
     var rect = cv.getBoundingClientRect();
     var px = ptr.x - rect.left, py = ptr.y - rect.top;
-    var pvx = ptr.px === -1e4 ? 0 : px - (ptr.px - rect.left), pvy = ptr.px === -1e4 ? 0 : py - (ptr.py - rect.top);
-    ptr.px = ptr.x; ptr.py = ptr.y;
     var energy = 0;
-    for (var k = 0; k < N; k++) {
-      var fx = -ox[k] * 0.018, fy = -oy[k] * 0.018;        // pružina zpět na místo
+    // pole posunu závisí jen na x: celé „písmeno“ uskočí jako kus, nic se nekroutí ani netrhá
+    var vs = py < h / 2 ? 1 : -1, k;
+    for (var i = 0; i < NX; i++) {
+      var tx = 0, ty = 0;
       if (ptr.on) {
-        var dx = bx[k] + ox[k] - px, dy = by[k] + oy[k] - py, d2 = dx * dx + dy * dy;
-        if (d2 < R2 * 5) {
-          var f = Math.exp(-d2 / (R2 * 1.2));
-          var d = Math.sqrt(d2) + 1;
-          fx += dx / d * f * 1.1 + pvx * f * 0.035;          // odtlačení od prstu + unášení pohybem
-          fy += dy / d * f * 1.1 + pvy * f * 0.035;
-        }
+        var dx = bx[i] - px, ad = Math.abs(dx), t = Math.max(0, 1 - ad / R), f = t * t * (3 - 2 * t);
+        tx = Math.tanh(dx / (R * 0.3)) * A * f * 0.4;
+        ty = vs * A * f * 1.1;
       }
-      vx[k] = (vx[k] + fx) * 0.90; vy[k] = (vy[k] + fy) * 0.90;
-    }
-    // sousedé se navzájem táhnou: tvar zůstává tekutý, nerozsype se
-    for (var j = 0; j < NY; j++) for (var i = 0; i < NX; i++) {
-      var q = j * NX + i, sx = 0, sy = 0, c = 0;
-      if (i > 0) { sx += ox[q - 1]; sy += oy[q - 1]; c++; }
-      if (i < GX) { sx += ox[q + 1]; sy += oy[q + 1]; c++; }
-      if (j > 0) { sx += ox[q - NX]; sy += oy[q - NX]; c++; }
-      if (j < GY) { sx += ox[q + NX]; sy += oy[q + NX]; c++; }
-      vx[q] += (sx / c - ox[q]) * 0.22; vy[q] += (sy / c - oy[q]) * 0.22;
+      for (var j = 0; j < NY; j++) {
+        k = j * NX + i;
+        vx[k] = (vx[k] + (tx - ox[k]) * 0.10) * 0.82;
+        vy[k] = (vy[k] + (ty - oy[k]) * 0.10) * 0.82;
+      }
     }
     for (k = 0; k < N; k++) {
       ox[k] += vx[k]; oy[k] += vy[k];
-      var m = Math.sqrt(ox[k] * ox[k] + oy[k] * oy[k]), cap = lw * 0.07;
-      if (m > cap) { ox[k] *= cap / m; oy[k] *= cap / m; }
       energy += Math.abs(ox[k]) + Math.abs(oy[k]) + Math.abs(vx[k]) + Math.abs(vy[k]);
     }
     return energy;
