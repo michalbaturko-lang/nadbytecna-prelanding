@@ -1,6 +1,6 @@
 import { CONSENT_VERSION, consentText, controller, controllerLine } from "../lib/consent.js";
 import { db } from "../lib/db.js";
-import { body, json, originOk } from "../lib/http.js";
+import { body, isDemo, json, originOk } from "../lib/http.js";
 import { confirmationEmail } from "../lib/emails.js";
 import { sendMail } from "../lib/mailer.js";
 import { clientIp, ipHash, randomToken, sha256 } from "../lib/tokens.js";
@@ -19,7 +19,9 @@ export default async function handler(req, res) {
 
   // Sběr je zavřený, dokud nebude doplněn správce údajů a Michal neotevře COLLECTION_OPEN=true.
   const c = controller();
-  if (process.env.COLLECTION_OPEN !== "true" || !c.complete) return json(res, 503, { error: "closed" });
+  // Výjimka: ukázkový režim na *.vercel.app (isDemo), kde se přihláška jen potvrdí a nic se neukládá.
+  const demo = isDemo(req);
+  if (!demo && (process.env.COLLECTION_OPEN !== "true" || !c.complete)) return json(res, 503, { error: "closed" });
 
   let b;
   try { b = await body(req); } catch { return json(res, 400, { error: "body" }); }
@@ -34,6 +36,9 @@ export default async function handler(req, res) {
   if (email.length > 254 || !EMAIL_RE.test(email)) return json(res, 400, { error: "email" });
   if (b.consent !== true) return json(res, 400, { error: "consent" });
   if (b.consent_version !== CONSENT_VERSION) return json(res, 409, { error: "version" });
+
+  // Ukázka: nic neukládáme, neodesíláme e-mail, neukládáme ani IP.
+  if (demo) return json(res, 200, { ok: true, demo: true });
 
   try {
     const norm = email.toLowerCase();

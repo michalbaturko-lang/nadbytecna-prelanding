@@ -7,7 +7,8 @@ import { fileURLToPath } from "node:url";
 import { CONSENT_VERSION, consentHtml, controller } from "./lib/consent.js";
 
 const ROOT = path.dirname(fileURLToPath(import.meta.url));
-const SITE = (process.env.SITE_URL || "https://nadbytecna.cz").replace(/\/$/, "");
+// Dokud není připojená doména nadbytecna.cz, na Vercelu míří absolutní URL (OG obrázek, canonical) na vercel.app, aby sdílecí náhledy fungovaly.
+const SITE = (process.env.SITE_URL || (process.env.VERCEL ? "https://nadbytecna-prelanding.vercel.app" : "https://nadbytecna.cz")).replace(/\/$/, "");
 const C = controller();
 
 const CLAIMS = {
@@ -53,14 +54,15 @@ ${og ? `<meta property="og:type" content="website">
 <meta property="og:title" content="${esc(og.title)}">
 <meta property="og:description" content="${esc(og.desc)}">
 <meta property="og:url" content="${url}">
-<meta property="og:image" content="${SITE}/og.png">
+<meta property="og:image" content="${SITE}/og.jpg">
+<meta property="og:image:type" content="image/jpeg">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta property="og:image:alt" content="Nadbytečná. ${esc(og.title)}">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="${esc(og.title)}">
 <meta name="twitter:description" content="${esc(og.desc)}">
-<meta name="twitter:image" content="${SITE}/og.png">` : ""}
+<meta name="twitter:image" content="${SITE}/og.jpg">` : ""}
 ${PRELOAD}
 <style>${css}</style>
 ${ld}
@@ -238,7 +240,7 @@ function build(out, variant) {
   write(path.join(out, "zasady-ochrany-osobnich-udaju/index.html"), policy());
   const urls = ["/"].concat(C.complete ? ["/zasady-ochrany-osobnich-udaju/"] : []);
   write(path.join(out, "sitemap.xml"), `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.map((u) => `<url><loc>${SITE}${u}</loc></url>`).join("\n")}\n</urlset>\n`);
-  write(path.join(out, "robots.txt"), LIVE ? `User-agent: *\nAllow: /\nDisallow: /api/\n\nSitemap: ${SITE}/sitemap.xml\n` : `User-agent: *\nDisallow: /\n`);
+  write(path.join(out, "robots.txt"), LIVE ? `User-agent: *\nAllow: /\nDisallow: /api/\n\nSitemap: ${SITE}/sitemap.xml\n` : `User-agent: *\nAllow: /og.jpg\nDisallow: /\n`);
 }
 
 const variant = Number(process.env.CLAIM || 1);
