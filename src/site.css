@@ -128,3 +128,5 @@ body[data-page=thanks] .sub{font-size:clamp(1.25rem,5.2vw,1.45rem);line-height:1
 }
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 @media (forced-colors:active){button.cta{border:2px solid ButtonText}.consent input:checked::after{background:CanvasText}}
+
+.foot .dom{font-family:'Playfair Display',Georgia,serif;font-weight:600;letter-spacing:.01em}

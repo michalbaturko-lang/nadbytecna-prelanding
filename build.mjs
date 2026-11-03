@@ -69,7 +69,7 @@ ${ld}
 </head>`;
 }
 
-const footer = () => `<footer class="foot"><a href="/zasady-ochrany-osobnich-udaju/">Zásady ochrany osobních údajů</a>${C.complete ? `<br>${esc(C.name)}, IČO ${esc(C.ico)}` : ""}</footer>`;
+const footer = () => `<footer class="foot"><span class="dom">Nadbytečná.cz</span><br><a href="/zasady-ochrany-osobnich-udaju/">Zásady ochrany osobních údajů</a>${C.complete ? `<br>${esc(C.name)}, IČO ${esc(C.ico)}` : ""}</footer>`;
 const analytics = '<script defer src="/_vercel/insights/script.js"></script>';
 
 function home(variant) {
