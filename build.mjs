@@ -84,6 +84,7 @@ function home(variant) {
 <div class="brand">
 <img class="logo" src="/img/nadbytecna-script.svg" width="1994" height="528" alt="Nadbytečná" fetchpriority="high" decoding="async">
 <div class="rule" aria-hidden="true">${HEART}</div>
+<p class="domain">Nadbytečná.cz</p>
 </div>
 <div class="content">
 <h1>${esc(cl.h1)}</h1>
