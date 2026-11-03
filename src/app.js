@@ -32,7 +32,7 @@
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v)) { say("Zkontroluj prosím e-mailovou adresu, vypadá neúplně.", email); return; }
       if (!consent.checked) { say("Bez souhlasu ti e-mail poslat nemůžeme. Zaškrtni ho prosím.", consent); return; }
       btn.disabled = true;
-      post("/api/subscribe", {
+      post("/api/subscribe/", {
         email: v,
         consent: true,
         consent_version: form.getAttribute("data-consent-version"),
@@ -64,7 +64,7 @@
     var token = new URLSearchParams(location.search).get("t") || "";
     var state = document.getElementById("state");
     var action = document.getElementById("action");
-    var url = page === "confirm" ? "/api/confirm" : "/api/unsubscribe";
+    var url = page === "confirm" ? "/api/confirm/" : "/api/unsubscribe/";
     var okText = page === "confirm" ? ["Děkujeme, jsi v tom s námi.", "Ozveme se ti, jakmile bude co ukázat."] : ["Odhlášeno.", "Už ti nebudeme psát. Kdyby sis to rozmyslela, můžeš se kdykoli přihlásit znovu."];
     var badText = ["Odkaz nefunguje.", page === "confirm" ? "Možná vypršel. Přihlas se prosím znovu na nadbytecna.cz." : "Napiš nám prosím na adresu uvedenou v zásadách ochrany osobních údajů a odhlásíme tě ručně."];
 

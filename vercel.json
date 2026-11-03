@@ -7,7 +7,7 @@
   "trailingSlash": true,
   "headers": [
     {
-      "source": "/:path*",
+      "source": "/(.*)",
       "headers": [
         {
           "key": "Content-Security-Policy",
@@ -161,5 +161,8 @@
         }
       ]
     }
+  ],
+  "regions": [
+    "fra1"
   ]
 }

@@ -58,7 +58,7 @@ test("přihláška se uloží jako pending s verzí a zněním souhlasu, odešle
   assert.match(rows[0].consent_text, /Test s\.r\.o\., IČO 12345678/);
   assert.ok(rows[0].confirm_token_hash && !JSON.stringify(rows[0]).includes(tokenFromMail(mails[0])), "token se neukládá v čitelné podobě");
   assert.equal(mails.length, 1);
-  assert.ok(mails[0].headers["List-Unsubscribe"].includes("/api/unsubscribe?t="));
+  assert.ok(mails[0].headers["List-Unsubscribe"].includes("/api/unsubscribe/?t="));
 });
 
 test("bez potvrzení se souhlas nepovažuje za udělený (stav zůstává pending)", () => {
