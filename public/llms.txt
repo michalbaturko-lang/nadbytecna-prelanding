@@ -1,0 +1,8 @@
+# Nadbytečná
+
+> Připravujeme místo pro ženy, které si prošly něčím podobným. Na nadbytecna.cz si můžeš nechat e-mail a dáme ti vědět jako první, až bude co ukázat.
+
+Stránka je zatím jednostránkový pre-landing. Sbírá pouze e-mailovou adresu a souhlas s informováním o spuštění platformy (dvoustupňové potvrzení). Žádné cookies.
+
+- [Úvodní stránka](https://nadbytecna.cz/)
+- [Zásady ochrany osobních údajů](https://nadbytecna.cz/zasady-ochrany-osobnich-udaju/)
