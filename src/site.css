@@ -159,3 +159,5 @@ html,body{overflow-x:clip;max-width:100%}
 .vote-note{margin:1rem 0 0;font-size:1rem;color:var(--ink-soft)}
 
 .picks[hidden],.vote .cta[hidden],.vote-sub[hidden]{display:none!important}
+
+@font-face{font-family:Damion;font-style:normal;font-weight:400;font-display:swap;src:url(/fonts/damion-latin-400-normal.woff2) format('woff2')}

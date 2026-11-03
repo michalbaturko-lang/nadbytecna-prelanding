@@ -83,7 +83,7 @@ function home(variant) {
 <div class="page">
 <main class="main">
 <div class="brand">
-<img class="logo" src="/img/nadbytecna-lockup.svg" width="2480" height="1219" alt="VERY VERA – Nadbytečná.cz" fetchpriority="high" decoding="async">
+<img class="logo" src="/img/nadbytecna-lockup.svg" width="2480" height="1219" data-split="0.5385" data-base="0.8403" data-na0="0.6444" data-na1="0.8065" data-hat="0.6589" data-haty="0.7048" alt="VERY VERA – Nadbytečná.cz" fetchpriority="high" decoding="async">
 <div class="rule" aria-hidden="true">${HEART}</div>
 </div>
 <div class="content">
@@ -123,7 +123,7 @@ function simplePage({ page, title, h1, p, button, extra = "" }) {
 <div class="page">
 <main class="main" style="grid-template-columns:1fr">
 <div class="card">
-<a href="/"><img class="logo" src="/img/nadbytecna-lockup.svg" width="2480" height="1219" alt="VERY VERA – Nadbytečná.cz"></a>
+<a href="/"><img class="logo" src="/img/nadbytecna-lockup.svg" width="2480" height="1219" data-split="0.5385" data-base="0.8403" data-na0="0.6444" data-na1="0.8065" data-hat="0.6589" data-haty="0.7048" alt="VERY VERA – Nadbytečná.cz"></a>
 <div id="state" hidden>
 <div id="live" tabindex="-1" aria-live="polite"><h1 id="h">${esc(h1)}</h1><p id="p">${esc(p)}</p></div>
 ${button ? `<button class="cta" id="action" type="button">${esc(button)}</button>` : ""}
@@ -213,7 +213,7 @@ function thanksPage({ slug, title, h1, lead, sub, extra = "", vote = false }) {
 <div class="page">
 <main class="main">
 <div class="brand">
-<a href="/" aria-label="Nadbytečná"><img class="logo" src="/img/nadbytecna-lockup.svg" width="2480" height="1219" alt="VERY VERA – Nadbytečná.cz" fetchpriority="high" decoding="async"></a>
+<a href="/" aria-label="Nadbytečná"><img class="logo" src="/img/nadbytecna-lockup.svg" width="2480" height="1219" data-split="0.5385" data-base="0.8403" data-na0="0.6444" data-na1="0.8065" data-hat="0.6589" data-haty="0.7048" alt="VERY VERA – Nadbytečná.cz" fetchpriority="high" decoding="async"></a>
 <div class="rule" aria-hidden="true">${HEART}</div>
 </div>
 <div class="content" role="status">
