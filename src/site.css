@@ -35,7 +35,7 @@ body{
 .main{flex:1;width:100%;max-width:70rem;margin:0 auto;display:grid;align-content:center;gap:1.5rem;padding:1.75rem 0 1rem}
 
 .brand{display:flex;flex-direction:column;align-items:center}
-.logo{display:block;width:min(88vw,24.8rem);height:auto;aspect-ratio:2480/528}
+.logo{display:block;width:min(70vw,19rem);height:auto;aspect-ratio:2480/1219}
 .rule{display:flex;align-items:center;gap:.75rem;width:min(70vw,17rem);margin-top:1rem;color:var(--gold)}
 .rule::before,.rule::after{content:"";flex:1;height:1px;background:currentColor}
 .rule svg{width:.95rem;height:.95rem;flex:none;fill:currentColor}
@@ -107,14 +107,14 @@ button.cta[disabled]{opacity:.7;cursor:progress}
 @media (min-width:60rem){
   .page{padding:0 3rem}
   .main{grid-template-columns:1fr 1fr;align-items:center;gap:4rem;padding:2rem 0}
-  .logo{width:min(46vw,40rem)}
+  .logo{width:min(44vw,36rem)}
   .rule{width:min(30vw,22rem);margin-top:1.6rem}
   .content{text-align:left;margin:0;max-width:31rem}
   h1{font-size:clamp(2.6rem,3.6vw,3.4rem)}
   .lead{font-size:1.65rem}
   .sub{margin-left:0;font-size:1.25rem}
 }
-@media (min-width:60rem) and (max-height:46rem){.logo{width:min(40vw,31rem)}}
+@media (min-width:60rem) and (max-height:46rem){.logo{width:min(36vw,26rem)}}
 /* děkovací stránky: velké, čitelné písmo */
 body[data-page=thanks] .content{max-width:36rem}
 body[data-page=thanks] h1{font-size:clamp(2.75rem,13vw,3.75rem);line-height:1.05;margin-bottom:.7rem}
@@ -136,3 +136,26 @@ body[data-page=thanks] .sub{font-size:clamp(1.25rem,5.2vw,1.45rem);line-height:1
 
 html,body{overflow-x:clip;max-width:100%}
 .page{overflow-x:clip}
+
+.foot .mail{display:inline-block;margin:.1rem 0 .35rem;color:var(--magenta-deep);text-decoration:none;font-weight:500}
+.foot .mail:hover{text-decoration:underline}
+/* výběr výroků po potvrzení e-mailu */
+.vote{margin:1.6rem auto 0;max-width:36rem;text-align:left}
+.vote h2{font:600 clamp(1.5rem,6vw,2rem)/1.15 'Playfair Display',Georgia,serif;margin:0 0 .5rem;color:var(--ink)}
+.vote-sub{margin:0 0 1rem;font-size:1.1rem;line-height:1.45;color:var(--ink)}
+.picks{display:grid;gap:.6rem;margin:0 0 1.1rem}
+.pick{font:600 clamp(1.15rem,4.6vw,1.35rem)/1.25 'Playfair Display',Georgia,serif;text-align:left;padding:.9rem 1.1rem;min-height:3.25rem;border:1.5px solid var(--magenta-deep);border-radius:.6rem;background:rgba(255,255,255,.55);color:var(--ink);cursor:pointer;transition:background .15s,color .15s,transform .15s}
+.pick:hover{background:rgba(255,255,255,.85)}
+.pick[aria-pressed=true]{background:var(--magenta-deep);color:#fff}
+.pick:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
+.results h3{font:600 1.35rem/1.2 'Playfair Display',Georgia,serif;margin:0 0 .8rem;color:var(--ink)}
+.bars{list-style:none;margin:0;padding:0;display:grid;gap:.85rem}
+.bars li{display:grid;grid-template-columns:1fr auto;gap:.2rem .8rem;align-items:center}
+.bars .bt{grid-column:1/-1;font-size:1.1rem;color:var(--ink)}
+.bars .bar{display:block;height:.7rem;border-radius:.4rem;background:rgba(255,255,255,.6);overflow:hidden}
+.bars .bar i{display:block;height:100%;background:var(--magenta-deep);border-radius:.4rem;transition:width .6s ease}
+.bars .mine .bt{font-weight:700}
+.bars .bn{font-weight:700;min-width:1.6rem;text-align:right}
+.vote-note{margin:1rem 0 0;font-size:1rem;color:var(--ink-soft)}
+
+.picks[hidden],.vote .cta[hidden],.vote-sub[hidden]{display:none!important}

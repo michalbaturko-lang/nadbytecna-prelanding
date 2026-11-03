@@ -5,6 +5,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { CONSENT_VERSION, consentHtml, controller } from "./lib/consent.js";
+import { VOTE_CLAIMS, VOTE_MAX } from "./lib/claims.js";
 
 const ROOT = path.dirname(fileURLToPath(import.meta.url));
 // Dokud není připojená doména nadbytecna.cz, na Vercelu míří absolutní URL (OG obrázek, canonical) na vercel.app, aby sdílecí náhledy fungovaly.
@@ -69,7 +70,7 @@ ${ld}
 </head>`;
 }
 
-const footer = () => `<footer class="foot"><img class="dom" src="/img/nadbytecna-script.svg" width="2480" height="528" alt="Nadbytečná.cz"><br><a href="/zasady-ochrany-osobnich-udaju/">Zásady ochrany osobních údajů</a>${C.complete ? `<br>${esc(C.name)}, IČO ${esc(C.ico)}` : ""}</footer>`;
+const footer = () => `<footer class="foot"><img class="dom" src="/img/nadbytecna-script.svg" width="2480" height="528" alt="Nadbytečná.cz"><a class="mail" href="mailto:veryvera@nadbytecna.cz">veryvera@nadbytecna.cz</a><br><a href="/zasady-ochrany-osobnich-udaju/">Zásady ochrany osobních údajů</a>${C.complete ? `<br>${esc(C.name)}, IČO ${esc(C.ico)}` : ""}</footer>`;
 const analytics = '<script defer src="/_vercel/insights/script.js"></script>';
 
 function home(variant) {
@@ -82,7 +83,7 @@ function home(variant) {
 <div class="page">
 <main class="main">
 <div class="brand">
-<img class="logo" src="/img/nadbytecna-script.svg" width="2480" height="528" alt="Nadbytečná" fetchpriority="high" decoding="async">
+<img class="logo" src="/img/nadbytecna-lockup.svg" width="2480" height="1219" alt="VERY VERA – Nadbytečná.cz" fetchpriority="high" decoding="async">
 <div class="rule" aria-hidden="true">${HEART}</div>
 </div>
 <div class="content">
@@ -122,7 +123,7 @@ function simplePage({ page, title, h1, p, button, extra = "" }) {
 <div class="page">
 <main class="main" style="grid-template-columns:1fr">
 <div class="card">
-<a href="/"><img class="logo" src="/img/nadbytecna-script.svg" width="2480" height="528" alt="Nadbytečná"></a>
+<a href="/"><img class="logo" src="/img/nadbytecna-lockup.svg" width="2480" height="1219" alt="VERY VERA – Nadbytečná.cz"></a>
 <div id="state" hidden>
 <div id="live" tabindex="-1" aria-live="polite"><h1 id="h">${esc(h1)}</h1><p id="p">${esc(p)}</p></div>
 ${button ? `<button class="cta" id="action" type="button">${esc(button)}</button>` : ""}
@@ -159,11 +160,12 @@ ${who}
 <h2>2. Jaké údaje zpracováváme, proč a na jakém základě</h2>
 <ul>
 <li><strong>E-mailová adresa, kterou zadáš.</strong> Pošleme ti potvrzovací e-mail a pak informaci, že platforma Nadbytečná byla spuštěna. Základ: tvůj souhlas (čl. 6 odst. 1 písm. a) nařízení GDPR).</li>
+<li><strong>Výroky, které si po potvrzení e-mailu nepovinně vybereš</strong> (až tři). Uložíme je k tvému e-mailu, abychom poznali, co tě oslovuje, a zveřejníme jen souhrnné počty, ze kterých nepoznáš nikoho konkrétního. Základ: tvůj souhlas, který dáš samotným výběrem (čl. 6 odst. 1 písm. a) GDPR). Výběr můžeš kdykoli změnit odhlášením, tím se vymaže.</li>
 <li><strong>Čas udělení souhlasu, znění souhlasu, které jsi viděla, čas potvrzení e-mailu a čas případného odvolání.</strong> Abychom mohli prokázat, že jsi souhlas udělila, a respektovat jeho odvolání. Základ: povinnost prokázat souhlas (čl. 7 odst. 1 GDPR) a náš oprávněný zájem na obhajobě právních nároků (čl. 6 odst. 1 písm. f) GDPR).</li>
 <li><strong>Otisk IP adresy</strong> (hash, ne samotná adresa), ukládaný nejdéle 30 dnů. Ochrana formuláře před zneužitím a automatickým vyplňováním. Základ: náš oprávněný zájem na bezpečném provozu (čl. 6 odst. 1 písm. f) GDPR).</li>
 <li><strong>IP adresa a technické údaje o požadavku v serverových logech hostingu.</strong> Provoz a zabezpečení stránky. Základ: náš oprávněný zájem na provozu a zabezpečení (čl. 6 odst. 1 písm. f) GDPR).</li>
 </ul>
-<p>Nic dalšího se neptáme. Na stránce nepoužíváme cookies ani nástroje třetích stran, které by tě sledovaly.</p>
+<p>Nic dalšího se neptáme (výběr výroků je nepovinný). Na stránce nepoužíváme cookies ani nástroje třetích stran, které by tě sledovaly.</p>
 <h2>3. Je poskytnutí údajů povinné</h2>
 <p>Ne. Bez e-mailové adresy a souhlasu ti ale nemůžeme dát o spuštění vědět.</p>
 <h2>4. Jak dlouho údaje uchováváme</h2>
@@ -174,7 +176,7 @@ ${who}
 <li>otisk IP adresy mažeme nejpozději po 30 dnech,</li>
 <li>serverové logy hostingu se uchovávají podle pravidel poskytovatele hostingu [doplnit dobu].</li>
 </ul>
-${T("[K potvrzení právní kontrolou: doba uchování důkazu o souhlasu a seznamu odhlášených; doba uchování logů hostingu.]")}
+${T("[K potvrzení právní kontrolou: doba uchování důkazu o souhlasu a seznamu odhlášených; doba uchování logů hostingu; zda stačí souhlas „činem“ u nepovinného výběru výroků.]")}
 <h2>5. Komu údaje předáváme</h2>
 <p>Správce používá zpracovatele, kteří pro něj údaje zpracovávají na základě smlouvy o zpracování:</p>
 <ul>
@@ -205,13 +207,13 @@ function write(file, content) {
   fs.writeFileSync(file, content);
 }
 
-function thanksPage({ slug, title, h1, lead, sub }) {
+function thanksPage({ slug, title, h1, lead, sub, extra = "", vote = false }) {
   return `${head({ title: `${title} – Nadbytečná`, desc: SUB, path: `/${slug}/`, index: false })}
-<body data-page="thanks">
+<body data-page="thanks"${vote ? " data-vote" : ""}>
 <div class="page">
 <main class="main">
 <div class="brand">
-<a href="/" aria-label="Nadbytečná"><img class="logo" src="/img/nadbytecna-script.svg" width="2480" height="528" alt="Nadbytečná" fetchpriority="high" decoding="async"></a>
+<a href="/" aria-label="Nadbytečná"><img class="logo" src="/img/nadbytecna-lockup.svg" width="2480" height="1219" alt="VERY VERA – Nadbytečná.cz" fetchpriority="high" decoding="async"></a>
 <div class="rule" aria-hidden="true">${HEART}</div>
 </div>
 <div class="content" role="status">
@@ -219,9 +221,12 @@ function thanksPage({ slug, title, h1, lead, sub }) {
 <p class="lead">${esc(lead)}</p>
 <p class="sub">${esc(sub)}</p>
 </div>
+${extra}
 </main>
 ${footer()}
 </div>
+<script src="/app.js" defer></script>
+<script src="/fluid.js" defer></script>
 </body>
 </html>
 `;
@@ -245,7 +250,20 @@ function build(out, variant) {
   write(path.join(out, "index.html"), home(variant));
   write(path.join(out, "potvrzeni/index.html"), simplePage({ page: "confirm", title: "Potvrzení e-mailu", h1: "Potvrď svůj e-mail", p: "Jedním kliknutím potvrdíš, že chceš vědět, co se chystá.", button: "Potvrdit e-mail" }));
   write(path.join(out, "dekujeme/index.html"), thanksPage({ slug: "dekujeme", title: "Děkujeme", h1: "Skoro tam jsi.", lead: "Ještě jedno kliknutí.", sub: "Pošleme ti e-mail. Klikni v něm na tlačítko a potvrď, že chceš vědět, co se chystá. Nic nepřišlo? Zkus složku Spam." }));
-  write(path.join(out, "potvrzeno/index.html"), thanksPage({ slug: "potvrzeno", title: "Potvrzeno", h1: "Jsi v tom s námi.", lead: "Děkujeme, že jsi tu.", sub: "Ozveme se ti jako první, jakmile bude co ukázat." }));
+  write(path.join(out, "potvrzeno/index.html"), thanksPage({ slug: "potvrzeno", title: "Potvrzeno", h1: "Jsi v tom s námi.", lead: "Děkujeme, že jsi tu.", sub: "Ozveme se ti jako první, jakmile bude co ukázat.", vote: true, extra: `<section class="vote" id="vote" hidden aria-labelledby="vote-h">
+<h2 id="vote-h">Co z toho jsi ty?</h2>
+<p class="vote-sub">Vyber až ${VOTE_MAX === 3 ? "tři" : VOTE_MAX} věty, které tě vystihují nejvíc. Přidáme je k tvému e-mailu a ukážeme ti, co vybraly ostatní.</p>
+<div class="picks" id="picks" role="group" aria-labelledby="vote-h">
+${VOTE_CLAIMS.map((c) => `<button type="button" class="pick" data-id="${c.id}" aria-pressed="false">${esc(c.text)}</button>`).join("\n")}
+</div>
+<button class="cta" id="vote-send" type="button" disabled>Odeslat výběr</button>
+<p class="msg" id="vote-msg" role="alert"></p>
+<div class="results" id="results" hidden aria-live="polite">
+<h3>Co vybraly ostatní</h3>
+<ol class="bars" id="bars"></ol>
+<p class="vote-note" id="vote-note"></p>
+</div>
+</section>` }));
   write(path.join(out, "odhlaseni/index.html"), simplePage({ page: "unsubscribe", title: "Odhlášení", h1: "Odhlašuji tě…", p: "Chvilku strpení.", button: "" }));
   write(path.join(out, "zasady-ochrany-osobnich-udaju/index.html"), policy());
   const urls = ["/"].concat(C.complete ? ["/zasady-ochrany-osobnich-udaju/"] : []);

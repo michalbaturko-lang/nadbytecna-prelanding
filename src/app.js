@@ -60,6 +60,61 @@
     });
   }
 
+
+  // Výběr výroků po potvrzení e-mailu (nepovinné, max 3). Token z potvrzení je jen v sessionStorage.
+  if (document.body.hasAttribute("data-vote")) {
+    var box = document.getElementById("vote");
+    var tok = ""; try { tok = sessionStorage.getItem("nv") || ""; } catch (e) {}
+    var demo = /\.vercel\.app$/.test(location.hostname);
+    if (box && (tok || demo)) {
+      box.hidden = false;
+      var picks = Array.prototype.slice.call(document.querySelectorAll("#picks .pick"));
+      var send = document.getElementById("vote-send"), vmsg = document.getElementById("vote-msg");
+      var chosen = [];
+      picks.forEach(function (b) {
+        b.addEventListener("click", function () {
+          var id = b.getAttribute("data-id"), at = chosen.indexOf(id);
+          if (at >= 0) chosen.splice(at, 1);
+          else if (chosen.length < 3) chosen.push(id);
+          else { vmsg.textContent = "Můžeš vybrat nejvýš tři. Zrušením jedné uvolníš místo."; return; }
+          vmsg.textContent = "";
+          picks.forEach(function (x) { x.setAttribute("aria-pressed", chosen.indexOf(x.getAttribute("data-id")) >= 0 ? "true" : "false"); });
+          send.disabled = chosen.length === 0;
+        });
+      });
+      send.addEventListener("click", function () {
+        send.disabled = true; vmsg.textContent = "";
+        post("/api/vote/", { v: tok, claims: chosen }).then(function (r) {
+          if (r.status === 200 && r.data.ok) { showResults(r.data); return; }
+          send.disabled = false;
+          vmsg.textContent = r.data && r.data.error === "token"
+            ? "Výběr jde odeslat jen hned po potvrzení e-mailu. Otevři prosím odkaz z e-mailu znovu."
+            : "Něco se nepovedlo. Zkus to prosím znovu za chvíli.";
+        }).catch(function () { send.disabled = false; vmsg.textContent = "Spojení se nezdařilo. Zkus to prosím znovu."; });
+      });
+      function showResults(d) {
+        var list = document.getElementById("bars"); list.textContent = "";
+        var max = 1; picks.forEach(function (b) { max = Math.max(max, d.counts[b.getAttribute("data-id")] || 0); });
+        picks.forEach(function (b) {
+          var id = b.getAttribute("data-id"), n = d.counts[id] || 0;
+          var li = document.createElement("li");
+          if (chosen.indexOf(id) >= 0) li.className = "mine";
+          var t = document.createElement("span"); t.className = "bt"; t.textContent = b.textContent;
+          var bar = document.createElement("span"); bar.className = "bar"; var fill = document.createElement("i"); fill.style.width = Math.round(n / max * 100) + "%"; bar.appendChild(fill);
+          var c = document.createElement("span"); c.className = "bn"; c.textContent = String(n);
+          li.appendChild(t); li.appendChild(bar); li.appendChild(c); list.appendChild(li);
+        });
+        document.getElementById("vote-note").textContent = d.demo
+          ? "Ukázka: nic se neukládá a počty jsou jen tvoje volba."
+          : "Díky. Tvůj výběr je uložený u tvého e-mailu. Odpovědělo " + d.voters + (d.voters === 1 ? " žena." : " žen.");
+        document.getElementById("picks").hidden = true; send.hidden = true; vmsg.textContent = "";
+        document.querySelector(".vote-sub").hidden = true;
+        document.getElementById("results").hidden = false;
+        document.getElementById("results").setAttribute("tabindex", "-1"); document.getElementById("results").focus();
+      }
+    }
+  }
+
   if (page === "confirm" || page === "unsubscribe") {
     var token = new URLSearchParams(location.search).get("t") || "";
     var state = document.getElementById("state");
@@ -77,7 +132,10 @@
     function run() {
       if (action) action.disabled = true;
       post(url, { t: token }).then(function (r) {
-        if (r.status === 200 && r.data.ok) { if (page === "confirm") location.replace("/potvrzeno/"); else show(okText[0], okText[1]); }
+        if (r.status === 200 && r.data.ok) {
+          if (page === "confirm") { try { if (r.data.vote) sessionStorage.setItem("nv", r.data.vote); } catch (e) {} location.replace("/potvrzeno/"); }
+          else show(okText[0], okText[1]);
+        }
         else show(badText[0], badText[1]);
       }).catch(function () {
         if (action) action.disabled = false;

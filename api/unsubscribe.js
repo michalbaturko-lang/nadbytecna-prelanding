@@ -23,6 +23,8 @@ export default async function handler(req, res) {
       await db.update(id, {
         status: "unsubscribed",
         unsubscribed_at: new Date().toISOString(),
+        claims: null,
+        claims_at: null,
         confirm_token_hash: null,
         confirm_token_expires_at: null,
         ip_hash: null,

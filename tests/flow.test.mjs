@@ -26,6 +26,7 @@ globalThis.fetch = async (url, opt = {}) => {
     const [op, val] = [v.slice(0, v.indexOf(".")), v.slice(v.indexOf(".") + 1)];
     if (op === "eq") return String(r[k]) === val;
     if (op === "gte") return r[k] && r[k] >= val;
+    if (op === "not" && val === "is.null") return r[k] != null;
     return false;
   });
   if (opt.method === "POST") { const r = { id: crypto.randomUUID(), ...JSON.parse(opt.body) }; rows.push(r); return ok([r], 201); }
@@ -37,6 +38,7 @@ const { CONSENT_VERSION } = await import("../lib/consent.js");
 const subscribe = (await import("../api/subscribe.js")).default;
 const confirm = (await import("../api/confirm.js")).default;
 const unsubscribe = (await import("../api/unsubscribe.js")).default;
+const vote = (await import("../api/vote.js")).default;
 
 function call(handler, { method = "POST", url = "/api/x", body = {}, headers = {} } = {}) {
   return new Promise((resolve) => {
@@ -89,10 +91,10 @@ test("chybný e-mail, chybějící souhlas, stará verze, cizí origin", async (
 test("potvrzení: špatný token neprojde, správný potvrdí a je idempotentní", async () => {
   assert.equal((await call(confirm, { body: { t: "x".repeat(43) } })).status, 400);
   const t = tokenFromMail(mails[0]);
-  assert.deepEqual((await call(confirm, { body: { t } })).json, { ok: true });
+  assert.equal((await call(confirm, { body: { t } })).json.ok, true);
   assert.equal(rows[0].status, "confirmed");
   assert.ok(rows[0].confirmed_at);
-  assert.deepEqual((await call(confirm, { body: { t } })).json, { ok: true });
+  assert.equal((await call(confirm, { body: { t } })).json.ok, true);
 });
 
 test("odhlášení jedním klikem (POST z poštovního klienta i ze stránky), neplatný token neprojde", async () => {
@@ -113,4 +115,40 @@ test("sběr je zavřený, dokud COLLECTION_OPEN není true", async () => {
   process.env.COLLECTION_OPEN = "false";
   assert.equal((await call(subscribe, { body: good({ email: "z@z.cz" }) })).status, 503);
   process.env.COLLECTION_OPEN = "true";
+});
+
+test("po potvrzení přijde token pro výběr; výběr se uloží, počty jsou souhrnné, odhlášení výběr smaže", async () => {
+  const r0 = await call(subscribe, { body: good({ email: "vyber@example.cz" }) });
+  assert.equal(r0.status, 200);
+  const m = mails[mails.length - 1];
+  const t = tokenFromMail(m);
+  const c = await call(confirm, { body: { t } });
+  assert.equal(c.status, 200);
+  assert.ok(c.json.vote, "potvrzení vrací token pro hlasování");
+  const bad = await call(vote, { body: { v: c.json.vote, claims: ["nesmysl"] } });
+  assert.equal(bad.status, 400);
+  const four = await call(vote, { body: { v: c.json.vote, claims: ["nejsi", "krasa", "zena", "prace"] } });
+  assert.equal(four.status, 400, "víc než tři se nepřijme");
+  const noTok = await call(vote, { body: { v: "x.y", claims: ["nejsi"] } });
+  assert.equal(noTok.status, 400);
+  const ok = await call(vote, { body: { v: c.json.vote, claims: ["zena", "never", "zena"] } });
+  assert.equal(ok.status, 200);
+  assert.equal(ok.json.counts.zena, 1); assert.equal(ok.json.counts.never, 1); assert.equal(ok.json.counts.nejsi, 0);
+  assert.equal(ok.json.voters, 1);
+  const row = rows.find((r) => r.email_normalized === "vyber@example.cz");
+  assert.deepEqual(row.claims, ["zena", "never"]);
+  const pub = await call(vote, { method: "GET" });
+  assert.equal(pub.status, 200); assert.equal(pub.json.voters, 1);
+  assert.ok(!JSON.stringify(pub.json).includes("example.cz"), "veřejné počty neobsahují e-maily");
+  const { signUnsub } = await import("../lib/tokens.js");
+  await call(unsubscribe, { body: { t: signUnsub(row.id) } });
+  assert.equal(row.claims, null, "odhlášení vymaže výběr");
+});
+
+test("výběr nejde bez potvrzeného e-mailu", async () => {
+  await call(subscribe, { body: good({ email: "nepotvrzena@example.cz" }) });
+  const row = rows.find((r) => r.email_normalized === "nepotvrzena@example.cz");
+  const { signVote } = await import("../lib/tokens.js");
+  const r = await call(vote, { body: { v: signVote(row.id), claims: ["nejsi"] } });
+  assert.equal(r.status, 400);
 });
