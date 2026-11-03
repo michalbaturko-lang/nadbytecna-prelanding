@@ -151,36 +151,43 @@ function policy() {
 <a class="back" href="/"><img src="/img/nadbytecna-script.svg" width="1994" height="528" alt="Nadbytečná, zpět na úvodní stránku"></a>
 <h1>Zásady ochrany osobních údajů</h1>
 <p>Platí pro přihlášení k informacím o spuštění platformy Nadbytečná na stránce nadbytecna.cz.</p>
-<h2>Kdo je správce</h2>
+<h2>1. Kdo je správce</h2>
 ${who}
-<h2>Jaké údaje zpracováváme</h2>
+<p>Správce nejmenoval pověřence pro ochranu osobních údajů.</p>
+<h2>2. Jaké údaje zpracováváme, proč a na jakém základě</h2>
 <ul>
-<li>e-mailovou adresu, kterou nám zadáš,</li>
-<li>čas, kdy jsi souhlas udělila, a znění souhlasu, které jsi viděla,</li>
-<li>čas, kdy jsi e-mailovou adresu potvrdila (nebo souhlas odvolala),</li>
-<li>technický otisk IP adresy (hash, ne samotnou adresu), který slouží k ochraně před zneužitím formuláře; mažeme ho nejpozději po 30 dnech.</li>
+<li><strong>E-mailová adresa, kterou zadáš.</strong> Pošleme ti potvrzovací e-mail a pak informaci, že platforma Nadbytečná byla spuštěna. Základ: tvůj souhlas (čl. 6 odst. 1 písm. a) nařízení GDPR).</li>
+<li><strong>Čas udělení souhlasu, znění souhlasu, které jsi viděla, čas potvrzení e-mailu a čas případného odvolání.</strong> Abychom mohli prokázat, že jsi souhlas udělila, a respektovat jeho odvolání. Základ: povinnost prokázat souhlas (čl. 7 odst. 1 GDPR) a náš oprávněný zájem na obhajobě právních nároků (čl. 6 odst. 1 písm. f) GDPR).</li>
+<li><strong>Otisk IP adresy</strong> (hash, ne samotná adresa), ukládaný nejdéle 30 dnů. Ochrana formuláře před zneužitím a automatickým vyplňováním. Základ: náš oprávněný zájem na bezpečném provozu (čl. 6 odst. 1 písm. f) GDPR).</li>
+<li><strong>IP adresa a technické údaje o požadavku v serverových logech hostingu.</strong> Provoz a zabezpečení stránky. Základ: náš oprávněný zájem na provozu a zabezpečení (čl. 6 odst. 1 písm. f) GDPR).</li>
 </ul>
-<p>Nic dalšího se neptáme. Nepoužíváme cookies.</p>
-<h2>Proč a na jakém základě</h2>
-<p>Abychom ti dali vědět, až bude platforma Nadbytečná spuštěna. Právním základem je tvůj souhlas (čl. 6 odst. 1 písm. a) nařízení GDPR). Bez potvrzení e-mailu nic neposíláme a souhlas se nepovažuje za udělený.</p>
-<h2>Jak dlouho údaje uchováváme</h2>
+<p>Nic dalšího se neptáme. Na stránce nepoužíváme cookies ani nástroje třetích stran, které by tě sledovaly.</p>
+<h2>3. Je poskytnutí údajů povinné</h2>
+<p>Ne. Bez e-mailové adresy a souhlasu ti ale nemůžeme dát o spuštění vědět.</p>
+<h2>4. Jak dlouho údaje uchováváme</h2>
 <ul>
 <li>nepotvrzené přihlášky mažeme do 7 dnů,</li>
-<li>potvrzenou adresu uchováváme do odvolání souhlasu,</li>
-<li>po odvolání uchováváme jen e-mailovou adresu v seznamu odhlášených, abychom ti už nepsali; ostatní údaje mažeme.</li>
+<li>potvrzenou e-mailovou adresu uchováváme, dokud souhlas neodvoláš,</li>
+<li>po odvolání ti už nepíšeme; uchováme jen e-mailovou adresu v seznamu odhlášených, aby ti nepřišla další zpráva, a důkaz o souhlasu a jeho odvolání po dobu [3 roky],</li>
+<li>otisk IP adresy mažeme nejpozději po 30 dnech,</li>
+<li>serverové logy hostingu se uchovávají podle pravidel poskytovatele hostingu [doplnit dobu].</li>
 </ul>
-${T("[K potvrzení legal session: délka uchování důkazu o souhlasu a seznam odhlášených.]")}
-<h2>Komu údaje předáváme</h2>
-<p>Správce používá zpracovatele, kteří mu pomáhají stránku provozovat:</p>
+${T("[K potvrzení právní kontrolou: doba uchování důkazu o souhlasu a seznamu odhlášených; doba uchování logů hostingu.]")}
+<h2>5. Komu údaje předáváme</h2>
+<p>Správce používá zpracovatele, kteří pro něj údaje zpracovávají na základě smlouvy o zpracování:</p>
 <ul>
-<li>Vercel Inc. – hosting stránky,</li>
-<li>Supabase – databáze přihlášek (region EU),</li>
+<li>Vercel Inc. (USA), hosting stránky. Přenos mimo EU se opírá o certifikaci společnosti v rámci EU-U.S. Data Privacy Framework a standardní smluvní doložky,</li>
+<li>Supabase, databáze přihlášek v regionu EU,</li>
 <li>poskytovatel odesílání e-mailů: [doplnit podle zvoleného nástroje].</li>
 </ul>
-${T("[Doplnit před spuštěním: poskytovatel e-mailů, sídlo a případný přenos mimo EU, odkaz na doložení záruk.]")}
-<h2>Tvoje práva</h2>
-<p>Máš právo na přístup k údajům, na opravu, na výmaz, na omezení zpracování a na přenositelnost. Souhlas můžeš kdykoli odvolat odkazem v každém e-mailu nebo zprávou správci; odvoláním souhlasu není dotčena zákonnost zpracování před jeho odvoláním. Můžeš podat stížnost u Úřadu pro ochranu osobních údajů (uoou.cz).</p>
-<h2>Kontakt</h2>
+${T("[Doplnit před spuštěním: subjekt a region Supabase, poskytovatel e-mailů, sídlo a případný přenos mimo EU, odkazy na smlouvy o zpracování.]")}
+<p>Údaje neprodáváme a nepředáváme dalším osobám k jejich vlastním účelům.</p>
+<h2>6. Tvoje práva</h2>
+<p>Máš právo na přístup k údajům, na opravu, na výmaz, na omezení zpracování a na přenositelnost údajů zpracovávaných na základě souhlasu. U zpracování na základě oprávněného zájmu máš právo vznést námitku. Souhlas můžeš kdykoli odvolat, stejně snadno, jako jsi ho udělila: odkazem na odhlášení v každém e-mailu nebo zprávou správci. Odvoláním souhlasu není dotčena zákonnost zpracování před jeho odvoláním. Nerozhodujeme o tobě automatizovaně a neprofilujeme tě.</p>
+<p>Máš také právo podat stížnost u dozorového úřadu, kterým je Úřad pro ochranu osobních údajů (uoou.cz).</p>
+<h2>7. Obchodní sdělení</h2>
+<p>E-mail o spuštění platformy je obchodní sdělení ve smyslu zákona č. 480/2004 Sb. Pošleme ti ho jen tehdy, pokud jsi nám dala souhlas a potvrdila svou adresu. Bude jasně označen jako obchodní sdělení, bude uvádět odesílatele a bude obsahovat odkaz, kterým se jedním kliknutím odhlásíš.</p>
+<h2>8. Kontakt</h2>
 ${C.complete ? `<p><a href="mailto:${esc(C.email)}">${esc(C.email)}</a></p>` : T("[Doplnit kontaktní e-mail správce.]")}
 <p><small>Znění z ${esc(CONSENT_VERSION.slice(0, 10))}.</small></p>
 </article>
@@ -233,8 +240,8 @@ function build(out, variant) {
   }
   fs.copyFileSync(path.join(ROOT, "src/app.js"), path.join(out, "app.js"));
   write(path.join(out, "index.html"), home(variant));
-  write(path.join(out, "potvrzeni/index.html"), simplePage({ page: "confirm", title: "Potvrzení e-mailu", h1: "Potvrď svůj e-mail", p: "Jedním klepnutím potvrdíš, že chceš vědět, co se chystá.", button: "Potvrdit e-mail" }));
-  write(path.join(out, "dekujeme/index.html"), thanksPage({ slug: "dekujeme", title: "Děkujeme", h1: "Skoro tam jsi.", lead: "Ještě jedno klepnutí.", sub: "Pošleme ti e-mail. Klikni v něm na tlačítko a potvrď, že chceš vědět, co se chystá. Nic nepřišlo? Zkus složku Spam." }));
+  write(path.join(out, "potvrzeni/index.html"), simplePage({ page: "confirm", title: "Potvrzení e-mailu", h1: "Potvrď svůj e-mail", p: "Jedním kliknutím potvrdíš, že chceš vědět, co se chystá.", button: "Potvrdit e-mail" }));
+  write(path.join(out, "dekujeme/index.html"), thanksPage({ slug: "dekujeme", title: "Děkujeme", h1: "Skoro tam jsi.", lead: "Ještě jedno kliknutí.", sub: "Pošleme ti e-mail. Klikni v něm na tlačítko a potvrď, že chceš vědět, co se chystá. Nic nepřišlo? Zkus složku Spam." }));
   write(path.join(out, "potvrzeno/index.html"), thanksPage({ slug: "potvrzeno", title: "Potvrzeno", h1: "Jsi v tom s námi.", lead: "Děkujeme, že jsi tu.", sub: "Ozveme se ti jako první, jakmile bude co ukázat." }));
   write(path.join(out, "odhlaseni/index.html"), simplePage({ page: "unsubscribe", title: "Odhlášení", h1: "Odhlašuji tě…", p: "Chvilku strpení.", button: "" }));
   write(path.join(out, "zasady-ochrany-osobnich-udaju/index.html"), policy());
