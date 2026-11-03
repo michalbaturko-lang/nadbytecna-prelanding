@@ -9,7 +9,7 @@
   var MX = 0.16, MY = 0.55;           // okraj kolem loga (podíl šířky / výšky), aby se tvar mohl vychýlit ven
   var GX = 96, GY = 26;               // hustota mřížky
   var wrap = document.createElement("span");
-  wrap.style.cssText = "position:relative;display:block;line-height:0";
+  wrap.style.cssText = "position:relative;display:block;line-height:0;touch-action:none;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none";
   img.parentNode.insertBefore(wrap, img);
   wrap.appendChild(img);
   var cv = document.createElement("canvas");
@@ -46,7 +46,20 @@
 
   var ready = false, w = 0, h = 0, lw = 0, lh = 0;
   var ptr = { x: -1e4, y: -1e4, px: -1e4, py: -1e4, down: false, on: false };
-  var raf = 0, calm = 0;
+  var raf = 0, hits = 0, stood = false, shiverUntil = 0, lastHit = 0;
+  var lead = document.querySelector(".lead"), leadOrig = lead ? lead.textContent : "";
+  var STAND = 5;                                   // po tolika šťouchnutích se logo přestane vyhýbat
+  function hit() {
+    var now = Date.now();
+    if (now - lastHit < 700) return;               // jedno gesto = jedno šťouchnutí
+    lastHit = now; hits++;
+    if (hits >= STAND && !stood) {
+      stood = true; shiverUntil = now + 700;
+      if (lead) { lead.style.transition = "opacity .3s"; lead.style.opacity = "0";
+        setTimeout(function () { lead.textContent = "Nikam neuhneme."; lead.style.opacity = "1"; }, 300); }
+    } else if (hits > STAND) shiverUntil = now + 500;
+  }
+  setInterval(function () { if (hits > 0 && !ptr.on && Date.now() - lastHit > 8000) hits = Math.max(0, hits - 1), stood = hits >= STAND; }, 4000);
 
   function layout() {
     var r = img.getBoundingClientRect();
@@ -85,6 +98,8 @@
     // Logo „uskakuje“: kus pod ukazatelem se hladce odsune pryč (skoro celek, ne zkroucení)
     // a po odchodu ukazatele se s malým zhoupnutím vrátí.
     var R = Math.max(lw * 0.26, 80), A = Math.max(lw * 0.06, 20);
+    var str = hits >= STAND ? 0 : Math.pow(1 - hits / STAND, 1.3) + 0.12; if (hits === 0) str = 1;
+    var tm = Date.now(), shiv = tm < shiverUntil ? Math.sin(tm / 22) * (shiverUntil - tm) / 700 : 0;
     var rect = cv.getBoundingClientRect();
     var px = ptr.x - rect.left, py = ptr.y - rect.top;
     var energy = 0;
@@ -94,8 +109,8 @@
       var tx = 0, ty = 0;
       if (ptr.on) {
         var dx = bx[i] - px, ad = Math.abs(dx), t = Math.max(0, 1 - ad / R), f = t * t * (3 - 2 * t);
-        tx = Math.tanh(dx / (R * 0.3)) * A * f * 0.4;
-        ty = vs * A * f * 1.1;
+        tx = Math.tanh(dx / (R * 0.3)) * A * f * 0.4 * str + shiv * A * f * 0.18;
+        ty = vs * A * f * 1.1 * str;
       }
       for (var j = 0; j < NY; j++) {
         k = j * NX + i;
@@ -127,6 +142,7 @@
     if (e > 0.5 || ptr.on) raf = requestAnimationFrame(loop);
   }
   function wake() { if (ready && !raf) raf = requestAnimationFrame(loop); }
+  setInterval(function () { if (Date.now() < shiverUntil) wake(); }, 40);
 
   function inside(e) {
     var r = img.getBoundingClientRect(), padx = r.width * 0.12, pady = r.height * 0.5;
@@ -134,12 +150,14 @@
   }
   window.addEventListener("pointermove", function (e) {
     ptr.x = e.clientX; ptr.y = e.clientY;
+    var was = ptr.on;
     ptr.on = inside(e) && (e.pointerType !== "touch" || ptr.down);
+    if (ptr.on && !was) hit();
     if (ptr.on) wake();
   }, { passive: true });
   window.addEventListener("pointerdown", function (e) {
     ptr.down = true; ptr.x = e.clientX; ptr.y = e.clientY; ptr.px = -1e4;
-    ptr.on = inside(e); if (ptr.on) wake();
+    ptr.on = inside(e); if (ptr.on) { hit(); wake(); }
   }, { passive: true });
   function up() { ptr.down = false; ptr.on = false; ptr.px = -1e4; wake(); }
   window.addEventListener("pointerup", up, { passive: true });
