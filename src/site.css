@@ -35,7 +35,7 @@ body{
 .main{flex:1;width:100%;max-width:70rem;margin:0 auto;display:grid;align-content:center;gap:1.5rem;padding:1.75rem 0 1rem}
 
 .brand{display:flex;flex-direction:column;align-items:center}
-.logo{display:block;width:min(80vw,20rem);height:auto;aspect-ratio:1994/528}
+.logo{display:block;width:min(88vw,24.8rem);height:auto;aspect-ratio:2480/528}
 .rule{display:flex;align-items:center;gap:.75rem;width:min(70vw,17rem);margin-top:1rem;color:var(--gold)}
 .rule::before,.rule::after{content:"";flex:1;height:1px;background:currentColor}
 .rule svg{width:.95rem;height:.95rem;flex:none;fill:currentColor}
@@ -107,14 +107,14 @@ button.cta[disabled]{opacity:.7;cursor:progress}
 @media (min-width:60rem){
   .page{padding:0 3rem}
   .main{grid-template-columns:1fr 1fr;align-items:center;gap:4rem;padding:2rem 0}
-  .logo{width:min(40vw,34rem)}
+  .logo{width:min(46vw,40rem)}
   .rule{width:min(30vw,22rem);margin-top:1.6rem}
   .content{text-align:left;margin:0;max-width:31rem}
   h1{font-size:clamp(2.6rem,3.6vw,3.4rem)}
   .lead{font-size:1.65rem}
   .sub{margin-left:0;font-size:1.25rem}
 }
-@media (min-width:60rem) and (max-height:46rem){.logo{width:min(34vw,26rem)}}
+@media (min-width:60rem) and (max-height:46rem){.logo{width:min(40vw,31rem)}}
 /* děkovací stránky: velké, čitelné písmo */
 body[data-page=thanks] .content{max-width:36rem}
 body[data-page=thanks] h1{font-size:clamp(2.75rem,13vw,3.75rem);line-height:1.05;margin-bottom:.7rem}
@@ -129,6 +129,7 @@ body[data-page=thanks] .sub{font-size:clamp(1.25rem,5.2vw,1.45rem);line-height:1
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 @media (forced-colors:active){button.cta{border:2px solid ButtonText}.consent input:checked::after{background:CanvasText}}
 
-.foot .dom{font-family:'Playfair Display',Georgia,serif;font-weight:600;letter-spacing:.01em}
 
-.domain{margin:.9rem 0 0;font:600 clamp(1.25rem,4.5vw,1.6rem)/1 'Playfair Display',Georgia,serif;color:var(--magenta-deep);letter-spacing:.01em}
+
+
+.foot .dom{display:block;margin:0 auto .3rem;height:1.9rem;width:auto}

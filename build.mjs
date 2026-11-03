@@ -69,7 +69,7 @@ ${ld}
 </head>`;
 }
 
-const footer = () => `<footer class="foot"><span class="dom">Nadbytečná.cz</span><br><a href="/zasady-ochrany-osobnich-udaju/">Zásady ochrany osobních údajů</a>${C.complete ? `<br>${esc(C.name)}, IČO ${esc(C.ico)}` : ""}</footer>`;
+const footer = () => `<footer class="foot"><img class="dom" src="/img/nadbytecna-script.svg" width="2480" height="528" alt="Nadbytečná.cz"><br><a href="/zasady-ochrany-osobnich-udaju/">Zásady ochrany osobních údajů</a>${C.complete ? `<br>${esc(C.name)}, IČO ${esc(C.ico)}` : ""}</footer>`;
 const analytics = '<script defer src="/_vercel/insights/script.js"></script>';
 
 function home(variant) {
@@ -82,9 +82,8 @@ function home(variant) {
 <div class="page">
 <main class="main">
 <div class="brand">
-<img class="logo" src="/img/nadbytecna-script.svg" width="1994" height="528" alt="Nadbytečná" fetchpriority="high" decoding="async">
+<img class="logo" src="/img/nadbytecna-script.svg" width="2480" height="528" alt="Nadbytečná" fetchpriority="high" decoding="async">
 <div class="rule" aria-hidden="true">${HEART}</div>
-<p class="domain">Nadbytečná.cz</p>
 </div>
 <div class="content">
 <h1>${esc(cl.h1)}</h1>
@@ -122,7 +121,7 @@ function simplePage({ page, title, h1, p, button, extra = "" }) {
 <div class="page">
 <main class="main" style="grid-template-columns:1fr">
 <div class="card">
-<a href="/"><img class="logo" src="/img/nadbytecna-script.svg" width="1994" height="528" alt="Nadbytečná"></a>
+<a href="/"><img class="logo" src="/img/nadbytecna-script.svg" width="2480" height="528" alt="Nadbytečná"></a>
 <div id="state" hidden>
 <div id="live" tabindex="-1" aria-live="polite"><h1 id="h">${esc(h1)}</h1><p id="p">${esc(p)}</p></div>
 ${button ? `<button class="cta" id="action" type="button">${esc(button)}</button>` : ""}
@@ -149,7 +148,7 @@ function policy() {
 <div class="page">
 <main class="main" style="grid-template-columns:1fr;align-content:start">
 <article class="doc">
-<a class="back" href="/"><img src="/img/nadbytecna-script.svg" width="1994" height="528" alt="Nadbytečná, zpět na úvodní stránku"></a>
+<a class="back" href="/"><img src="/img/nadbytecna-script.svg" width="2480" height="528" alt="Nadbytečná, zpět na úvodní stránku"></a>
 <h1>Zásady ochrany osobních údajů</h1>
 <p>Platí pro přihlášení k informacím o spuštění platformy Nadbytečná na stránce nadbytecna.cz.</p>
 <h2>1. Kdo je správce</h2>
@@ -210,7 +209,7 @@ function thanksPage({ slug, title, h1, lead, sub }) {
 <div class="page">
 <main class="main">
 <div class="brand">
-<a href="/" aria-label="Nadbytečná"><img class="logo" src="/img/nadbytecna-script.svg" width="1994" height="528" alt="Nadbytečná" fetchpriority="high" decoding="async"></a>
+<a href="/" aria-label="Nadbytečná"><img class="logo" src="/img/nadbytecna-script.svg" width="2480" height="528" alt="Nadbytečná" fetchpriority="high" decoding="async"></a>
 <div class="rule" aria-hidden="true">${HEART}</div>
 </div>
 <div class="content" role="status">
