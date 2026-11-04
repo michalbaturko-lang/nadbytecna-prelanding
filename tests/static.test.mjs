@@ -30,7 +30,7 @@ test("HTML: žádný inline skript, žádné onXXX události, žádné javascrip
 });
 
 test("žádné cizí zdroje: HTML, CSS ani JS nenačítá nic ze třetích stran", () => {
-  const allowed = [/^https?:\/\/nadbytecna\.cz/, /^https?:\/\/nadbytecna-prelanding\.vercel\.app/, /^https:\/\/schema\.org/, /^http:\/\/www\.w3\.org\/(2000\/svg|1999\/xlink)/, /^https:\/\/www\.instagram\.com\/?/, /^http:\/\/www\.sitemaps\.org\/schemas\/sitemap\/0\.9/];
+  const allowed = [/^https?:\/\/nadbytecna\.cz/, /^https?:\/\/nadbytecna-prelanding\.vercel\.app/, /^https:\/\/schema\.org/, /^http:\/\/www\.w3\.org\/(2000\/svg|1999\/xlink)/, /^https:\/\/www\.instagram\.com\/?/, /^http:\/\/www\.sitemaps\.org\/schemas\/sitemap\/0\.9/, /^http:\/\/www\.w3\.org\/1999\/xhtml/];
   for (const f of files.filter((x) => /\.(html|js|css|svg|webmanifest|xml|txt)$/.test(x))) {
     for (const m of text(f).matchAll(/https?:\/\/[^\s"'<>)]+/g)) {
       assert.ok(allowed.some((r) => r.test(m[0])), `${path.relative(DIST, f)}: ${m[0]}`);
@@ -91,4 +91,30 @@ test("noindex na všech stránkách s tokenem a v ukázkovém režimu", () => {
   const v = JSON.parse(text(path.join(ROOT, "vercel.json")));
   const x = v.headers.filter((h) => /potvrzeni|odhlaseni|dekujeme|potvrzeno|api/.test(h.source)).flatMap((h) => h.headers.map((y) => y.key));
   assert.ok(x.includes("X-Robots-Tag"));
+});
+
+test("SK stránky: jazyk, hreflang, žádná čeština v textu, slovenská diakritika, nic nezůstalo nepřeložené", async () => {
+  const fs = await import("node:fs");
+  const read = (p) => fs.readFileSync(new URL("../dist/" + p, import.meta.url), "utf8");
+  const pages = ["sk/index.html", "sk/dakujeme/index.html", "sk/potvrdene/index.html", "sk/potvrdenie/index.html", "sk/odhlasenie/index.html", "sk/zasady-ochrany-osobnych-udajov/index.html"];
+  const text = (h) => h.replace(/<style>[\s\S]*?<\/style>/g, "").replace(/<script[\s\S]*?<\/script>/g, "").replace(/<[^>]+>/g, " ");
+  // typicky české tvary, které se na slovenských stránkách nesmí objevit
+  const CZ = /(\bnení\b|\bjsem\b|\bjsi\b|\bněco\b|\bděkujeme\b|\bpotvrď svůj\b|\bzásady ochrany osobních\b|\bsouhlas(?:ím|u)\b|\bodhlášení\b|\bnadbytečn|\bkteré\b|\bchystá\b|\bvědět\b|\bzpět\b|\bnech nám\b)/i;
+  for (const p of pages) {
+    const h = read(p);
+    assert.match(h, /<html lang="sk">/, p);
+    assert.doesNotMatch(text(h), CZ, `${p}: česky ${text(h).match(CZ)?.[0]}`);
+    assert.doesNotMatch(h.replace(/<a class="lang"[^>]*>/g, ""), /href="\/(?:dekujeme|potvrzeno|potvrzeni|odhlaseni|zasady-ochrany-osobnich-udaju)\//, `${p}: odkaz do české verze`);
+  }
+  const home = read("sk/index.html");
+  assert.match(home, /hreflang="cs" href="https:\/\/[^"]+\/"/); assert.match(home, /hreflang="sk" href="https:\/\/[^"]+\/sk\/"/); assert.match(home, /hreflang="x-default"/);
+  assert.match(home, /rel="canonical" href="https:\/\/[^"]+\/sk\/"/);
+  assert.match(home, /og:locale" content="sk_SK"/); assert.match(home, /Nadbytočná – niečo sa chystá/);
+  assert.match(home, /data-consent-version="2026-11-04-sk-v1"/);
+  assert.match(home, /Súhlasím, že/); assert.match(home, /<a href="\/sk\/zasady-ochrany-osobnych-udajov\/">zásadách ochrany osobných údajov<\/a>/);
+  assert.match(read("index.html"), /<a class="lang" href="\/sk\/" hreflang="sk"/);
+  assert.match(read("sk/potvrdene/index.html"), /Nie si nadbytočná\./);
+  const fl = read("fluid.js"); assert.match(fl, /"s nič nezlomí!"/); assert.match(fl, /"s nic nezlomí!"/);
+  assert.ok(fs.existsSync(new URL("../dist/fonts/damion-latin-ext-400-normal.woff2", import.meta.url)));
+  const sm = read("sitemap.xml"); assert.match(sm, /xhtml:link/);
 });

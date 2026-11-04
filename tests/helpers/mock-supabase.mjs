@@ -9,7 +9,7 @@ export function installMockSupabase({ latency = [0, 0], failRate = 0 } = {}) {
   const requests = [];
   const violations = [];
   const COLUMNS = new Set(["id", "email", "email_normalized", "status", "consent_version", "consent_text", "consented_at", "ip_hash", "ip_hash_expires_at",
-    "confirm_token_hash", "confirm_token_expires_at", "confirm_sent_at", "confirmed_at", "unsubscribed_at", "last_attempt_at", "created_at", "claims", "claims_at"]);
+    "confirm_token_hash", "confirm_token_expires_at", "confirm_sent_at", "confirmed_at", "unsubscribed_at", "last_attempt_at", "created_at", "claims", "claims_at", "lang"]);
   const CONTROL = new Set(["select", "limit"]);
   const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   const realFetch = globalThis.fetch;

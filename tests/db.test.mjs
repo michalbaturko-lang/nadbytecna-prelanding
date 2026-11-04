@@ -73,3 +73,13 @@ test("retence: IP hash po expiraci pryč, nepotvrzené po 7 dnech smazané, potv
   assert.equal((await db.query("select public.erase_preregistration('  OLD-CONF@x.cz ') n")).rows[0].n, 1);
   assert.equal((await db.query("select count(*)::int n from public.preregistrations")).rows[0].n, 2);
 });
+
+test("sloupec lang: výchozí cs, povoleno cs/sk, jiné odmítnuto", async () => {
+  const db = await fresh();
+  await db.exec("set role service_role");
+  await db.exec(row("a@example.cz"));
+  assert.equal((await db.query("select lang from public.preregistrations")).rows[0].lang, "cs");
+  await db.query(`update public.preregistrations set lang='sk'`);
+  for (const bad of ["de", "SK", ""]) await assert.rejects(() => db.query(`update public.preregistrations set lang='${bad}'`), /lang_check/);
+  await assert.rejects(() => db.query(`update public.preregistrations set lang=null`), /null/);
+});

@@ -14,7 +14,7 @@
   if (!DATA) return;
 
   var SPLIT = parseFloat(img.getAttribute("data-split"));        // kde v logu začíná rukopis (podíl výšky)
-  var PHRASE = "s nic nezlomí!";
+  var PHRASE = document.documentElement.lang === "sk" ? "s nič nezlomí!" : "s nic nezlomí!";
   var PINK = [0xD7, 0x1D, 0x62], GOLD = [0xA9, 0x80, 0x2F];
   var SY = 688;                                                   // posun rukopisu v lockupu (jednotky 2480 široké kresby)
   var CHAIN = true;                                               // po 2. přiblížení hned padá i zbytek

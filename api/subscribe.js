@@ -1,4 +1,4 @@
-import { CONSENT_VERSION, consentText, controller, controllerLine } from "../lib/consent.js";
+import { CONSENT_VERSIONS, consentText, controller, controllerLine, isLang } from "../lib/consent.js";
 import { db } from "../lib/db.js";
 import { parseEmail } from "../lib/email.js";
 import { MAX_AGE_MS, MIN_FILL_MS, readFormToken } from "../lib/form.js";
@@ -57,10 +57,14 @@ export default async function handler(req, res) {
     if (form.age > MAX_AGE_MS) return json(res, 400, { error: "stale" });
   }
 
+  // Jazyk stránky, ze které přihláška přišla (chybí = čeština, kvůli starším načteným stránkám). Cokoli jiného je chyba.
+  if (b.lang != null && !isLang(b.lang)) return json(res, 400, { error: "lang" });
+  const lang = b.lang || "cs";
+
   const parsed = parseEmail(b.email);
   if (!parsed) return json(res, 400, { error: "email" });
   if (b.consent !== true) return json(res, 400, { error: "consent" });
-  if (b.consent_version !== CONSENT_VERSION) return json(res, 409, { error: "version" });
+  if (b.consent_version !== CONSENT_VERSIONS[lang]) return json(res, 409, { error: "version" });
 
   // Ukázka: nic neukládáme, neodesíláme e-mail, neukládáme ani IP.
   if (demo) return json(res, 200, { ok: true, demo: true });
@@ -89,8 +93,9 @@ export default async function handler(req, res) {
 
     const token = randomToken();
     const fields = {
-      consent_version: CONSENT_VERSION,
-      consent_text: consentText(c),
+      consent_version: CONSENT_VERSIONS[lang],
+      lang,
+      consent_text: consentText(c, lang),
       consented_at: iso(now),
       ip_hash: hash,
       ip_hash_expires_at: iso(now + IP_RETENTION_MS),
@@ -112,7 +117,7 @@ export default async function handler(req, res) {
     }
 
     try {
-      await sendMail({ to: email, ...confirmationEmail({ id: row.id, token, controllerLine: controllerLine(c) }) });
+      await sendMail({ to: email, ...confirmationEmail({ id: row.id, token, controllerLine: controllerLine(c, lang), lang }) });
     } catch (e) {
       console.error("mail failed", e.message);
       return json(res, 502, { error: "mail" });

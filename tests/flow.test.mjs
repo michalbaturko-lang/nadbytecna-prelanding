@@ -135,3 +135,38 @@ test("souběžný dvojklik téže adresy: jeden e-mail, první odkaz platí", as
     assert.equal(mails.length, 1);
   } finally { await S.close(); }
 });
+
+// ---------- slovenská verze ----------
+test("SK: přihláška uloží jazyk a slovenské znění souhlasu, e-mail je slovensky s /sk/ odkazy", async () => {
+  const { CONSENT_VERSIONS } = await import("../lib/consent.js");
+  const { call, captureMails } = await import("./helpers/mock-supabase.mjs");
+  assert.notEqual(CONSENT_VERSIONS.sk, CONSENT_VERSIONS.cs);
+  const S = await (await import("../tools/devserver.mjs")).startDevServer({ latency: [0, 1], env: { COLLECTION_OPEN: "true", CONTROLLER_NAME: "Test s.r.o.", CONTROLLER_ICO: "12345678", CONTROLLER_ADDRESS: "Brno", CONTROLLER_EMAIL: "a@test.cz" } });
+  try {
+    const url = S.url;
+    const k = async () => (await (await fetch(url + "/api/form/")).json()).k;
+    const post = async (body, ip = "198.51.100.1") => fetch(url + "/api/subscribe/", { method: "POST", headers: { "Content-Type": "application/json", Origin: "https://nadbytecna.cz", "x-vercel-forwarded-for": ip }, body: JSON.stringify(body) });
+    const key = await k(); await new Promise((r) => setTimeout(r, 2800));
+    // špatná verze souhlasu pro jazyk -> 409; neznámý jazyk -> 400
+    assert.equal((await post({ email: "sk1@example.sk", consent: true, consent_version: CONSENT_VERSIONS.cs, lang: "sk", website: "", k: key })).status, 409);
+    for (const lang of ["de", "SK", 5, {}, ["sk"]]) assert.equal((await post({ email: "sk1@example.sk", consent: true, consent_version: CONSENT_VERSIONS.sk, lang, website: "", k: key })).status, 400, JSON.stringify(lang));
+    assert.equal((await post({ email: "sk1@example.sk", consent: true, consent_version: CONSENT_VERSIONS.sk, lang: "sk", website: "", k: key })).status, 200);
+    const mails = await (await fetch(url + "/__test/mails")).json();
+    assert.equal(mails.length, 1);
+    assert.match(mails[0].subject, /Potvrď svoj e-mail/);
+    assert.match(mails[0].text, /\/sk\/potvrdenie\/\?t=/);
+    assert.match(mails[0].text, /\/sk\/odhlasenie\/\?t=/);
+    assert.match(mails[0].text, /Prevádzkovateľ: Test s\.r\.o\., IČO 12345678, so sídlom Brno/);
+    const { confirmationEmail } = await import("../lib/emails.js");
+    const em = confirmationEmail({ id: "00000000-0000-4000-8000-000000000000", token: "t", controllerLine: "X", lang: "sk" });
+    assert.match(em.html, /<html lang="sk">/); assert.match(em.html, /Potvrdiť e-mail/); assert.doesNotMatch(em.html + em.text, /Potvrď svůj|Odhlásit se|Správce/);
+    const st = await (await fetch(url + "/__test/state")).json();
+    assert.equal(st.rows[0].lang, "sk");
+    assert.match(st.rows[0].consent_text, /^Súhlasím, že Test s\.r\.o\./);
+    // bez lang = čeština (starší načtená stránka)
+    const k2 = await k(); await new Promise((r) => setTimeout(r, 2800));
+    assert.equal((await post({ email: "cs1@example.cz", consent: true, consent_version: CONSENT_VERSIONS.cs, website: "", k: k2 }, "198.51.100.2")).status, 200);
+    const m2 = await (await fetch(url + "/__test/mails")).json();
+    assert.match(m2[0].subject, /Potvrď svůj e-mail/); assert.match(m2[0].text, /\/potvrzeni\/\?t=/);
+  } finally { await S.close(); }
+});

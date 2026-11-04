@@ -5,7 +5,7 @@ import fs from "node:fs";
 import crypto from "node:crypto";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { CONSENT_VERSION, consentHtml, controller } from "./lib/consent.js";
+import { CONSENT_VERSIONS, LANGS, PATHS, consentHtml, controller } from "./lib/consent.js";
 import { VOTE_CLAIMS, VOTE_MAX } from "./lib/claims.js";
 
 const ROOT = path.dirname(fileURLToPath(import.meta.url));
@@ -14,12 +14,49 @@ const SITE = (process.env.SITE_URL || (process.env.VERCEL ? "https://nadbytecna-
 const C = controller();
 
 const CLAIMS = {
-  1: { h1: "Žádná žena není nadbytečná.", lead: "Jsi zvědavá, co se chystá?" },
-  2: { h1: "Nejsi nadbytečná.", lead: "Něco se chystá a ty u toho budeš první." },
-  3: { h1: "Nadbytečná? Nikdy.", lead: "Zjisti jako první, co se chystá." },
+  cs: {
+    1: { h1: "Žádná žena není nadbytečná.", lead: "Jsi zvědavá, co se chystá?" },
+    2: { h1: "Nejsi nadbytečná.", lead: "Něco se chystá a ty u toho budeš první." },
+    3: { h1: "Nadbytečná? Nikdy.", lead: "Zjisti jako první, co se chystá." },
+  },
+  sk: {
+    1: { h1: "Žiadna žena nie je nadbytočná.", lead: "Si zvedavá, čo sa chystá?" },
+    2: { h1: "Nie si nadbytočná.", lead: "Niečo sa chystá a ty pri tom budeš prvá." },
+    3: { h1: "Nadbytočná? Nikdy.", lead: "Zisti ako prvá, čo sa chystá." },
+  },
 };
-const SUB = "Připravujeme místo pro ženy, které si prošly něčím podobným. Nech nám e-mail a dáme ti vědět jako první.";
-const TITLE = "Nadbytečná – něco se chystá";
+const TXT = {
+  cs: {
+    locale: "cs_CZ", brand: "Nadbytečná",
+    sub: "Připravujeme místo pro ženy, které si prošly něčím podobným. Nech nám e-mail a dáme ti vědět jako první.",
+    title: "Nadbytečná – něco se chystá",
+    nojsSend: "Pro odeslání je potřeba zapnout JavaScript.", nojsDone: "Pro dokončení je potřeba zapnout JavaScript.",
+    email: "E-mail", placeholder: "jmeno@email.cz", cta: "Chci vědět víc", hp: "Web",
+    policyLink: "Zásady ochrany osobních údajů", otherLang: { label: "Slovensky", code: "sk" },
+    backAlt: "Nadbytečná, zpět na úvodní stránku",
+    confirm: { title: "Potvrzení e-mailu", h1: "Potvrď svůj e-mail", p: "Jedním kliknutím potvrdíš, že chceš vědět, co se chystá.", button: "Potvrdit e-mail" },
+    thanks: { title: "Děkujeme", h1: "Skoro tam jsi.", lead: "Ještě jedno kliknutí.", sub: "Pošleme ti e-mail. Klikni v něm na tlačítko a potvrď, že chceš vědět, co se chystá. Nic nepřišlo? Zkus složku Spam." },
+    confirmed: { title: "Potvrzeno", h1: "Jsi v tom s námi.", lead: "Děkujeme, že jsi tu.", sub: "Ozveme se ti jako první, jakmile bude co ukázat." },
+    vote: { h2: "Co z toho jsi ty?", sub: (n) => `Vyber až ${n === 3 ? "tři" : n} věty, které tě vystihují nejvíc. Přidáme je k tvému e-mailu a ukážeme ti, co vybraly ostatní.`, send: "Odeslat výběr", others: "Co vybraly ostatní" },
+    unsub: { title: "Odhlášení", h1: "Odhlašuji tě…", p: "Chvilku strpení." },
+    policyTitle: "Zásady ochrany osobních údajů – Nadbytečná", policyDesc: "Jak zacházíme s e-mailovou adresou, kterou nám necháš na stránce Nadbytečná.",
+  },
+  sk: {
+    locale: "sk_SK", brand: "Nadbytočná",
+    sub: "Pripravujeme miesto pre ženy, ktoré si prešli niečím podobným. Nechaj nám e-mail a dáme ti vedieť ako prvej.",
+    title: "Nadbytočná – niečo sa chystá",
+    nojsSend: "Na odoslanie je potrebné zapnúť JavaScript.", nojsDone: "Na dokončenie je potrebné zapnúť JavaScript.",
+    email: "E-mail", placeholder: "meno@email.sk", cta: "Chcem vedieť viac", hp: "Web",
+    policyLink: "Zásady ochrany osobných údajov", otherLang: { label: "Česky", code: "cs" },
+    backAlt: "Nadbytočná, späť na úvodnú stránku",
+    confirm: { title: "Potvrdenie e-mailu", h1: "Potvrď svoj e-mail", p: "Jedným kliknutím potvrdíš, že chceš vedieť, čo sa chystá.", button: "Potvrdiť e-mail" },
+    thanks: { title: "Ďakujeme", h1: "Skoro tam si.", lead: "Ešte jedno kliknutie.", sub: "Pošleme ti e-mail. Klikni v ňom na tlačidlo a potvrď, že chceš vedieť, čo sa chystá. Nič neprišlo? Skús priečinok Spam." },
+    confirmed: { title: "Potvrdené", h1: "Si v tom s nami.", lead: "Ďakujeme, že si tu.", sub: "Ozveme sa ti ako prvej, len čo bude čo ukázať." },
+    vote: { h2: "Čo z toho si ty?", sub: (n) => `Vyber až ${n === 3 ? "tri" : n} vety, ktoré ťa vystihujú najviac. Pridáme ich k tvojmu e-mailu a ukážeme ti, čo vybrali ostatné.`, send: "Odoslať výber", others: "Čo vybrali ostatné" },
+    unsub: { title: "Odhlásenie", h1: "Odhlasujem ťa…", p: "Chvíľku strpenia." },
+    policyTitle: "Zásady ochrany osobných údajov – Nadbytočná", policyDesc: "Ako zaobchádzame s e-mailovou adresou, ktorú nám necháš na stránke Nadbytočná.",
+  },
+};
 
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const css = fs.readFileSync(path.join(ROOT, "src/site.css"), "utf8").replace(/\/\*[\s\S]*?\*\//g, "").replace(/\s*\n\s*/g, "\n");
@@ -43,11 +80,16 @@ const PRELOAD = [
 
 // Web se indexuje až po otevření sběru (COLLECTION_OPEN=true při buildu a vyplněný správce); do té doby noindex + Disallow.
 const LIVE = process.env.COLLECTION_OPEN === "true" && C.complete;
-function head({ title, desc, path: p, index = true, og = null, ld = "" }) {
+const HOME_ALT = Object.fromEntries(LANGS.map((l) => [l, PATHS[l].home]));
+const POLICY_ALT = Object.fromEntries(LANGS.map((l) => [l, PATHS[l].policy]));
+
+function head({ lang, title, desc, path: p, index = true, og = null, ld = "", alt = null }) {
   index = index && LIVE;
   const url = SITE + p;
+  const t = TXT[lang];
+  const alternates = alt ? LANGS.map((l) => `<link rel="alternate" hreflang="${l}" href="${SITE + alt[l]}">`).join("\n") + `\n<link rel="alternate" hreflang="x-default" href="${SITE + alt.cs}">` : "";
   return `<!doctype html>
-<html lang="cs">
+<html lang="${lang}">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
@@ -57,13 +99,15 @@ function head({ title, desc, path: p, index = true, og = null, ld = "" }) {
 <meta name="referrer" content="no-referrer">
 <meta name="robots" content="${index ? "index,follow,max-image-preview:large" : "noindex,nofollow"}">
 <link rel="canonical" href="${url}">
+${alternates}
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="icon" href="/favicon.ico" sizes="32x32">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link rel="manifest" href="/site.webmanifest">
 ${og ? `<meta property="og:type" content="website">
-<meta property="og:locale" content="cs_CZ">
-<meta property="og:site_name" content="Nadbytečná">
+<meta property="og:locale" content="${t.locale}">
+${LANGS.filter((l) => l !== lang).map((l) => `<meta property="og:locale:alternate" content="${TXT[l].locale}">`).join("\n")}
+<meta property="og:site_name" content="${t.brand}">
 <meta property="og:title" content="${esc(og.title)}">
 <meta property="og:description" content="${esc(og.desc)}">
 <meta property="og:url" content="${url}">
@@ -71,7 +115,7 @@ ${og ? `<meta property="og:type" content="website">
 <meta property="og:image:type" content="image/jpeg">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
-<meta property="og:image:alt" content="Nadbytečná. ${esc(og.title)}">
+<meta property="og:image:alt" content="${t.brand}. ${esc(og.title)}">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="${esc(og.title)}">
 <meta name="twitter:description" content="${esc(og.desc)}">
@@ -82,43 +126,48 @@ ${ld}
 </head>`;
 }
 
-const footer = () => `<footer class="foot"><img class="dom" src="/img/nadbytecna-script.svg" width="2480" height="528" alt="Nadbytečná.cz"><a class="mail" href="mailto:veryvera@nadbytecna.cz">veryvera@nadbytecna.cz</a><br><a href="/zasady-ochrany-osobnich-udaju/">Zásady ochrany osobních údajů</a>${C.complete ? `<br>${esc(C.name)}, IČO ${esc(C.ico)}` : ""}</footer>`;
+const footer = (lang, switcher = null) => {
+  const t = TXT[lang];
+  const sw = switcher ? `<br><a class="lang" href="${switcher}" hreflang="${t.otherLang.code}" lang="${t.otherLang.code}">${t.otherLang.label}</a>` : "";
+  return `<footer class="foot"><img class="dom" src="/img/nadbytecna-script.svg" width="2480" height="528" alt="Nadbytečná.cz"><a class="mail" href="mailto:veryvera@nadbytecna.cz">veryvera@nadbytecna.cz</a><br><a href="${PATHS[lang].policy}">${t.policyLink}</a>${C.complete ? `<br>${esc(C.name)}, IČO ${esc(C.ico)}` : ""}${sw}</footer>`;
+};
 const analytics = '<script defer src="/_vercel/insights/script.js"></script>';
+const LOGO_ATTRS = 'width="2480" height="1219" data-split="0.5385" data-base="0.8403" data-na0="0.6444" data-na1="0.8065" data-hat="0.6589" data-haty="0.7048" alt="VERY VERA – Nadbytečná.cz"';
 
-function home(variant) {
-  const cl = CLAIMS[variant];
-  const jsonld = [{ "@context": "https://schema.org", "@type": "WebSite", name: "Nadbytečná", url: SITE + "/", inLanguage: "cs" }];
+function home(lang, variant) {
+  const t = TXT[lang], P = PATHS[lang], cl = CLAIMS[lang][variant];
+  const jsonld = [{ "@context": "https://schema.org", "@type": "WebSite", name: t.brand, url: SITE + P.home, inLanguage: lang }];
   if (C.complete) jsonld.push({ "@context": "https://schema.org", "@type": "Organization", name: C.name, url: SITE + "/", identifier: C.ico, email: C.email, logo: SITE + "/img/nadbytecna-script.svg" });
   const ld = jsonld.map((o) => `<script type="application/ld+json">${JSON.stringify(o)}</script>`).join("\n");
-  return `${head({ title: TITLE, desc: SUB, path: "/", og: { title: `${cl.h1} ${cl.lead}`, desc: SUB }, ld })}
+  return `${head({ lang, title: t.title, desc: t.sub, path: P.home, og: { title: `${cl.h1} ${cl.lead}`, desc: t.sub }, ld, alt: HOME_ALT })}
 <body data-page="home">
 <div class="page">
 <main class="main">
 <div class="brand">
-<img class="logo" src="/img/nadbytecna-lockup.svg" width="2480" height="1219" data-split="0.5385" data-base="0.8403" data-na0="0.6444" data-na1="0.8065" data-hat="0.6589" data-haty="0.7048" alt="VERY VERA – Nadbytečná.cz" fetchpriority="high" decoding="async">
+<img class="logo" src="/img/nadbytecna-lockup.svg" ${LOGO_ATTRS} fetchpriority="high" decoding="async">
 <div class="rule" aria-hidden="true">${HEART}</div>
 </div>
 <div class="content">
 <h1>${esc(cl.h1)}</h1>
 <p class="lead">${esc(cl.lead)}</p>
-<p class="sub">${esc(SUB)}</p>
-<noscript><p class="nojs">Pro odeslání je potřeba zapnout JavaScript.</p></noscript>
-<form id="signup" novalidate data-consent-version="${CONSENT_VERSION}" action="/api/subscribe" method="post">
+<p class="sub">${esc(t.sub)}</p>
+<noscript><p class="nojs">${esc(t.nojsSend)}</p></noscript>
+<form id="signup" novalidate data-consent-version="${CONSENT_VERSIONS[lang]}" action="/api/subscribe" method="post">
 <div class="field">
-<label class="lbl" for="email">E-mail</label>
-<input id="email" name="email" type="email" maxlength="254" inputmode="email" autocomplete="email" autocapitalize="off" spellcheck="false" placeholder="jmeno@email.cz" required aria-describedby="msg">
+<label class="lbl" for="email">${t.email}</label>
+<input id="email" name="email" type="email" maxlength="254" inputmode="email" autocomplete="email" autocapitalize="off" spellcheck="false" placeholder="${t.placeholder}" required aria-describedby="msg">
 </div>
-<div class="hp" aria-hidden="true"><label>Web<input type="text" name="website" tabindex="-1" autocomplete="off"></label></div>
+<div class="hp" aria-hidden="true"><label>${t.hp}<input type="text" name="website" tabindex="-1" autocomplete="off"></label></div>
 <div class="consent">
 <input id="consent" name="consent" type="checkbox" required aria-describedby="consent-text">
-<label id="consent-text" for="consent">${consentHtml(C, esc)}</label>
+<label id="consent-text" for="consent">${consentHtml(C, esc, lang)}</label>
 </div>
-<button class="cta" id="send" type="submit">Chci vědět víc</button>
+<button class="cta" id="send" type="submit">${t.cta}</button>
 <p class="msg" id="msg" role="alert"></p>
 </form>
 </div>
 </main>
-${footer()}
+${footer(lang, PATHS[t.otherLang.code].home)}
 </div>
 <script src="/app.js" defer></script>
 <script src="/fluid.js" defer></script>
@@ -128,22 +177,22 @@ ${analytics}
 `;
 }
 
-function simplePage({ page, title, h1, p, button, extra = "" }) {
-  return `${head({ title: `${title} – Nadbytečná`, desc: SUB, path: `/${page === "confirm" ? "potvrzeni" : "odhlaseni"}/`, index: false })}
+function simplePage(lang, { page, c }) {
+  const t = TXT[lang], P = PATHS[lang];
+  return `${head({ lang, title: `${c.title} – ${t.brand}`, desc: t.sub, path: page === "confirm" ? P.confirm : P.unsub, index: false })}
 <body data-page="${page}">
 <div class="page">
 <main class="main main-one">
 <div class="card">
-<a href="/"><img class="logo" src="/img/nadbytecna-lockup.svg" width="2480" height="1219" data-split="0.5385" data-base="0.8403" data-na0="0.6444" data-na1="0.8065" data-hat="0.6589" data-haty="0.7048" alt="VERY VERA – Nadbytečná.cz"></a>
+<a href="${P.home}"><img class="logo" src="/img/nadbytecna-lockup.svg" ${LOGO_ATTRS}></a>
 <div id="state" hidden>
-<div id="live" tabindex="-1" aria-live="polite"><h1 id="h">${esc(h1)}</h1><p id="p">${esc(p)}</p></div>
-${button ? `<button class="cta" id="action" type="button">${esc(button)}</button>` : ""}
+<div id="live" tabindex="-1" aria-live="polite"><h1 id="h">${esc(c.h1)}</h1><p id="p">${esc(c.p)}</p></div>
+${c.button ? `<button class="cta" id="action" type="button">${esc(c.button)}</button>` : ""}
 </div>
-<noscript><h1>${esc(h1)}</h1><p>Pro dokončení je potřeba zapnout JavaScript.</p></noscript>
-${extra}
+<noscript><h1>${esc(c.h1)}</h1><p>${esc(t.nojsDone)}</p></noscript>
 </div>
 </main>
-${footer()}
+${footer(lang)}
 </div>
 <script src="/app.js" defer></script>
 <script src="/fluid.js" defer></script>
@@ -152,18 +201,16 @@ ${footer()}
 `;
 }
 
-function policy() {
+// Zásady: české znění zůstává beze změny; slovenské je samostatný překlad s úpravou na slovenské reálie
+// (dozorový úřad, zákon o elektronických komunikacích). Obojí podléhá právní kontrole.
+function policy(lang) {
   const T = (s) => `<p class="todo">${s}</p>`;
+  const sk = lang === "sk";
+  const t = TXT[lang], P = PATHS[lang];
   const who = C.complete
-    ? `<p>${esc(C.name)}, IČO ${esc(C.ico)}, se sídlem ${esc(C.address)}.<br>Kontakt: <a href="mailto:${esc(C.email)}">${esc(C.email)}</a></p>`
-    : T("[Doplnit před spuštěním sběru: název s.r.o., IČO, sídlo, kontaktní e-mail správce.]");
-  return `${head({ title: "Zásady ochrany osobních údajů – Nadbytečná", desc: "Jak zacházíme s e-mailovou adresou, kterou nám necháš na stránce Nadbytečná.", path: "/zasady-ochrany-osobnich-udaju/", index: C.complete })}
-<body data-page="policy">
-<div class="page">
-<main class="main main-one main-top">
-<article class="doc">
-<a class="back" href="/"><img src="/img/nadbytecna-script.svg" width="2480" height="528" alt="Nadbytečná, zpět na úvodní stránku"></a>
-<h1>Zásady ochrany osobních údajů</h1>
+    ? `<p>${esc(C.name)}, IČO ${esc(C.ico)}, ${sk ? "so sídlom" : "se sídlem"} ${esc(C.address)}.<br>${sk ? "Kontakt" : "Kontakt"}: <a href="mailto:${esc(C.email)}">${esc(C.email)}</a></p>`
+    : T(sk ? "[Doplniť pred spustením zberu: názov s.r.o., IČO, sídlo, kontaktný e-mail prevádzkovateľa.]" : "[Doplnit před spuštěním sběru: název s.r.o., IČO, sídlo, kontaktní e-mail správce.]");
+  const cs = `<h1>Zásady ochrany osobních údajů</h1>
 <p>Platí pro přihlášení k informacím o spuštění platformy Nadbytečná na stránce nadbytecna.cz.</p>
 <h2>1. Kdo je správce</h2>
 ${who}
@@ -204,7 +251,57 @@ ${T("[Doplnit před spuštěním: subjekt a region Supabase, poskytovatel e-mail
 <p>E-mail o spuštění platformy je obchodní sdělení ve smyslu zákona č. 480/2004 Sb. Pošleme ti ho jen tehdy, pokud jsi nám dala souhlas a potvrdila svou adresu. Bude jasně označen jako obchodní sdělení, bude uvádět odesílatele a bude obsahovat odkaz, kterým se jedním kliknutím odhlásíš.</p>
 <h2>8. Kontakt</h2>
 ${C.complete ? `<p><a href="mailto:${esc(C.email)}">${esc(C.email)}</a></p>` : T("[Doplnit kontaktní e-mail správce.]")}
-<p><small>Znění z ${esc(CONSENT_VERSION.slice(0, 10))}.</small></p>
+<p><small>Znění z ${esc(CONSENT_VERSIONS.cs.slice(0, 10))}.</small></p>`;
+  const skBody = `<h1>Zásady ochrany osobných údajov</h1>
+<p>Platia pre prihlásenie na informácie o spustení platformy Nadbytočná na stránke nadbytecna.cz.</p>
+<h2>1. Kto je prevádzkovateľ</h2>
+${who}
+<p>Prevádzkovateľ nemenoval zodpovednú osobu pre ochranu osobných údajov.</p>
+<h2>2. Aké údaje spracúvame, prečo a na akom základe</h2>
+<ul>
+<li><strong>E-mailová adresa, ktorú zadáš.</strong> Pošleme ti potvrdzovací e-mail a potom informáciu, že platforma Nadbytočná bola spustená. Základ: tvoj súhlas (čl. 6 ods. 1 písm. a) nariadenia GDPR).</li>
+<li><strong>Výroky, ktoré si po potvrdení e-mailu nepovinne vyberieš</strong> (až tri). Uložíme ich pri tvojom e-maile, aby sme vedeli, čo ťa oslovuje, a zverejníme len súhrnné počty, z ktorých nespoznáš nikoho konkrétneho. Základ: tvoj súhlas, ktorý dáš samotným výberom (čl. 6 ods. 1 písm. a) GDPR). Výber môžeš kedykoľvek zrušiť odhlásením, tým sa vymaže.</li>
+<li><strong>Čas udelenia súhlasu, znenie súhlasu, ktoré si videla, čas potvrdenia e-mailu a čas prípadného odvolania.</strong> Aby sme vedeli preukázať, že si súhlas udelila, a rešpektovať jeho odvolanie. Základ: povinnosť preukázať súhlas (čl. 7 ods. 1 GDPR) a náš oprávnený záujem na obhajobe právnych nárokov (čl. 6 ods. 1 písm. f) GDPR).</li>
+<li><strong>Odtlačok IP adresy</strong> (hash, nie samotná adresa), ukladaný najviac 30 dní. Ochrana formulára pred zneužitím a automatickým vypĺňaním. Základ: náš oprávnený záujem na bezpečnej prevádzke (čl. 6 ods. 1 písm. f) GDPR).</li>
+<li><strong>IP adresa a technické údaje o požiadavke v serverových logoch hostingu.</strong> Prevádzka a zabezpečenie stránky. Základ: náš oprávnený záujem na prevádzke a zabezpečení (čl. 6 ods. 1 písm. f) GDPR).</li>
+</ul>
+<p>Nič ďalšie sa nepýtame (výber výrokov je nepovinný). Na stránke nepoužívame cookies ani nástroje tretích strán, ktoré by ťa sledovali.</p>
+<h2>3. Je poskytnutie údajov povinné</h2>
+<p>Nie. Bez e-mailovej adresy a súhlasu ti však nemôžeme dať o spustení vedieť.</p>
+<h2>4. Ako dlho údaje uchovávame</h2>
+<ul>
+<li>nepotvrdené prihlášky mažeme do 7 dní,</li>
+<li>potvrdenú e-mailovú adresu uchovávame, kým súhlas neodvoláš,</li>
+<li>po odvolaní ti už nepíšeme; uchováme len e-mailovú adresu v zozname odhlásených, aby ti neprišla ďalšia správa, a dôkaz o súhlase a jeho odvolaní po dobu [3 roky],</li>
+<li>odtlačok IP adresy mažeme najneskôr po 30 dňoch,</li>
+<li>serverové logy hostingu sa uchovávajú podľa pravidiel poskytovateľa hostingu [doplniť dobu].</li>
+</ul>
+${T("[Na potvrdenie právnou kontrolou: doba uchovania dôkazu o súhlase a zoznamu odhlásených; doba uchovania logov hostingu; či stačí súhlas „konaním“ pri nepovinnom výbere výrokov; ktoré slovenské a české predpisy sa uplatnia, keď je prevádzkovateľ v Česku a účastníčka na Slovensku.]")}
+<h2>5. Komu údaje poskytujeme</h2>
+<p>Prevádzkovateľ používa sprostredkovateľov, ktorí pre neho spracúvajú údaje na základe zmluvy o spracúvaní:</p>
+<ul>
+<li>Vercel Inc. (USA), hosting stránky. Prenos mimo EÚ sa opiera o certifikáciu spoločnosti v rámci EU-U.S. Data Privacy Framework a štandardné zmluvné doložky,</li>
+<li>Supabase, databáza prihlášok v regióne EÚ,</li>
+<li>poskytovateľ odosielania e-mailov: [doplniť podľa zvoleného nástroja].</li>
+</ul>
+${T("[Doplniť pred spustením: subjekt a región Supabase, poskytovateľ e-mailov, sídlo a prípadný prenos mimo EÚ, odkazy na zmluvy o spracúvaní.]")}
+<p>Údaje nepredávame a neposkytujeme ďalším osobám na ich vlastné účely.</p>
+<h2>6. Tvoje práva</h2>
+<p>Máš právo na prístup k údajom, na opravu, na vymazanie, na obmedzenie spracúvania a na prenosnosť údajov spracúvaných na základe súhlasu. Pri spracúvaní na základe oprávneného záujmu máš právo namietať. Súhlas môžeš kedykoľvek odvolať, rovnako ľahko, ako si ho udelila: odkazom na odhlásenie v každom e-maile alebo správou prevádzkovateľovi. Odvolaním súhlasu nie je dotknutá zákonnosť spracúvania pred jeho odvolaním. Nerozhodujeme o tebe automatizovane a neprofilujeme ťa.</p>
+<p>Máš tiež právo podať sťažnosť dozornému orgánu. Na Slovensku je to Úrad na ochranu osobných údajov Slovenskej republiky (dataprotection.gov.sk), v Česku Úřad pro ochranu osobních údajů.</p>
+<h2>7. Obchodné oznámenie</h2>
+<p>E-mail o spustení platformy je obchodné oznámenie. Pošleme ti ho len vtedy, ak si nám dala súhlas a potvrdila svoju adresu. Bude jasne označený ako obchodné oznámenie, bude uvádzať odosielateľa a bude obsahovať odkaz, ktorým sa jedným kliknutím odhlásiš.</p>
+<h2>8. Kontakt</h2>
+${C.complete ? `<p><a href="mailto:${esc(C.email)}">${esc(C.email)}</a></p>` : T("[Doplniť kontaktný e-mail prevádzkovateľa.]")}
+<p><small>Znenie z ${esc(CONSENT_VERSIONS.sk.slice(0, 10))}.</small></p>`;
+  return `${head({ lang, title: t.policyTitle, desc: t.policyDesc, path: P.policy, index: C.complete, alt: POLICY_ALT })}
+<body data-page="policy">
+<div class="page">
+<main class="main main-one main-top">
+<article class="doc">
+<a class="back" href="${P.home}"><img src="/img/nadbytecna-script.svg" width="2480" height="528" alt="${t.backAlt}"></a>
+${sk ? skBody : cs}
+<p><a class="lang" href="${PATHS[t.otherLang.code].policy}" hreflang="${t.otherLang.code}" lang="${t.otherLang.code}">${t.otherLang.label}</a></p>
 </article>
 </main>
 </div>
@@ -218,29 +315,48 @@ function write(file, content) {
   fs.writeFileSync(file, content);
 }
 
-function thanksPage({ slug, title, h1, lead, sub, extra = "", vote = false }) {
-  return `${head({ title: `${title} – Nadbytečná`, desc: SUB, path: `/${slug}/`, index: false })}
+function thanksPage(lang, { slug, c, extra = "", vote = false }) {
+  const t = TXT[lang], P = PATHS[lang];
+  return `${head({ lang, title: `${c.title} – ${t.brand}`, desc: t.sub, path: slug, index: false })}
 <body data-page="thanks"${vote ? " data-vote" : ""}>
 <div class="page">
 <main class="main">
 <div class="brand">
-<a href="/" aria-label="Nadbytečná"><img class="logo" src="/img/nadbytecna-lockup.svg" width="2480" height="1219" data-split="0.5385" data-base="0.8403" data-na0="0.6444" data-na1="0.8065" data-hat="0.6589" data-haty="0.7048" alt="VERY VERA – Nadbytečná.cz" fetchpriority="high" decoding="async"></a>
+<a href="${P.home}" aria-label="${t.brand}"><img class="logo" src="/img/nadbytecna-lockup.svg" ${LOGO_ATTRS} fetchpriority="high" decoding="async"></a>
 <div class="rule" aria-hidden="true">${HEART}</div>
 </div>
 <div class="content" role="status">
-<h1>${esc(h1)}</h1>
-<p class="lead">${esc(lead)}</p>
-<p class="sub">${esc(sub)}</p>
+<h1>${esc(c.h1)}</h1>
+<p class="lead">${esc(c.lead)}</p>
+<p class="sub">${esc(c.sub)}</p>
 </div>
 ${extra}
 </main>
-${footer()}
+${footer(lang)}
 </div>
 <script src="/app.js" defer></script>
 <script src="/fluid.js" defer></script>
 </body>
 </html>
 `;
+}
+
+function voteSection(lang) {
+  const t = TXT[lang].vote;
+  return `<section class="vote" id="vote" hidden aria-labelledby="vote-h">
+<h2 id="vote-h">${t.h2}</h2>
+<p class="vote-sub">${t.sub(VOTE_MAX)}</p>
+<div class="picks" id="picks" role="group" aria-labelledby="vote-h">
+${VOTE_CLAIMS.map((c) => `<button type="button" class="pick" data-id="${c.id}" aria-pressed="false">${esc(lang === "sk" ? c.sk : c.text)}</button>`).join("\n")}
+</div>
+<button class="cta" id="vote-send" type="button" disabled>${t.send}</button>
+<p class="msg" id="vote-msg" role="alert"></p>
+<div class="results" id="results" hidden aria-live="polite">
+<h3>${t.others}</h3>
+<ol class="bars" id="bars"></ol>
+<p class="vote-note" id="vote-note"></p>
+</div>
+</section>`;
 }
 
 function build(out, variant) {
@@ -258,32 +374,24 @@ function build(out, variant) {
   }
   fs.copyFileSync(path.join(ROOT, "src/app.js"), path.join(out, "app.js"));
   fs.writeFileSync(path.join(out, "fluid.js"), fs.readFileSync(path.join(ROOT, "src/fluid.js"), "utf8").replace("/*LETTERS*/null", () => fs.readFileSync(path.join(ROOT, "src/letters.json"), "utf8")));
-  write(path.join(out, "index.html"), home(variant));
-  write(path.join(out, "potvrzeni/index.html"), simplePage({ page: "confirm", title: "Potvrzení e-mailu", h1: "Potvrď svůj e-mail", p: "Jedním kliknutím potvrdíš, že chceš vědět, co se chystá.", button: "Potvrdit e-mail" }));
-  write(path.join(out, "dekujeme/index.html"), thanksPage({ slug: "dekujeme", title: "Děkujeme", h1: "Skoro tam jsi.", lead: "Ještě jedno kliknutí.", sub: "Pošleme ti e-mail. Klikni v něm na tlačítko a potvrď, že chceš vědět, co se chystá. Nic nepřišlo? Zkus složku Spam." }));
-  write(path.join(out, "potvrzeno/index.html"), thanksPage({ slug: "potvrzeno", title: "Potvrzeno", h1: "Jsi v tom s námi.", lead: "Děkujeme, že jsi tu.", sub: "Ozveme se ti jako první, jakmile bude co ukázat.", vote: true, extra: `<section class="vote" id="vote" hidden aria-labelledby="vote-h">
-<h2 id="vote-h">Co z toho jsi ty?</h2>
-<p class="vote-sub">Vyber až ${VOTE_MAX === 3 ? "tři" : VOTE_MAX} věty, které tě vystihují nejvíc. Přidáme je k tvému e-mailu a ukážeme ti, co vybraly ostatní.</p>
-<div class="picks" id="picks" role="group" aria-labelledby="vote-h">
-${VOTE_CLAIMS.map((c) => `<button type="button" class="pick" data-id="${c.id}" aria-pressed="false">${esc(c.text)}</button>`).join("\n")}
-</div>
-<button class="cta" id="vote-send" type="button" disabled>Odeslat výběr</button>
-<p class="msg" id="vote-msg" role="alert"></p>
-<div class="results" id="results" hidden aria-live="polite">
-<h3>Co vybraly ostatní</h3>
-<ol class="bars" id="bars"></ol>
-<p class="vote-note" id="vote-note"></p>
-</div>
-</section>` }));
-  write(path.join(out, "odhlaseni/index.html"), simplePage({ page: "unsubscribe", title: "Odhlášení", h1: "Odhlašuji tě…", p: "Chvilku strpení.", button: "" }));
-  write(path.join(out, "zasady-ochrany-osobnich-udaju/index.html"), policy());
-  const urls = ["/"].concat(C.complete ? ["/zasady-ochrany-osobnich-udaju/"] : []);
-  write(path.join(out, "sitemap.xml"), `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.map((u) => `<url><loc>${SITE}${u}</loc></url>`).join("\n")}\n</urlset>\n`);
+  const file = (p) => path.join(out, p.replace(/^\//, ""), "index.html");
+  for (const lang of LANGS) {
+    const t = TXT[lang], P = PATHS[lang];
+    write(file(P.home), home(lang, variant));
+    write(file(P.confirm), simplePage(lang, { page: "confirm", c: t.confirm }));
+    write(file(P.thanks), thanksPage(lang, { slug: P.thanks, c: t.thanks }));
+    write(file(P.confirmed), thanksPage(lang, { slug: P.confirmed, c: t.confirmed, vote: true, extra: voteSection(lang) }));
+    write(file(P.unsub), simplePage(lang, { page: "unsubscribe", c: { ...t.unsub, button: "" } }));
+    write(file(P.policy), policy(lang));
+  }
+  const urls = LANGS.flatMap((l) => [PATHS[l].home].concat(C.complete ? [PATHS[l].policy] : []));
+  const altOf = (u) => { const l = LANGS.find((x) => PATHS[x].home === u || PATHS[x].policy === u); const key = PATHS[l].home === u ? "home" : "policy"; return LANGS.map((x) => `<xhtml:link rel="alternate" hreflang="${x}" href="${SITE}${PATHS[x][key]}"/>`).join(""); };
+  write(path.join(out, "sitemap.xml"), `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">\n${urls.map((u) => `<url><loc>${SITE}${u}</loc>${altOf(u)}</url>`).join("\n")}\n</urlset>\n`);
   write(path.join(out, "robots.txt"), LIVE ? `User-agent: *\nAllow: /\nDisallow: /api/\n\nSitemap: ${SITE}/sitemap.xml\n` : `User-agent: *\nAllow: /og.jpg\nDisallow: /\n`);
 }
 
 const variant = Number(process.env.CLAIM || 1);
-if (!CLAIMS[variant]) throw new Error("CLAIM musí být 1, 2 nebo 3");
+if (!CLAIMS.cs[variant]) throw new Error("CLAIM musí být 1, 2 nebo 3");
 build(path.join(ROOT, "dist"), variant);
 if (process.argv.includes("--all")) for (const v of [1, 2, 3]) build(path.join(ROOT, "preview", `v${v}`), v);
 
