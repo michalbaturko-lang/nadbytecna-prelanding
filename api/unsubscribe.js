@@ -1,5 +1,5 @@
 import { db } from "../lib/db.js";
-import { body, json, originOk } from "../lib/http.js";
+import { body, bodyError, json, originOk } from "../lib/http.js";
 import { verifyUnsub } from "../lib/tokens.js";
 
 // Odhlášení jedním klikem. Dvě cesty:
@@ -12,7 +12,7 @@ export default async function handler(req, res) {
     const q = new URL(req.url, "http://x").searchParams.get("t");
     let t = q;
     if (!t) {
-      const b = await body(req).catch(() => ({}));
+      const b = await body(req).catch((e) => { throw e; });
       t = b.t;
     }
     const id = verifyUnsub(t);
@@ -33,6 +33,7 @@ export default async function handler(req, res) {
     }
     return json(res, 200, { ok: true });
   } catch (e) {
+    if (e && e.status && e.status < 500) return bodyError(res, e);
     console.error("unsubscribe failed", e.message);
     return json(res, 500, { error: "server" });
   }

@@ -2,6 +2,7 @@
 // Použití:  node build.mjs            (varianta claimu z env CLAIM, default 1)
 //           node build.mjs --all      (navíc náhledy preview/v1..v3 pro schvalování s Věrou)
 import fs from "node:fs";
+import crypto from "node:crypto";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { CONSENT_VERSION, consentHtml, controller } from "./lib/consent.js";
@@ -22,6 +23,17 @@ const TITLE = "Nadbytečná – něco se chystá";
 
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const css = fs.readFileSync(path.join(ROOT, "src/site.css"), "utf8").replace(/\/\*[\s\S]*?\*\//g, "").replace(/\s*\n\s*/g, "\n");
+
+// CSP bez 'unsafe-inline': inline <style> povolíme jen podle otisku jeho přesného obsahu.
+// Otisk se propíše do vercel.json (test ověří, že sedí; změníš-li CSS, spusť build a commitni vercel.json).
+{
+  const cssHash = "sha256-" + crypto.createHash("sha256").update(css).digest("base64");
+  const vjPath = path.join(ROOT, "vercel.json");
+  const vj = JSON.parse(fs.readFileSync(vjPath, "utf8"));
+  const h = vj.headers[0].headers.find((x) => x.key === "Content-Security-Policy");
+  const next = h.value.replace(/style-src [^;]*;/, `style-src 'self' '${cssHash}';`);
+  if (next !== h.value) { h.value = next; fs.writeFileSync(vjPath, JSON.stringify(vj, null, 2) + "\n"); }
+}
 
 const HEART = '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>';
 const PRELOAD = [
@@ -94,10 +106,9 @@ function home(variant) {
 <form id="signup" novalidate data-consent-version="${CONSENT_VERSION}" action="/api/subscribe" method="post">
 <div class="field">
 <label class="lbl" for="email">E-mail</label>
-<input id="email" name="email" type="email" inputmode="email" autocomplete="email" autocapitalize="off" spellcheck="false" placeholder="jmeno@email.cz" required aria-describedby="msg">
+<input id="email" name="email" type="email" maxlength="254" inputmode="email" autocomplete="email" autocapitalize="off" spellcheck="false" placeholder="jmeno@email.cz" required aria-describedby="msg">
 </div>
 <div class="hp" aria-hidden="true"><label>Web<input type="text" name="website" tabindex="-1" autocomplete="off"></label></div>
-<input type="hidden" id="ts" name="ts" value="">
 <div class="consent">
 <input id="consent" name="consent" type="checkbox" required aria-describedby="consent-text">
 <label id="consent-text" for="consent">${consentHtml(C, esc)}</label>
@@ -121,7 +132,7 @@ function simplePage({ page, title, h1, p, button, extra = "" }) {
   return `${head({ title: `${title} – Nadbytečná`, desc: SUB, path: `/${page === "confirm" ? "potvrzeni" : "odhlaseni"}/`, index: false })}
 <body data-page="${page}">
 <div class="page">
-<main class="main" style="grid-template-columns:1fr">
+<main class="main main-one">
 <div class="card">
 <a href="/"><img class="logo" src="/img/nadbytecna-lockup.svg" width="2480" height="1219" data-split="0.5385" data-base="0.8403" data-na0="0.6444" data-na1="0.8065" data-hat="0.6589" data-haty="0.7048" alt="VERY VERA – Nadbytečná.cz"></a>
 <div id="state" hidden>
@@ -149,7 +160,7 @@ function policy() {
   return `${head({ title: "Zásady ochrany osobních údajů – Nadbytečná", desc: "Jak zacházíme s e-mailovou adresou, kterou nám necháš na stránce Nadbytečná.", path: "/zasady-ochrany-osobnich-udaju/", index: C.complete })}
 <body data-page="policy">
 <div class="page">
-<main class="main" style="grid-template-columns:1fr;align-content:start">
+<main class="main main-one main-top">
 <article class="doc">
 <a class="back" href="/"><img src="/img/nadbytecna-script.svg" width="2480" height="528" alt="Nadbytečná, zpět na úvodní stránku"></a>
 <h1>Zásady ochrany osobních údajů</h1>

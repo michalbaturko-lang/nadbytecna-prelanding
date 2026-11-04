@@ -2,37 +2,10 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-process.env.SUPABASE_URL = "http://supabase.test";
-process.env.SUPABASE_SERVICE_ROLE_KEY = "service-key";
-process.env.TOKEN_SECRET = "x".repeat(40);
-process.env.IP_HASH_SALT = "s".repeat(32);
-process.env.SITE_URL = "https://nadbytecna.cz";
-process.env.COLLECTION_OPEN = "true";
-process.env.CONTROLLER_NAME = "Test s.r.o."; process.env.CONTROLLER_ICO = "12345678";
-process.env.CONTROLLER_ADDRESS = "Ulice 1, Brno"; process.env.CONTROLLER_EMAIL = "ahoj@test.cz";
-process.env.MAIL_PROVIDER = "console";
-
-const rows = [];
-const mails = [];
-const origLog = console.log;
-console.log = (...a) => { if (a[0] === "[mail:console]") mails.push(JSON.parse(a[1])); else origLog(...a); };
-
-globalThis.fetch = async (url, opt = {}) => {
-  const u = new URL(url);
-  const ok = (data, status = 200) => ({ ok: status < 300, status, text: async () => (data === null ? "" : JSON.stringify(data)) });
-  const q = u.searchParams;
-  const matches = (r) => [...q.entries()].every(([k, v]) => {
-    if (["select", "limit"].includes(k)) return true;
-    const [op, val] = [v.slice(0, v.indexOf(".")), v.slice(v.indexOf(".") + 1)];
-    if (op === "eq") return String(r[k]) === val;
-    if (op === "gte") return r[k] && r[k] >= val;
-    if (op === "not" && val === "is.null") return r[k] != null;
-    return false;
-  });
-  if (opt.method === "POST") { const r = { id: crypto.randomUUID(), ...JSON.parse(opt.body) }; rows.push(r); return ok([r], 201); }
-  if (opt.method === "PATCH") { const hit = rows.filter(matches); hit.forEach((r) => Object.assign(r, JSON.parse(opt.body))); return ok(hit); }
-  return ok(rows.filter(matches));
-};
+import { baseEnv, call as call0, captureMails, installMockSupabase } from "./helpers/mock-supabase.mjs";
+baseEnv({ RATE_PER_IP_HOUR: "5" });
+const { rows } = installMockSupabase();
+const { mails } = captureMails();
 
 const { CONSENT_VERSION } = await import("../lib/consent.js");
 const subscribe = (await import("../api/subscribe.js")).default;
@@ -40,14 +13,9 @@ const confirm = (await import("../api/confirm.js")).default;
 const unsubscribe = (await import("../api/unsubscribe.js")).default;
 const vote = (await import("../api/vote.js")).default;
 
-function call(handler, { method = "POST", url = "/api/x", body = {}, headers = {} } = {}) {
-  return new Promise((resolve) => {
-    const req = { method, url, headers: { origin: "https://nadbytecna.cz", "x-forwarded-for": "1.2.3.4", ...headers }, body, socket: {} };
-    const res = { statusCode: 200, headers: {}, setHeader(k, v) { this.headers[k] = v; }, end(s) { resolve({ status: this.statusCode, json: JSON.parse(s) }); } };
-    handler(req, res);
-  });
-}
-const good = (extra = {}) => ({ email: "Zena@Example.cz", consent: true, consent_version: CONSENT_VERSION, website: "", ts: Date.now() - 5000, ...extra });
+const call = (handler, o = {}) => call0(handler, { ...o, headers: { ...(o.headers || {}) } }).then((r) => r);
+const { issueFormToken } = await import("../lib/form.js");
+const good = (extra = {}) => ({ email: "Zena@Example.cz", consent: true, consent_version: CONSENT_VERSION, website: "", k: issueFormToken(Date.now() - 5000), ...extra });
 const tokenFromMail = (m) => new URL(m.text.match(/https:\/\/\S+potvrzeni\/\?t=\S+/)[0]).searchParams.get("t");
 
 test("přihláška se uloží jako pending s verzí a zněním souhlasu, odešle se potvrzovací e-mail", async () => {
@@ -76,8 +44,8 @@ test("druhé odeslání do 10 minut neposílá další e-mail a neprozradí stav
 
 test("honeypot a příliš rychlé odeslání: 200, ale nic se neuloží", async () => {
   const n = rows.length;
-  assert.equal((await call(subscribe, { body: good({ website: "http://spam", email: "a@b.cz" }) })).status, 200);
-  assert.equal((await call(subscribe, { body: good({ ts: Date.now() - 300, email: "c@d.cz" }) })).status, 200);
+  assert.equal((await call(subscribe, { body: good({ website: "http://spam", email: "aa@bb.cz" }) })).status, 200);
+  assert.equal((await call(subscribe, { body: good({ k: issueFormToken(Date.now() - 300), email: "cc@dd.cz" }) })).status, 200);
   assert.equal(rows.length, n);
 });
 
@@ -99,7 +67,7 @@ test("potvrzení: špatný token neprojde, správný potvrdí a je idempotentní
 
 test("odhlášení jedním klikem (POST z poštovního klienta i ze stránky), neplatný token neprojde", async () => {
   const unsubUrl = new URL(mails[0].headers["List-Unsubscribe"].slice(1, -1));
-  assert.equal((await call(unsubscribe, { url: unsubUrl.pathname + unsubUrl.search, headers: { origin: undefined } })).status, 200);
+  assert.equal((await call(unsubscribe, { url: unsubUrl.pathname + unsubUrl.search, headers: { origin: undefined, "content-type": undefined } })).status, 200);
   assert.equal(rows[0].status, "unsubscribed");
   assert.ok(rows[0].unsubscribed_at);
   assert.equal((await call(unsubscribe, { body: { t: rows[0].id + ".podvrzeno" } })).status, 400);
@@ -107,7 +75,7 @@ test("odhlášení jedním klikem (POST z poštovního klienta i ze stránky), n
 
 test("rate limit: po 5 přihláškách z jedné IP za hodinu 429", async () => {
   let last;
-  for (let i = 0; i < 6; i++) last = await call(subscribe, { body: good({ email: `u${i}@example.cz` }), headers: { "x-forwarded-for": "9.9.9.9" } });
+  for (let i = 0; i < 6; i++) last = await call(subscribe, { body: good({ email: `u${i}@example.cz` }), headers: { "x-vercel-forwarded-for": "9.9.9.9" } });
   assert.equal(last.status, 429);
 });
 
@@ -151,4 +119,19 @@ test("výběr nejde bez potvrzeného e-mailu", async () => {
   const { signVote } = await import("../lib/tokens.js");
   const r = await call(vote, { body: { v: signVote(row.id), claims: ["nejsi"] } });
   assert.equal(r.status, 400);
+});
+
+test("souběžný dvojklik téže adresy: jeden e-mail, první odkaz platí", async () => {
+  const { startDevServer } = await import("../tools/devserver.mjs");
+  const S = await startDevServer({ latency: [20, 40] });
+  try {
+    const k = async () => (await (await fetch(S.url + "/api/form/")).json()).k;
+    const kk = await Promise.all([k(), k(), k()]);
+    await new Promise((r) => setTimeout(r, 2800));
+    const post = (key) => fetch(S.url + "/api/subscribe/", { method: "POST", headers: { "Content-Type": "application/json", Origin: "https://nadbytecna.cz", "x-vercel-forwarded-for": "198.51.100.77" }, body: JSON.stringify({ email: "dvojklik@example.cz", consent: true, consent_version: "2026-11-03-v3", website: "", k: key }) });
+    const rs = await Promise.all(kk.map(post));
+    assert.ok(rs.every((r) => r.status === 200));
+    const mails = await (await fetch(S.url + "/__test/mails")).json();
+    assert.equal(mails.length, 1);
+  } finally { await S.close(); }
 });
