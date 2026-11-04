@@ -48,11 +48,14 @@ export default async function handler(req, res) {
 
   // Honeypot: tváříme se, že je vše v pořádku, aby bot nevěděl.
   if (typeof b.website === "string" ? b.website !== "" : b.website != null) return json(res, 200, { ok: true });
-  let form;
-  try { form = readFormToken(b.k); } catch { return json(res, 500, { error: "server" }); }
-  if (!form) return json(res, 400, { error: "stale" });
-  if (form.age < MIN_FILL_MS) return json(res, 200, { ok: true });
-  if (form.age > MAX_AGE_MS) return json(res, 400, { error: "stale" });
+  // Ukázka bez nastaveného TOKEN_SECRET (nic se neukládá): token se nevyžaduje. Mimo ukázku vždy.
+  if (!(demo && !process.env.TOKEN_SECRET)) {
+    let form;
+    try { form = readFormToken(b.k); } catch { return json(res, 500, { error: "server" }); }
+    if (!form) return json(res, 400, { error: "stale" });
+    if (form.age < MIN_FILL_MS) return json(res, 200, { ok: true });
+    if (form.age > MAX_AGE_MS) return json(res, 400, { error: "stale" });
+  }
 
   const parsed = parseEmail(b.email);
   if (!parsed) return json(res, 400, { error: "email" });
