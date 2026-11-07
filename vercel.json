@@ -233,6 +233,9 @@
     },
     "api/admin-mail.js": {
       "maxDuration": 120
+    },
+    "api/mail-connect.js": {
+      "maxDuration": 120
     }
   }
 }
