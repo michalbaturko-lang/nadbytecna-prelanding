@@ -144,6 +144,9 @@
       t.tabIndex = on ? 0 : -1;
       document.getElementById(t.getAttribute("aria-controls")).hidden = !on;
     });
+    var input = tab.getAttribute("data-input");
+    var box = document.getElementById("sdilet-consent-transcript");
+    if (box) box.hidden = input === "text";
   }
   var started = Date.now();
   var sendBtn = document.getElementById("sdilet-send");
@@ -170,7 +173,9 @@
     if (spam === "bot") { showThanks("Děkujeme. Ozveme se na e-mail, který jsi uvedla."); return; }
     if (!name || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { storySay("Doplň jméno a e-mail."); return; }
     if (!share) { storySay("Vyber, jestli chceš sdílet anonymně, nebo se jménem."); return; }
-    if (!consent) { storySay("Bez souhlasu se zpracováním to poslat nemůžeme."); return; }
+    if (!consent) { storySay("Bez souhlasu se zpracováním příběhu to poslat nemůžeme."); return; }
+    var audio = input === "recording" || input === "file";
+    if (audio && !document.getElementById("sdilet-prepis").checked) { storySay("U hlasu je potřeba souhlas s přepisem."); return; }
     if (input === "text" && !text) { storySay("Napiš příběh, nebo přepni na hlas."); return; }
     if (input === "recording" && !micBlob) { storySay("Nejdřív nahraj hlasovou zprávu."); return; }
     if (input === "file" && !fileBlob) { storySay("Nejdřív vyber audio soubor."); return; }
@@ -190,6 +195,8 @@
         story_text: input === "text" ? text : (text || null),
         audio_path: audioPath,
         consent: true,
+        consent_transcript: audio ? true : null,
+        consent_publish: document.getElementById("sdilet-zverejneni").checked,
       });
     }).then(function () {
       api.done("stories", id, blob ? { audio: blob, filename: fname } : null);

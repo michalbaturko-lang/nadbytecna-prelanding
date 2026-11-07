@@ -71,6 +71,14 @@ Resend, pro odesílání z `veryvera@nadbytecna.cz`: v Resendu přidej doménu a
 5. E-shopový odkaz po souhlasu pošle `shop_click`. Bez souhlasu značku nespouští.
 6. Potvrzovací e-mail odejde až ve chvíli, kdy jsou `RESEND_API_KEY` i `SUPABASE_SERVICE_ROLE_KEY` a DNS u Resendu sedí.
 
+## Souhlasy ve formulářích
+
+Ve formuláři příběhu jsou tři nepředzaškrtnuté souhlasy: zpracování včetně citlivých údajů (povinné), přepis hlasu (jen u audia, tam povinné) a zveřejnění příběhu (nepovinné). U pomoci je povinné zpracování nabídky. Zveřejnění nabídky je ve stránce skryté, `[ROZHODNOUT]`.
+
+Sloupce do databáze doplň ručně ze `docs/consent-columns.sql`. Dokud neběží, odeslání formuláře spadne, protože klient ty sloupce posílá.
+
+Zásady a pravidla zveřejňování mají značky `[DOPLNIT]`, `[ROZHODNOUT]` a `[OVĚŘIT]`. Na preview je nahoře označení „Návrh“. V produkčním buildu (`VERCEL_ENV=production`) to označení není a odkazy na ty dvě stránky zmizí z patičky, dokud značky v textu jsou.
+
 ## Zástupné, co 11. 11. pořád může chybět
 
 - Text Věry na úvodu.

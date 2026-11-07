@@ -146,7 +146,7 @@
     title.className = "cookie-title";
     title.textContent = "Cookies";
     var text = document.createElement("p");
-    text.appendChild(document.createTextNode("Nezbytné uložení volby necháme vždy. Analytické a reklamní cookies (Meta, Google, TikTok) zapneme jen se souhlasem. "));
+    text.appendChild(document.createTextNode("Web po souhlasu používá analytické a marketingové cookies (GA4, Google Ads, Meta Pixel, TikTok Pixel), bez souhlasu ne. "));
     var link = document.createElement("a");
     link.href = "/ochrana-osobnich-udaju/";
     link.textContent = "Návrh zásad";

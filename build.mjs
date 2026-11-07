@@ -416,7 +416,7 @@ function buildPhase1(out) {
     tiktok: process.env.NEXT_PUBLIC_TIKTOK_PIXEL_ID || "",
   };
   fs.writeFileSync(path.join(out, "config.js"), "window.NADBYTECNA_SUPABASE=" + JSON.stringify({ url: supaUrl, key: supaKey }) + ";\nwindow.NADBYTECNA_ADS=" + JSON.stringify(ads) + ";\n");
-  const { pages, robots, llms } = renderPhase1({ css, preload: PRELOAD, heart: HEART, logoAttrs: LOGO_ATTRS });
+  const { pages, robots, llms } = renderPhase1({ css, preload: PRELOAD, heart: HEART, logoAttrs: LOGO_ATTRS, draft: process.env.VERCEL_ENV !== "production" });
   for (const [p, html] of Object.entries(pages)) {
     const rel = p === "/" ? "index.html" : path.join(p.replace(/^\//, ""), "index.html");
     write(path.join(out, rel), html);
