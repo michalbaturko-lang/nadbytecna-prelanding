@@ -142,10 +142,17 @@ END $migration$;
 DO $migration$
 BEGIN
 IF to_regclass('public.stories') IS NULL THEN RETURN; END IF;
+-- The service role deliberately has no broad read access to auth.users.
+-- Expose only the verified identity predicate needed for allowlist enrollment.
+EXECUTE $sql$ CREATE OR REPLACE FUNCTION private.verified_admin_identity(p_user_id uuid,p_email text) RETURNS boolean LANGUAGE sql STABLE SECURITY DEFINER SET search_path=pg_catalog AS $$
+SELECT EXISTS(SELECT 1 FROM auth.users WHERE id=p_user_id AND lower(email)=lower(p_email) AND email_confirmed_at IS NOT NULL)
+$$ $sql$;
+REVOKE ALL ON FUNCTION private.verified_admin_identity(uuid,text) FROM PUBLIC,anon,authenticated;
+GRANT EXECUTE ON FUNCTION private.verified_admin_identity(uuid,text) TO service_role;
 EXECUTE $sql$ CREATE OR REPLACE FUNCTION public.admin_access(p_user_id uuid,p_email text,p_session_id text) RETURNS boolean LANGUAGE plpgsql SECURITY INVOKER SET search_path=public,pg_catalog AS $$
 DECLARE s private.admin_sessions;
 BEGIN
-IF NOT EXISTS(SELECT 1 FROM public.admin_emails WHERE email=lower(p_email)) OR NOT EXISTS(SELECT 1 FROM auth.users WHERE id=p_user_id AND lower(email)=lower(p_email) AND email_confirmed_at IS NOT NULL) THEN RETURN false; END IF;
+IF NOT EXISTS(SELECT 1 FROM public.admin_emails WHERE email=lower(p_email)) OR NOT private.verified_admin_identity(p_user_id,p_email) THEN RETURN false; END IF;
 SELECT * INTO s FROM private.admin_sessions WHERE session_id=p_session_id FOR UPDATE;
 IF FOUND AND (s.revoked OR s.user_id<>p_user_id OR s.last_seen <= now()-interval '12 hours') THEN UPDATE private.admin_sessions SET revoked=true WHERE session_id=p_session_id; RETURN false; END IF;
 INSERT INTO public.admins(user_id) VALUES(p_user_id) ON CONFLICT DO NOTHING;
@@ -210,9 +217,15 @@ UNION ALL
 SELECT 'help_offers',id,created_at,updated_at,full_name,email,phone,false,true,'text',helper_type,status,coalesce(admin_category,ai_category),coalesce(admin_urgency,ai_urgency),admin_category,admin_urgency,classified_by,classified_email,classified_at,ai_summary,ai_category,ai_urgency,ai_help_type,ai_model,ai_at,ai_error,consent,consent_publish,consent_at,consent_transcript_at,consent_publish_at,consent_version,consent_texts,age_confirmed,age_confirmed_at,last_contact_at,opened_at,message,NULL,NULL,links::text,admin_note,search_document,erasure_requested_at,coalesce(last_contact_at,created_at)+interval '24 months', CASE coalesce(admin_urgency,ai_urgency) WHEN 'acute' THEN 4 WHEN 'high' THEN 3 WHEN 'medium' THEN 2 WHEN 'low' THEN 1 ELSE 0 END, NULL::boolean FROM public.help_offers $sql$;
 REVOKE ALL ON public.admin_records FROM PUBLIC,anon;
 GRANT SELECT ON public.admin_records TO authenticated,service_role;
-EXECUTE $sql$ CREATE OR REPLACE FUNCTION public.admin_person(p_email text) RETURNS jsonb LANGUAGE sql SECURITY INVOKER SET search_path=public,pg_catalog AS $$
-SELECT jsonb_build_object('records',coalesce(jsonb_agg(to_jsonb(r)-'search_document'),'[]'::jsonb),'notes',coalesce((SELECT jsonb_agg(to_jsonb(n)) FROM public.admin_notes n WHERE EXISTS(SELECT 1 FROM public.admin_records x WHERE lower(x.email)=lower(trim(p_email)) AND x.id=n.entity_id AND x.entity=n.entity)),'[]'::jsonb),'history',coalesce((SELECT jsonb_agg(to_jsonb(h)) FROM public.status_history h WHERE EXISTS(SELECT 1 FROM public.admin_records x WHERE lower(x.email)=lower(trim(p_email)) AND x.id=h.entity_id AND x.entity=h.entity)),'[]'::jsonb),'matches',coalesce((SELECT jsonb_agg(to_jsonb(m)) FROM public.matches m WHERE m.story_id IN(SELECT id FROM public.stories WHERE lower(email)=lower(trim(p_email))) OR m.offer_id IN(SELECT id FROM public.help_offers WHERE lower(email)=lower(trim(p_email)))),'[]'::jsonb),'signups',coalesce((SELECT jsonb_agg(to_jsonb(l)) FROM public.launch_signups l WHERE lower(l.email)=lower(trim(p_email))),'[]'::jsonb),'preregistrations',coalesce((SELECT jsonb_agg(to_jsonb(p)-'confirm_token_hash') FROM public.preregistrations p WHERE p.email_normalized=lower(trim(p_email))),'[]'::jsonb)) FROM public.admin_records r WHERE lower(r.email)=lower(trim(p_email))
-$$ $sql$;
+EXECUTE $sql$ CREATE OR REPLACE FUNCTION public.admin_person(p_email text) RETURNS jsonb LANGUAGE plpgsql SECURITY INVOKER SET search_path=public,pg_catalog AS $$
+DECLARE result jsonb; legacy jsonb := '[]'::jsonb;
+BEGIN
+IF to_regclass('public.preregistrations') IS NOT NULL THEN
+  EXECUTE 'SELECT coalesce(jsonb_agg(to_jsonb(p)-''confirm_token_hash''),''[]''::jsonb) FROM public.preregistrations p WHERE p.email_normalized=lower(trim($1))' INTO legacy USING p_email;
+END IF;
+SELECT jsonb_build_object('records',coalesce(jsonb_agg(to_jsonb(r)-'search_document'),'[]'::jsonb),'notes',coalesce((SELECT jsonb_agg(to_jsonb(n)) FROM public.admin_notes n WHERE EXISTS(SELECT 1 FROM public.admin_records x WHERE lower(x.email)=lower(trim(p_email)) AND x.id=n.entity_id AND x.entity=n.entity)),'[]'::jsonb),'history',coalesce((SELECT jsonb_agg(to_jsonb(h)) FROM public.status_history h WHERE EXISTS(SELECT 1 FROM public.admin_records x WHERE lower(x.email)=lower(trim(p_email)) AND x.id=h.entity_id AND x.entity=h.entity)),'[]'::jsonb),'matches',coalesce((SELECT jsonb_agg(to_jsonb(m)) FROM public.matches m WHERE m.story_id IN(SELECT id FROM public.stories WHERE lower(email)=lower(trim(p_email))) OR m.offer_id IN(SELECT id FROM public.help_offers WHERE lower(email)=lower(trim(p_email)))),'[]'::jsonb),'signups',coalesce((SELECT jsonb_agg(to_jsonb(l)) FROM public.launch_signups l WHERE lower(l.email)=lower(trim(p_email))),'[]'::jsonb)) INTO result FROM public.admin_records r WHERE lower(r.email)=lower(trim(p_email));
+RETURN result || jsonb_build_object('preregistrations',legacy);
+END $$ $sql$;
 EXECUTE $sql$ CREATE OR REPLACE FUNCTION public.admin_erase(p_email text,p_hash text,p_actor uuid,p_actor_email text,p_mark_only boolean DEFAULT false) RETURNS jsonb LANGUAGE plpgsql SECURITY INVOKER SET search_path=public,pg_catalog AS $$
 BEGIN
 IF length(trim(p_email))<3 OR length(p_hash)<>64 THEN RAISE EXCEPTION 'email'; END IF;
@@ -230,7 +243,7 @@ DELETE FROM private.ai_jobs WHERE (entity='stories' AND entity_id IN(SELECT id F
 DELETE FROM public.stories WHERE lower(email)=lower(trim(p_email)) AND erasure_requested_at IS NOT NULL;
 DELETE FROM public.help_offers WHERE lower(email)=lower(trim(p_email)) AND erasure_requested_at IS NOT NULL;
 DELETE FROM public.launch_signups WHERE lower(email)=lower(trim(p_email));
-DELETE FROM public.preregistrations WHERE email_normalized=lower(trim(p_email));
+IF to_regclass('public.preregistrations') IS NOT NULL THEN EXECUTE 'DELETE FROM public.preregistrations WHERE email_normalized=lower(trim($1))' USING p_email; END IF;
 INSERT INTO public.admin_audit_log(user_id,email,action,diff) VALUES(p_actor,p_actor_email,'erase_person',jsonb_build_object('email_hash',p_hash));
 RETURN jsonb_build_object('ok',true);
 END $$ $sql$;
@@ -240,7 +253,8 @@ EXECUTE format('REVOKE ALL ON FUNCTION %s FROM PUBLIC,anon,authenticated',f.sign
 EXECUTE format('GRANT EXECUTE ON FUNCTION %s TO service_role',f.signature);
 END LOOP;
 GRANT ALL ON private.admin_sessions TO service_role;
-GRANT SELECT,DELETE ON public.launch_signups,public.preregistrations TO service_role;
+GRANT SELECT,DELETE ON public.launch_signups TO service_role;
+IF to_regclass('public.preregistrations') IS NOT NULL THEN GRANT SELECT,DELETE ON public.preregistrations TO service_role; END IF;
 END $migration$;
 
 DO $migration$
