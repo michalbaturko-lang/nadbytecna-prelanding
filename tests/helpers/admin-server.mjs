@@ -44,7 +44,7 @@ export async function startAdminServer({ port = 0, autoLogin = false } = {}) {
   );
   for (let i = 0; i < 28; i++)
     await db.query(
-      `INSERT INTO stories(full_name,email,anonymous,story_text,consent,status) VALUES($1,$2,$3,'Pouze syntetická zpráva pro testování adminu.',true,$4)`,
+      `INSERT INTO stories(full_name,email,anonymous,input_type,story_text,consent,status) VALUES($1,$2,$3,'text','Pouze syntetická zpráva pro testování adminu.',true,$4)`,
       [
         "Ukázková osoba " + (i + 2),
         "sample" + i + "@example.invalid",
