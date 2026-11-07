@@ -399,6 +399,7 @@ function build(out, variant) {
 function buildPhase1(out) {
   stage(out);
   fs.rmSync(path.join(out, "app.js"), { force: true });
+  fs.copyFileSync(path.join(ROOT, "src/story-form.js"), path.join(out, "story-form.js"));
   const { pages, robots, llms } = renderPhase1({ css, preload: PRELOAD, heart: HEART, logoAttrs: LOGO_ATTRS });
   for (const [p, html] of Object.entries(pages)) {
     const rel = p === "/" ? "index.html" : path.join(p.replace(/^\//, ""), "index.html");

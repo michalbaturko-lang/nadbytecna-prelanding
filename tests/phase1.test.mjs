@@ -15,7 +15,7 @@ execFileSync(process.execPath, ["build.mjs"], {
 });
 
 const read = (p) => fs.readFileSync(path.join(OUT, p), "utf8");
-const pages = ["index.html", "sdilet-pribeh/index.html", "chci-pomoci/index.html", "potrebuji-pomoc/index.html", "pripravujeme/index.html", "ochrana-osobnich-udaju/index.html", "pravidla-zverejnovani/index.html", "kontakt/index.html"];
+const pages = ["index.html", "sdilet-pribeh/index.html", "mohu-pomoci/index.html", "potrebuji-pomoc/index.html", "pripravujeme/index.html", "ochrana-osobnich-udaju/index.html", "pravidla-zverejnovani/index.html", "kontakt/index.html"];
 const home = read("index.html");
 const visible = (h) => h.replace(/<style>[\s\S]*?<\/style>/g, "").replace(/<script[\s\S]*?<\/script>/g, "");
 
@@ -47,16 +47,18 @@ test("hero má stejný lockup a stejné fluid.js, app.js se nenačítá", () => 
   assert.doesNotMatch(fluid, /\/\*LETTERS\*\/null/);
   assert.match(fluid, /img\.logo\[data-split\]/);
   assert.match(fluid, /s nic nezlomí!/);
-  assert.equal(fs.readFileSync(path.join(ROOT, "src/fluid.js"), "utf8").includes("/*LETTERS*/null"), true);
+  const fluidSrc = fs.readFileSync(path.join(ROOT, "src/fluid.js"), "utf8");
+  assert.match(fluidSrc, /pointer: coarse/);
+  assert.match(fluidSrc, /prefers-reduced-motion/);
+  assert.match(fluidSrc, /autoT = setTimeout\(function \(\) \{[\s\S]*?\}, 1000\)/);
+  assert.equal(fluidSrc.includes("/*LETTERS*/null"), true);
 });
 
 test("homepage má dvě volby, ne mřížku osmi kategorií, a formuláře nic neodesílají", () => {
-  assert.match(home, /<a class="choice" href="\/sdilet-pribeh\/">/);
-  assert.match(home, /<a class="choice" href="\/chci-pomoci\/">/);
-  assert.match(home, /Chci nasdílet svůj příběh/);
-  assert.match(home, /Chci pomoci/);
+  assert.match(home, /<a class="choice" href="\/sdilet-pribeh\/"><span class="choice-title">Sdílej svůj příběh<\/span><\/a>/);
+  assert.match(home, /<a class="choice" href="\/mohu-pomoci\/"><span class="choice-title">Mohu pomoci<\/span><\/a>/);
   assert.equal(visible(home).match(/class="choice"/g).length, 2);
-  assert.doesNotMatch(home, /<summary>|Nabídni terapii|Nabídni právní pomoc|Nabídni své výrobky|Sdílej svůj příběh/);
+  assert.doesNotMatch(visible(home), /<summary>|Nabídni terapii|Nabídni právní pomoc|Chci pomoci|chci-pomoci/);
   assert.match(home, /<footer[\s\S]*href="\/potrebuji-pomoc\/">Potřebuji pomoc<\/a>/);
   const choices = [...home.matchAll(/<a class="choice"[^>]*>([\s\S]*?)<\/a>/g)].map((m) => m[1]);
   assert.equal(choices.length, 2);
@@ -75,13 +77,26 @@ test("homepage má dvě volby, ne mřížku osmi kategorií, a formuláře nic n
   assert.doesNotMatch(read("ochrana-osobnich-udaju/index.html"), /Zapsaný ústav/);
   assert.doesNotMatch(read("kontakt/index.html"), /Zapsaný ústav/);
   assert.match(home, /mailto:veryvera@nadbytecna\.cz/);
-  for (const p of ["index.html", "sdilet-pribeh/index.html", "chci-pomoci/index.html", "potrebuji-pomoc/index.html"]) {
+  for (const p of ["index.html", "sdilet-pribeh/index.html", "mohu-pomoci/index.html", "potrebuji-pomoc/index.html"]) {
     assert.doesNotMatch(visible(read(p)), /<form\b|<\/form>|method=|action=|\brequired\b|\bchecked\b|localStorage|sessionStorage|fetch\(|XMLHttpRequest|sendBeacon|\/api\//i, p);
   }
   const story = read("sdilet-pribeh/index.html");
   assert.equal(story.match(/<button type="button" class="send" disabled/g).length, 1);
   assert.match(story, /Odesílání zatím není spuštěné\./);
-  const help = read("chci-pomoci/index.html");
+  assert.match(story, /Chci sdílet anonymně/);
+  assert.match(story, /Chci sdílet se jménem/);
+  assert.match(story, /Chci i pomáhat \(být aktivní a podílet se na platformě\)/);
+  assert.match(story, /Hlasové zprávy přepisujeme na text/);
+  assert.match(story, /accept="audio\/\*,\.m4a/);
+  assert.match(story, /<script src="\/story-form\.js" defer><\/script>/);
+  const storyJs = fs.readFileSync(path.join(ROOT, "src/story-form.js"), "utf8");
+  assert.match(storyJs, /MediaRecorder/);
+  assert.match(storyJs, /audio\/mp4/);
+  assert.match(storyJs, /50 \* 1024 \* 1024/);
+  assert.match(storyJs, /story-audio/);
+  assert.doesNotMatch(storyJs, /fetch\(|localStorage|sessionStorage|indexedDB|sendBeacon|XMLHttpRequest|supabase\.|innerHTML/);
+  const help = read("mohu-pomoci/index.html");
+  assert.match(help, /<h1>Mohu pomoci<\/h1>/);
   assert.match(help, /Už jsem si tím prošla \/ prošel/);
   assert.match(help, /Pomáhám takovým lidem/);
   assert.equal(visible(help).match(/type="radio"/g).length, 2);

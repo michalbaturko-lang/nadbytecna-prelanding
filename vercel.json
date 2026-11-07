@@ -11,7 +11,7 @@
       "headers": [
         {
           "key": "Content-Security-Policy",
-          "value": "default-src 'self'; script-src 'self'; style-src 'self' 'sha256-dyPw1W6LAQUAL2gUuuKKG8TTI4XbtmHShfU0/b4ozvk='; img-src 'self' data:; font-src 'self'; connect-src 'self'; form-action 'self'; base-uri 'none'; frame-ancestors 'none'; object-src 'none'; manifest-src 'self'; upgrade-insecure-requests"
+          "value": "default-src 'self'; script-src 'self'; style-src 'self' 'sha256-X5AOrABUH8FEnFAVEuXiu9iYZQYCKtzC0QE5wcMWLjI='; img-src 'self' data:; font-src 'self'; media-src 'self' blob:; connect-src 'self'; form-action 'self'; base-uri 'none'; frame-ancestors 'none'; object-src 'none'; manifest-src 'self'; upgrade-insecure-requests"
         },
         {
           "key": "Strict-Transport-Security",
@@ -31,7 +31,7 @@
         },
         {
           "key": "Permissions-Policy",
-          "value": "camera=(), microphone=(), geolocation=(), interest-cohort=(), payment=(), usb=(), serial=(), bluetooth=(), accelerometer=(), gyroscope=(), magnetometer=()"
+          "value": "camera=(), microphone=(self), geolocation=(), interest-cohort=(), payment=(), usb=(), serial=(), bluetooth=(), accelerometer=(), gyroscope=(), magnetometer=()"
         },
         {
           "key": "X-Frame-Options",
