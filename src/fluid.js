@@ -22,7 +22,7 @@
 
   var MX = 0.12, MYB = 1.0;                                       // okraj vlevo/vpravo; prostor pro pád dolů (násobek výšky rukopisu)
   var wrap = document.createElement("span");
-  wrap.style.cssText = "position:relative;display:block;line-height:0;max-width:100%;touch-action:pan-y;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none";
+  wrap.style.cssText = "position:relative;display:block;width:100%;line-height:0;max-width:100%;touch-action:pan-y;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none";
   img.parentNode.insertBefore(wrap, img);
   wrap.appendChild(img);
   var cv = document.createElement("canvas");
@@ -124,7 +124,7 @@
     if (seq) drawPhrase(now);
   }
 
-  // ---- finále: „ná“ se posune. Věta zůstává na lince nápisu, nepadá ke srdci. ----
+  // ---- finále: „ná“ se posune. Věta sedí na stejné lince jako nápis, nepadá ke srdci. ----
   function drawNa(now) {
     var t = now - seq.t0, s = easeIO(clamp01((t - seq.Tslide) / 1300)), b = easeIO(clamp01((t - seq.Tback) / 1100));
     seq.k = s * (1 - b);
@@ -143,7 +143,7 @@
     var front = x0 - soft + e * (x1 - x0 + 2 * soft + 30);
     tx.setTransform(1, 0, 0, 1, 0, 0); tx.clearRect(0, 0, tc.width, tc.height);
     setScript(tx);
-    tx.font = seq.fsz + "px Damion, cursive"; tx.textBaseline = "alphabetic"; tx.fillStyle = mix(GOLD, GOLD, 0);
+    tx.font = seq.fsz + "px Damion"; tx.textBaseline = "alphabetic"; tx.fillStyle = mix(GOLD, GOLD, 0);
     tx.fillText(PHRASE, seq.tx, seq.base);
     tx.globalCompositeOperation = "destination-in";
     var g = tx.createLinearGradient(front - soft, 0, front, 0);
@@ -196,13 +196,15 @@
       var d = Math.abs(L[id].cx - px) / 2480 * 900 + Math.random() * 50;
       dmax = Math.max(dmax, d); fallOne(id, d, now);
     });
-    var n = L.na, fsz = 430, tw, gap = -6;
-    tx.font = fsz + "px Damion, cursive"; tw = tx.measureText(PHRASE).width;
+    var n = L.na, fsz = 400, tw, gap = -6;
+    tx.font = fsz + "px Damion"; tw = tx.measureText(PHRASE).width;
     var nw = n.x1 - n.x0;
-    while (nw + gap + tw > 2480 * 0.92 && fsz > 40) { fsz -= 4; tx.font = fsz + "px Damion, cursive"; tw = tx.measureText(PHRASE).width; }
+    while (nw + gap + tw > 2480 * 0.92 && fsz > 40) { fsz -= 4; tx.font = fsz + "px Damion"; tw = tx.measureText(PHRASE).width; }
     var total = nw + gap + tw, left = (2480 - total) / 2;
+    // data-base je podíl výšky loga, kde leží linka rukopisu. Damion má jednu rodinu (latin i latin-ext), takže „s“ nesedne výš než zbytek věty.
+    var base = 1219 * parseFloat(img.getAttribute("data-base") || "0.8403") - SY;
     var Tslide = dmax + (WOB + 1.0) * 1000 + 250, Tunroll = Tslide + 900, Dunroll = 3400, Tfade = Tunroll + Dunroll + 3200, Tback = Tfade + 100;
-    seq = { t0: now, dx: left - n.x0, tx: left + nw + gap, tw: tw, fsz: fsz, base: 250, Tslide: Tslide, Tunroll: Tunroll, Dunroll: Dunroll, Tfade: Tfade, Tback: Tback, k: 0,
+    seq = { t0: now, dx: left - n.x0, tx: left + nw + gap, tw: tw, fsz: fsz, base: base, Tslide: Tslide, Tunroll: Tunroll, Dunroll: Dunroll, Tfade: Tfade, Tback: Tback, k: 0,
       end: Tback + 1100 + 300 };
     dirty = true;
     stage = 3;
@@ -277,7 +279,7 @@
   var rt = 0;
   window.addEventListener("resize", function () { clearTimeout(rt); rt = setTimeout(function () { if (!seq) layout(); }, 150); });
   function start() {
-    var p = document.fonts && document.fonts.load ? document.fonts.load("40px Damion", PHRASE) : Promise.resolve();
+    var p = document.fonts && document.fonts.load ? document.fonts.load("40px Damion", "s nič nezlomí áščřžůě") : Promise.resolve();
     p.then(function () { layout(); if (pendingKick) kickMobile(); }, function () { layout(); if (pendingKick) kickMobile(); });
   }
   if (img.complete && img.naturalWidth) start(); else img.addEventListener("load", start);
