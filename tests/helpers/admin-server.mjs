@@ -31,12 +31,25 @@ const ident = (s) => {
   if (!/^[a-z_][a-z_0-9]*$/i.test(s)) throw new Error("identifier");
   return '"' + s + '"';
 };
-export async function startAdminServer({ port = 0, autoLogin = false } = {}) {
+export async function startAdminServer({
+  port = 0,
+  autoLogin = false,
+  mailConnectClient,
+} = {}) {
   const db = await freshAdminDb();
   await db.exec(
     fs.readFileSync(
       new URL(
         "../../supabase/migrations/20261109000000_admin_mail.sql",
+        import.meta.url,
+      ),
+      "utf8",
+    ),
+  );
+  await db.exec(
+    fs.readFileSync(
+      new URL(
+        "../../supabase/migrations/20261110000000_mail_oauth.sql",
         import.meta.url,
       ),
       "utf8",
@@ -410,6 +423,8 @@ export async function startAdminServer({ port = 0, autoLogin = false } = {}) {
     CRON_SECRET: "synthetic-only-cron-secret-for-local-tests",
     RETENTION_ENABLED: "false",
     M365_INGEST_ENABLED: "false",
+    M365_AUTH_MODE: autoLogin ? "delegated" : "certificate",
+    M365_CONNECT_ENABLED: "false",
     AI_EMAIL_CLASSIFICATION_ENABLED: "false",
     AI_EMAIL_PROCESSING_APPROVED: "false",
     M365_RETENTION_ENABLED: "false",
@@ -420,6 +435,10 @@ export async function startAdminServer({ port = 0, autoLogin = false } = {}) {
   const worker = (await import("../../api/ai-worker.js")).default;
   const adminMail = (await import("../../api/admin-mail.js")).default;
   const mailSync = (await import("../../api/mail-sync.js")).default;
+  const connectModule = await import("../../api/mail-connect.js");
+  const mailConnect = mailConnectClient
+    ? connectModule.createMailConnectHandler(mailConnectClient)
+    : connectModule.default;
   const server = http.createServer(async (req, res) => {
     const u = new URL(req.url, "http://localhost");
     res.setHeader("Cache-Control", "no-store");
@@ -457,6 +476,7 @@ export async function startAdminServer({ port = 0, autoLogin = false } = {}) {
       "/api/ai-worker/": worker,
       "/api/admin-mail/": adminMail,
       "/api/mail-sync/": mailSync,
+      "/api/mail-connect/": mailConnect,
     };
     if (routes[u.pathname]) {
       try {
