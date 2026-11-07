@@ -189,9 +189,40 @@
           "value": "noindex"
         }
       ]
+    },
+    {
+      "source": "/admin/:path*",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-store"
+        },
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow, noarchive"
+        }
+      ]
     }
   ],
   "regions": [
     "fra1"
-  ]
+  ],
+  "crons": [
+    {
+      "path": "/api/retention/",
+      "schedule": "0 3 * * *"
+    },
+    {
+      "path": "/api/ai-worker/",
+      "schedule": "*/5 * * * *"
+    }
+  ],
+  "functions": {
+    "api/ai-worker.js": {
+      "maxDuration": 120
+    },
+    "api/admin.js": {
+      "maxDuration": 60
+    }
+  }
 }
