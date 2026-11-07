@@ -76,6 +76,30 @@ for (const anonymous of [true, false]) {
     }
   }
 }
+const launchText = `Dobrý den,
+
+děkujeme, že chcete být u otevření Nadbytečné.
+
+11. 11. se vám ozveme jako prvním.
+
+Souhlasím se zasláním zprávy o spuštění platformy.
+Zásady: https://nadbytecna.cz/zasady/
+
+Věra
+Nadbytečná
+${FROM_LINE}
+`;
+const launchHtml = `<!doctype html><html lang="cs"><body style="margin:0;background:#F4CCD8;font-family:Arial,Helvetica,sans-serif;color:#3A0B22">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#F4CCD8"><tr><td align="center" style="padding:24px 12px">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;background:#FFF8FA;border-radius:8px"><tr><td style="padding:32px 28px">
+<p style="margin:0 0 16px;font-size:16px;line-height:1.55">Dobrý den,</p>
+<p style="margin:0 0 16px;font-size:16px;line-height:1.55">děkujeme, že chcete být u otevření Nadbytečné.</p>
+<p style="margin:0 0 16px;font-size:16px;line-height:1.55">11. 11. se vám ozveme jako prvním.</p>
+<p style="margin:0 0 16px;font-size:16px;line-height:1.55">Souhlasím se zasláním zprávy o spuštění platformy.<br><a href="https://nadbytecna.cz/zasady/" style="color:#3A0B22">Zásady</a></p>
+<p style="margin:24px 0 0;font-family:Georgia,'Times New Roman',serif;font-size:18px">Věra</p>
+<p style="margin:4px 0 0;font-size:14px;line-height:1.5;color:#5E2A41">Nadbytečná<br><a href="mailto:${FROM_LINE}" style="color:#5E2A41">${FROM_LINE}</a></p>
+</td></tr></table></td></tr></table></body></html>`;
+jobs.push({ id: "launch-signup", dir: "launch", file: "signup", subject: "Dáme vám vědět, až se otevřeme", text: launchText, html: launchHtml, anonymous: true });
 jobs.push({ id: "help-been-through", dir: "can-help", file: "been-through", ...been, anonymous: false });
 jobs.push({ id: "help-others", dir: "can-help", file: "help-others", ...helpOthers(null), anonymous: false });
 for (const type of Object.keys(types)) {

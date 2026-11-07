@@ -11,20 +11,32 @@ test("SITE_LIVE je zapnuté jen pro true a 1", () => {
 });
 
 test("www jde na apex, vercel.app zůstává plný web", () => {
-  assert.deepEqual(hostGate({ host: "www.nadbytecna.cz", pathname: "/sdilet-pribeh/", search: "?a=1" }), {
-    type: "redirect", status: 301, url: "https://nadbytecna.cz/sdilet-pribeh/?a=1",
+  assert.deepEqual(hostGate({ host: "www.nadbytecna.cz", pathname: "/", search: "?a=1" }), {
+    type: "redirect", status: 301, url: "https://nadbytecna.cz/?a=1",
   });
-  assert.equal(hostGate({ host: "nadbytecna-prelanding.vercel.app", pathname: "/" }).type, "next");
-  assert.equal(hostGate({ host: "nadbytecna.cz", pathname: "/", live: true }).type, "next");
+  assert.deepEqual(hostGate({ host: "www.nadbytecna.cz", pathname: "/zasady/" }), {
+    type: "redirect", status: 301, url: "https://nadbytecna.cz/zasady/",
+  });
+  assert.equal(hostGate({ host: "nadbytecna-prelanding.vercel.app", pathname: "/admin/" }).type, "next");
+  assert.equal(hostGate({ host: "nadbytecna.cz", pathname: "/sdilet-pribeh/", live: true }).type, "next");
+  assert.deepEqual(hostGate({ host: "www.nadbytecna.cz", pathname: "/admin/", live: true }), {
+    type: "redirect", status: 301, url: "https://nadbytecna.cz/admin/",
+  });
 });
 
-test("apex bez SITE_LIVE ukáže coming soon a pustí zásady i soubory", () => {
+test("coming soon pustí jen úvod, zásady a soubory", () => {
+  for (const host of ["nadbytecna.cz", "www.nadbytecna.cz"]) {
+    assert.equal(hostGate({ host, pathname: "/api/transcribe/" }).type, "missing");
+    assert.equal(hostGate({ host, pathname: "/api/notify/" }).type, "missing");
+    assert.equal(hostGate({ host, pathname: "/fluid.js" }).type, host === "www.nadbytecna.cz" ? "redirect" : "next");
+  }
   assert.deepEqual(hostGate({ host: "nadbytecna.cz", pathname: "/" }), { type: "rewrite", url: "/coming-soon/" });
-  assert.deepEqual(hostGate({ host: "Nadbytecna.cz:443", pathname: "/sdilet-pribeh/" }), { type: "rewrite", url: "/coming-soon/" });
-  assert.equal(hostGate({ host: "nadbytecna.cz", pathname: "/ochrana-osobnich-udaju/" }).type, "next");
-  assert.equal(hostGate({ host: "nadbytecna.cz", pathname: "/fluid.js" }).type, "next");
+  assert.equal(hostGate({ host: "nadbytecna.cz", pathname: "/zasady/" }).type, "next");
   assert.equal(hostGate({ host: "nadbytecna.cz", pathname: "/coming-soon/" }).type, "next");
-  assert.equal(hostGate({ host: "nadbytecna.cz", pathname: "/api/transcribe/" }).type, "missing");
+  for (const path of ["/pribeh", "/admin/", "/sdilet-pribeh/", "/mohu-pomoci/", "/ochrana-osobnich-udaju/", "/kontakt/"]) {
+    assert.deepEqual(hostGate({ host: "nadbytecna.cz", pathname: path }), { type: "redirect", status: 302, url: "https://nadbytecna.cz/" }, path);
+    assert.deepEqual(hostGate({ host: "www.nadbytecna.cz", pathname: path }), { type: "redirect", status: 302, url: "https://nadbytecna.cz/" }, path);
+  }
 });
 
 test("Host i x-forwarded-host poznají veřejnou doménu", () => {

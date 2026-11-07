@@ -62,8 +62,8 @@ Domény `nadbytecna.cz` a `www.nadbytecna.cz` jsou v projektu Vercel připojené
 
 Do spuštění middleware (`middleware.js`) rozhoduje podle hostitele:
 
-- `www.nadbytecna.cz` trvale přesměruje na `https://nadbytecna.cz` se stejnou cestou.
-- `nadbytecna.cz` ukazuje jen coming soon (padající nápis, věta, datum 11. 11. 2026, e-mail k upozornění). Formuláře příběhu a pomoci tam nejsou. `noindex` zůstává.
+- `www.nadbytecna.cz` trvale přesměruje na apex. Úvod, `/zasady/` a soubory si nechají cestu. Ostatní cesty jdou na `https://nadbytecna.cz/`.
+- `nadbytecna.cz` ukazuje jen coming soon. `/` je tenhle obsah. `/zasady/` jsou zásady. Soubory (font, skript, obrázek) projdou. `/admin/`, formuláře a jakákoli jiná stránka přesměrují na `/`. `/api/` na tom hostu vrací 404, včetně přepisu a potvrzení příběhu nebo nabídky. `noindex` zůstává.
 - Adresa `*.vercel.app` ukazuje plný web jako dosud.
 
 Přepínač je proměnná `SITE_LIVE`. Když chybí, nebo není přesně `true` či `1`, platí coming soon. Ve výchozím stavu ji nenastavuj.
@@ -74,7 +74,7 @@ V den spuštění, až má apex ukázat plný web:
 2. Nasaď znovu. Middleware čte proměnnou při běhu, nové nasazení ji vezme jistě.
 3. Ověř, že `https://nadbytecna.cz/` je úvod fáze 1 a `https://www.nadbytecna.cz/` přesměruje na apex.
 
-Přihlášky k upozornění jsou v `public.launch_signups` (`email`, `created_at`, `consent`). Anon smí jen vložit řádek s `consent = true`. Číst je smí jen administrátor. Potvrzovací e-mail se neposílá.
+Přihlášky k upozornění jsou v `public.launch_signups` (`email`, `created_at`, `consent`). Anon smí jen vložit řádek s `consent = true`. Číst je smí jen administrátor. Šablona potvrzení je `emails/launch/signup.txt` (id `launch-signup`). Zatím se neodesílá.
 
 Resend, pro odesílání z `veryvera@nadbytecna.cz`: v Resendu přidej doménu a do DNS opiš přesně ty TXT a CNAME, které Resend ukáže (SPF, DKIM, return-path). Vlastní hodnoty sem nepatří, Resend je ukáže až pro tuto doménu.
 
