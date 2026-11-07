@@ -240,3 +240,38 @@ test("M365 cursor validator accepts exported configuration shape and documented 
     delta.replace("%40", "@"),
   );
 });
+test("delegated sync reads only authenticated /me mailbox and validates its continuation", async () => {
+  const delegated = { ...env, M365_AUTH_MODE: "delegated" },
+    me = "https://graph.microsoft.com/v1.0/me/mailFolders/Inbox/messages/delta";
+  const r = await readM365DeltaPage({
+    env: delegated,
+    accessToken: "synthetic",
+    fetcher: async (url, opts) => {
+      assert.equal(
+        new URL(url).pathname,
+        "/v1.0/me/mailFolders/Inbox/messages/delta",
+      );
+      assert.equal(opts.method, "GET");
+      return response([message], {
+        "@odata.deltaLink": me + "?$deltatoken=synthetic",
+      });
+    },
+  });
+  assert.equal(r.messages.length, 1);
+  assert.equal(r.deltaLink, me + "?$deltatoken=synthetic");
+});
+test("delegated sync rejects old certificate and other-user cursors before transmitting bearer", async () => {
+  let calls = 0;
+  await assert.rejects(
+    readM365DeltaPage({
+      env: { ...env, M365_AUTH_MODE: "delegated" },
+      accessToken: "synthetic",
+      cursor: delta,
+      fetcher: async () => {
+        calls++;
+      },
+    }),
+    (e) => e.code === "invalid_cursor",
+  );
+  assert.equal(calls, 0);
+});
