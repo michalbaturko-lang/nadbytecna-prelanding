@@ -3,7 +3,7 @@
 // Písmena jsou skutečné vektorové tvary (řezy vedené podle spojů mezi písmeny, ne svislé čáry).
 //  1. první přejetí (na mobilu první dotyk nebo scroll): odpadne velké „N“
 //  2. asi po 1 s samo naváže dnešní pokračování: dvě písmena, pak zbytek „Nadbytečná“,
-//     „ná“ se zlatě posune a rozvine se „s nic nezlomí!“; pak se vše složí zpátky.
+//     „ná“ se zlatě posune. Věta „s nic nezlomí!“ zůstává na svém místě a nepadá.
 // Bez Canvasu nebo při „omezit pohyb“ zůstává obyčejný obrázek.
 (function () {
   "use strict";
@@ -124,7 +124,7 @@
     if (seq) drawPhrase(now);
   }
 
-  // ---- finále: „ná“ + zlatá fráze ----
+  // ---- finále: „ná“ se posune. Věta zůstává na lince nápisu, nepadá ke srdci. ----
   function drawNa(now) {
     var t = now - seq.t0, s = easeIO(clamp01((t - seq.Tslide) / 1300)), b = easeIO(clamp01((t - seq.Tback) / 1100));
     seq.k = s * (1 - b);
@@ -144,7 +144,7 @@
     tx.setTransform(1, 0, 0, 1, 0, 0); tx.clearRect(0, 0, tc.width, tc.height);
     setScript(tx);
     tx.font = seq.fsz + "px Damion, cursive"; tx.textBaseline = "alphabetic"; tx.fillStyle = mix(GOLD, GOLD, 0);
-    tx.fillText(PHRASE, seq.tx, seq.base + (1 - e) * 26);        // text se při rozvíjení lehce zvedá
+    tx.fillText(PHRASE, seq.tx, seq.base);
     tx.globalCompositeOperation = "destination-in";
     var g = tx.createLinearGradient(front - soft, 0, front, 0);
     g.addColorStop(0, "rgba(0,0,0,1)"); g.addColorStop(1, "rgba(0,0,0,0)");
@@ -202,7 +202,7 @@
     while (nw + gap + tw > 2480 * 0.92 && fsz > 40) { fsz -= 4; tx.font = fsz + "px Damion, cursive"; tw = tx.measureText(PHRASE).width; }
     var total = nw + gap + tw, left = (2480 - total) / 2;
     var Tslide = dmax + (WOB + 1.0) * 1000 + 250, Tunroll = Tslide + 900, Dunroll = 3400, Tfade = Tunroll + Dunroll + 3200, Tback = Tfade + 100;
-    seq = { t0: now, dx: left - n.x0, tx: left + nw + gap, tw: tw, fsz: fsz, base: 336, Tslide: Tslide, Tunroll: Tunroll, Dunroll: Dunroll, Tfade: Tfade, Tback: Tback, k: 0,
+    seq = { t0: now, dx: left - n.x0, tx: left + nw + gap, tw: tw, fsz: fsz, base: 250, Tslide: Tslide, Tunroll: Tunroll, Dunroll: Dunroll, Tfade: Tfade, Tback: Tback, k: 0,
       end: Tback + 1100 + 300 };
     dirty = true;
     stage = 3;

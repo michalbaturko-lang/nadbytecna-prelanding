@@ -146,8 +146,11 @@ test("právní stránky mluví o souhlasu a kontakt není krizová linka", () =>
   const story = read("sdilet-pribeh/index.html");
   assert.match(story, /id="sdilet-consent-transcript" hidden/);
   assert.match(story, /id="sdilet-zverejneni"/);
+  assert.match(story, /Chci svůj příběh zveřejnit/);
+  assert.doesNotMatch(story, /Souhlasím se zveřejněním příběhu|Není povinné\./);
   assert.doesNotMatch(story, /id="sdilet-gdpr"[^>]*checked/);
   const helpPage = read("mohu-pomoci/index.html");
+  assert.match(helpPage, /Chci svou nabídku zveřejnit/);
   assert.match(helpPage, /Souhlasím se zpracováním nabídky pomoci/);
   assert.match(helpPage, /id="pomoc-consent-publish" hidden/);
   assert.match(read("potrebuji-pomoc/index.html"), /Není to krizová linka/);
