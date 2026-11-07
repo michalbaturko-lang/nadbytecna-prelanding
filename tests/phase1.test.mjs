@@ -15,7 +15,7 @@ execFileSync(process.execPath, ["build.mjs"], {
 });
 
 const read = (p) => fs.readFileSync(path.join(OUT, p), "utf8");
-const pages = ["index.html", "ochrana-osobnich-udaju/index.html", "pravidla-zverejnovani/index.html", "kontakt/index.html"];
+const pages = ["index.html", "sdilet-pribeh/index.html", "chci-pomoci/index.html", "potrebuji-pomoc/index.html", "pripravujeme/index.html", "ochrana-osobnich-udaju/index.html", "pravidla-zverejnovani/index.html", "kontakt/index.html"];
 const home = read("index.html");
 const visible = (h) => h.replace(/<style>[\s\S]*?<\/style>/g, "").replace(/<script[\s\S]*?<\/script>/g, "");
 
@@ -50,49 +50,56 @@ test("hero má stejný lockup a stejné fluid.js, app.js se nenačítá", () => 
   assert.equal(fs.readFileSync(path.join(ROOT, "src/fluid.js"), "utf8").includes("/*LETTERS*/null"), true);
 });
 
-test("osm kategorií, vypnutá pole, nikde formulář ani sběr", () => {
-  const titles = [
-    "Sdílej svůj příběh",
-    "Nabídni svůj potenciál — hledám novou práci",
-    "Nabídni práci — hledáme někoho do týmu",
-    "Nabídni terapii — psychoterapeuti, psychologové, psychiatři, fyzioterapeuti apod.",
-    "Nabídni právní pomoc — právní zástupci, vyjednavači, mediátoři",
-    "Nabídni pomoc — přidej se k nám",
-    "Nabídni své výrobky a služby",
-    "Potřebuji pomoc",
-  ];
-  for (const t of titles) {
-    assert.ok(home.includes(`<summary>${t}</summary>`), t);
-    assert.ok(home.includes(`Formulář: ${t}`), t);
-  }
-  assert.equal(home.match(/<fieldset disabled/g).length, 8);
-  assert.equal(home.match(/<button type="button" class="send" disabled/g).length, 8);
-  assert.equal(home.match(/Spouštíme 11\. 11\./g).length, 8);
-  assert.equal(home.match(/Odesílání zatím není spuštěné\./g).length, 8);
-  assert.equal(home.match(/type="checkbox"/g).length, 8);
-  assert.doesNotMatch(visible(home), /<form\b|<\/form>|method=|action=|\brequired\b|\bchecked\b|localStorage|sessionStorage|fetch\(|XMLHttpRequest|sendBeacon|\/api\//i);
+test("homepage má dvě volby, ne mřížku osmi kategorií, a formuláře nic neodesílají", () => {
+  assert.match(home, /<a class="choice" href="\/sdilet-pribeh\/">/);
+  assert.match(home, /<a class="choice" href="\/chci-pomoci\/">/);
+  assert.match(home, /Chci nasdílet svůj příběh/);
+  assert.match(home, /Chci pomoci/);
+  assert.equal(visible(home).match(/class="choice"/g).length, 2);
+  assert.doesNotMatch(home, /<summary>|Nabídni terapii|Nabídni právní pomoc|Nabídni své výrobky|Sdílej svůj příběh/);
+  assert.match(home, /<footer[\s\S]*href="\/potrebuji-pomoc\/">Potřebuji pomoc<\/a>/);
+  const choices = [...home.matchAll(/<a class="choice"[^>]*>([\s\S]*?)<\/a>/g)].map((m) => m[1]);
+  assert.equal(choices.length, 2);
+  assert.ok(choices.every((c) => !c.includes("Potřebuji pomoc")));
+  const pribeh = home.slice(home.indexOf('id="pribeh"'), home.indexOf("</section>"));
+  assert.match(pribeh, /Tady bude osobní výpověď Věry Komárové\. Čekáme na její text\./);
+  assert.equal(pribeh.includes("<img"), false);
   assert.match(home, /Pracovní náhled — formuláře zatím nic neodesílají\./);
-  assert.match(home, /Tady bude osobní výpověď Věry Komárové\. Čekáme na její text\./);
   assert.match(home, /Žádná žena není nadbytečná\./);
   assert.match(home, /Připravujeme místo pro ženy, které si prošly něčím podobným\./);
   assert.match(home, /Hlavní cíl - změnit systém - více ochrany našimi zákony pro ženy, manželky, partnerky, matky, podnikatelky\./);
-  assert.match(home, /Právní i jinou pomoc připravujeme\./);
   assert.match(home, /href="https:\/\/veryvera\.cz" rel="noopener noreferrer"/);
-  assert.match(home, /Zapsaný ústav — název, IČO, sídlo a zápis v rejstříku doplníme po založení\./);
+  assert.match(home, /Správce osobních údajů: Věra Komárová, fyzická osoba\. Adresa: doplníme\. IČ: doplníme\./);
+  assert.doesNotMatch(visible(home), /Zapsaný ústav/);
+  assert.match(read("ochrana-osobnich-udaju/index.html"), /Správce osobních údajů je Věra Komárová, fyzická osoba/);
+  assert.doesNotMatch(read("ochrana-osobnich-udaju/index.html"), /Zapsaný ústav/);
+  assert.doesNotMatch(read("kontakt/index.html"), /Zapsaný ústav/);
   assert.match(home, /mailto:veryvera@nadbytecna\.cz/);
+  for (const p of ["index.html", "sdilet-pribeh/index.html", "chci-pomoci/index.html", "potrebuji-pomoc/index.html"]) {
+    assert.doesNotMatch(visible(read(p)), /<form\b|<\/form>|method=|action=|\brequired\b|\bchecked\b|localStorage|sessionStorage|fetch\(|XMLHttpRequest|sendBeacon|\/api\//i, p);
+  }
+  const story = read("sdilet-pribeh/index.html");
+  assert.equal(story.match(/<button type="button" class="send" disabled/g).length, 1);
+  assert.match(story, /Odesílání zatím není spuštěné\./);
+  const help = read("chci-pomoci/index.html");
+  assert.match(help, /Už jsem si tím prošla \/ prošel/);
+  assert.match(help, /Pomáhám takovým lidem/);
+  assert.equal(visible(help).match(/type="radio"/g).length, 2);
+  for (const typ of ["práce", "terapie", "právní pomoc", "výrobky a služby", "jiné"]) assert.match(help, new RegExp(`<span>${typ}</span>`));
+  assert.match(help, /Není povinné/);
   assert.doesNotMatch(visible(home), /50 %|Dermacol|Kateřina|Maruška|Miklíková|Golden Line|Malé nám|Dlouhá 34|Lázeňská|Supabase|Resend/i);
-  assert.doesNotMatch(home, /<img[^>]+pribeh|osobní fot/i);
-  const story = home.slice(home.indexOf('id="pribeh"'), home.indexOf('id="zapoj-se"'));
-  assert.equal(story.includes("<img"), false);
 });
 
 test("kontakty a chat jsou připravované, právní texty jsou návrhy", () => {
-  assert.match(home, /Prověřené kontakty/);
-  assert.match(home, /Žádný kontakt tu není a nic tu není prověřené\./);
-  assert.match(home, /Chat neběží/);
-  for (const p of pages.slice(1)) assert.match(read(p), /Pracovní návrh/);
+  const prep = read("pripravujeme/index.html");
+  assert.match(prep, /Prověřené kontakty/);
+  assert.match(prep, /Žádný kontakt tu není a nic tu není prověřené\./);
+  assert.match(prep, /Chat neběží/);
+  assert.match(prep, /Právní i jinou pomoc připravujeme\./);
+  for (const p of ["ochrana-osobnich-udaju/index.html", "pravidla-zverejnovani/index.html"]) assert.match(read(p), /Pracovní návrh/);
   assert.match(read("ochrana-osobnich-udaju/index.html"), /Souhlas se zpracováním údajů a souhlas se zveřejněním jsou dvě různé věci/);
   assert.match(read("kontakt/index.html"), /Tohle není krizová linka/);
+  assert.match(read("potrebuji-pomoc/index.html"), /Není to krizová linka/);
 });
 
 test("preview API požadavek odmítne dřív, než přečte tělo", () => {
