@@ -31,8 +31,13 @@ test("noindex v HTML, robots.txt zakazuje vše, stránky nemají kanonický odka
 
 test("hero má stejný lockup a stejné fluid.js, app.js se nenačítá", () => {
   assert.match(home, /<img class="wordmark" src="\/img\/nadbytecna-script\.svg"/);
-  assert.doesNotMatch(home, /<img class="logo"/);
-  assert.doesNotMatch(home, /data-split="/);
+  const logo = home.match(/<img class="logo"[^>]*>/)[0];
+  assert.match(logo, /src="\/img\/nadbytecna-lockup\.svg"/);
+  assert.match(logo, /data-split="0\.5385"/);
+  assert.match(logo, /data-base="0\.8403"/);
+  assert.match(logo, /alt="VERY VERA – Nadbytečná\.cz"/);
+  assert.equal(home.match(/data-split="/g).length, 1);
+  assert.match(home, /<script src="\/fluid\.js" defer><\/script>/);
   assert.doesNotMatch(home, /app\.js/);
   assert.equal(fs.existsSync(path.join(OUT, "app.js")), false);
   const fluid = read("fluid.js");
