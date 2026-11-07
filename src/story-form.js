@@ -192,6 +192,7 @@
         consent: true,
       });
     }).then(function () {
+      api.done("stories", id, blob ? { audio: blob, filename: fname } : null);
       var msg = input === "text"
         ? "Dostali jsme tvůj příběh. Ozveme se na e-mail, který jsi uvedla."
         : "Dostali jsme tvou hlasovou zprávu. Přepíšeme ji na text a ozveme se na e-mail.";

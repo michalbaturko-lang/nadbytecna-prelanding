@@ -34,8 +34,9 @@
       web: val("pomoc-web"),
     };
     sendBtn.disabled = true;
+    var id = api.uuid();
     api.insertRow("help_offers", {
-      id: api.uuid(),
+      id: id,
       full_name: name,
       email: email,
       phone: val("pomoc-telefon") || null,
@@ -45,6 +46,7 @@
       links: JSON.stringify(links),
       consent: true,
     }).then(function () {
+      api.done("help_offers", id);
       root.querySelector("fieldset").hidden = true;
       sendBtn.hidden = true;
       document.getElementById("pomoc-thanks-text").textContent = type.value === "lived_experience"

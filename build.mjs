@@ -402,9 +402,20 @@ function buildPhase1(out) {
   fs.copyFileSync(path.join(ROOT, "src/story-form.js"), path.join(out, "story-form.js"));
   fs.copyFileSync(path.join(ROOT, "src/help-form.js"), path.join(out, "help-form.js"));
   fs.copyFileSync(path.join(ROOT, "src/submit.js"), path.join(out, "submit.js"));
+  fs.copyFileSync(path.join(ROOT, "src/cookies.js"), path.join(out, "cookies.js"));
+  fs.copyFileSync(path.join(ROOT, "src/admin.js"), path.join(out, "admin.js"));
   const supaUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
   const supaKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || "";
-  fs.writeFileSync(path.join(out, "config.js"), "window.NADBYTECNA_SUPABASE=" + JSON.stringify({ url: supaUrl, key: supaKey }) + ";\n");
+  const ads = {
+    meta: process.env.NEXT_PUBLIC_META_PIXEL_ID || "",
+    ga4: process.env.NEXT_PUBLIC_GA4_ID || "",
+    ads: process.env.NEXT_PUBLIC_GOOGLE_ADS_ID || "",
+    adsStory: process.env.NEXT_PUBLIC_GOOGLE_ADS_STORY_LABEL || "",
+    adsHelp: process.env.NEXT_PUBLIC_GOOGLE_ADS_HELP_LABEL || "",
+    adsShop: process.env.NEXT_PUBLIC_GOOGLE_ADS_SHOP_LABEL || "",
+    tiktok: process.env.NEXT_PUBLIC_TIKTOK_PIXEL_ID || "",
+  };
+  fs.writeFileSync(path.join(out, "config.js"), "window.NADBYTECNA_SUPABASE=" + JSON.stringify({ url: supaUrl, key: supaKey }) + ";\nwindow.NADBYTECNA_ADS=" + JSON.stringify(ads) + ";\n");
   const { pages, robots, llms } = renderPhase1({ css, preload: PRELOAD, heart: HEART, logoAttrs: LOGO_ATTRS });
   for (const [p, html] of Object.entries(pages)) {
     const rel = p === "/" ? "index.html" : path.join(p.replace(/^\//, ""), "index.html");
