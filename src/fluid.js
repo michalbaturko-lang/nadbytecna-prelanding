@@ -1,9 +1,9 @@
 // Logo reaguje na přiblížení myši / dotek prstu. Bez knihoven, bez třetích stran.
 // VERY VERA nad nápisem se nikdy nehýbe: efekt běží jen na rukopisném „Nadbytečná.cz“.
 // Písmena jsou skutečné vektorové tvary (řezy vedené podle spojů mezi písmeny, ne svislé čáry).
-//  1. přiblížení: odpadne velké „N“
-//  2. přiblížení: odpadnou dvě náhodná písmena a hned potom zbytek kromě „ná“
-//  „ná“ se zlatě posune na začátek a pomalu se k němu rozvine „s nic nezlomí!“; pak se vše složí zpátky.
+//  1. první přejetí (na mobilu první dotyk nebo scroll): odpadne velké „N“
+//  2. asi po 1 s samo naváže dnešní pokračování: dvě písmena, pak zbytek „Nadbytečná“,
+//     „ná“ se zlatě posune a rozvine se „s nic nezlomí!“; pak se vše složí zpátky.
 // Bez Canvasu nebo při „omezit pohyb“ zůstává obyčejný obrázek.
 (function () {
   "use strict";
@@ -39,7 +39,7 @@
     var d = DATA[id];
     L[id] = { id: id, p: new Path2D(d.d), cx: d.cx, cy: d.cy, x0: d.x0, x1: d.x1, mode: "on", t0: 0, vx: 0, rot: 0 };
   });
-  var stage = 0, active = false, raf = 0, idleT = 0, chainT = 0, lastPoke = -1e9, seq = null, dirty = true, statics = null;
+  var stage = 0, active = false, raf = 0, idleT = 0, chainT = 0, autoT = 0, lastPoke = -1e9, lastPx = 1240, pendingKick = false, seq = null, dirty = true, statics = null;
 
   function easeIO(x) { return x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2; }
   function easeS(x) { return 0.5 - 0.5 * Math.cos(Math.PI * x); }
@@ -215,15 +215,22 @@
     stage = 0;
   }
 
-  function poke(px, now) {                                         // px v jednotkách kresby
+  function poke(px, now, fromAuto) {                            // px v jednotkách kresby
     if (!ready || seq) return;
-    if (now - lastPoke < 650) return;
+    if (!fromAuto && now - lastPoke < 650) return;
     lastPoke = now;
+    lastPx = px;
     clearTimeout(idleT); clearTimeout(chainT);
+    if (!fromAuto) clearTimeout(autoT);
     if (!active) show(true);
     stage++;
     if (stage === 1) {
       fallOne("N", 0, now);
+      autoT = setTimeout(function () {
+        autoT = 0;
+        if (stage !== 1 || seq) return;
+        poke(lastPx, performance.now(), true);
+      }, 1000);
       idleT = setTimeout(function () { restoreAll(performance.now()); }, 9000);
     } else if (stage === 2) {
       var cand = ["a", "d", "b", "y", "t", "e", "c"].filter(function (id) { return L[id].mode === "on"; }), n = 0;
@@ -249,6 +256,17 @@
     }
     inside = ins;
   }
+  var coarse = (window.matchMedia && window.matchMedia("(pointer: coarse)").matches) || navigator.maxTouchPoints > 0;
+  function kickMobile() {
+    if (!coarse || stage !== 0) return;
+    if (!ready) { pendingKick = true; return; }
+    pendingKick = false;
+    poke(lastPx, performance.now());
+  }
+  if (coarse) {
+    window.addEventListener("pointerdown", kickMobile, { passive: true });
+    window.addEventListener("scroll", kickMobile, { passive: true });
+  }
   window.addEventListener("pointermove", onPoint, { passive: true });
   window.addEventListener("pointerdown", function (e) { if (e.pointerType === "touch") inside = false; onPoint(e); }, { passive: true });
   function leave(e) { if (!e || e.pointerType === "touch" || e.type === "pointercancel") inside = false; }
@@ -260,7 +278,7 @@
   window.addEventListener("resize", function () { clearTimeout(rt); rt = setTimeout(function () { if (!seq) layout(); }, 150); });
   function start() {
     var p = document.fonts && document.fonts.load ? document.fonts.load("40px Damion", PHRASE) : Promise.resolve();
-    p.then(layout, layout);
+    p.then(function () { layout(); if (pendingKick) kickMobile(); }, function () { layout(); if (pendingKick) kickMobile(); });
   }
   if (img.complete && img.naturalWidth) start(); else img.addEventListener("load", start);
 })();

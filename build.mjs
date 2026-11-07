@@ -1,12 +1,14 @@
 // Statický build: public/ + src/ -> dist/ (HTML stránky, inline CSS, fonty).
 // Použití:  node build.mjs            (varianta claimu z env CLAIM, default 1)
 //           node build.mjs --all      (navíc náhledy preview/v1..v3 pro schvalování s Věrou)
+//           PHASE1=1 node build.mjs   (pracovní náhled fáze 1; pre-landing se negeneruje)
 import fs from "node:fs";
 import crypto from "node:crypto";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { CONSENT_VERSIONS, LANGS, PATHS, consentHtml, controller } from "./lib/consent.js";
 import { VOTE_CLAIMS, VOTE_MAX } from "./lib/claims.js";
+import { renderPhase1 } from "./lib/phase1-html.js";
 
 const ROOT = path.dirname(fileURLToPath(import.meta.url));
 // Dokud není připojená doména nadbytecna.cz, na Vercelu míří absolutní URL (OG obrázek, canonical) na vercel.app, aby sdílecí náhledy fungovaly.
@@ -69,7 +71,7 @@ const css = fs.readFileSync(path.join(ROOT, "src/site.css"), "utf8").replace(/\/
   const vj = JSON.parse(fs.readFileSync(vjPath, "utf8"));
   const h = vj.headers[0].headers.find((x) => x.key === "Content-Security-Policy");
   const next = h.value.replace(/style-src [^;]*;/, `style-src 'self' '${cssHash}';`);
-  if (next !== h.value) { h.value = next; fs.writeFileSync(vjPath, JSON.stringify(vj, null, 2) + "\n"); }
+  if (!process.env.OUT_DIR && next !== h.value) { h.value = next; fs.writeFileSync(vjPath, JSON.stringify(vj, null, 2) + "\n"); }
 }
 
 const HEART = '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>';
@@ -359,7 +361,7 @@ ${VOTE_CLAIMS.map((c) => `<button type="button" class="pick" data-id="${c.id}" a
 </section>`;
 }
 
-function build(out, variant) {
+function stage(out) {
   fs.rmSync(out, { recursive: true, force: true });
   fs.cpSync(path.join(ROOT, "public"), out, { recursive: true });
   fs.mkdirSync(path.join(out, "fonts"), { recursive: true });
@@ -374,6 +376,10 @@ function build(out, variant) {
   }
   fs.copyFileSync(path.join(ROOT, "src/app.js"), path.join(out, "app.js"));
   fs.writeFileSync(path.join(out, "fluid.js"), fs.readFileSync(path.join(ROOT, "src/fluid.js"), "utf8").replace("/*LETTERS*/null", () => fs.readFileSync(path.join(ROOT, "src/letters.json"), "utf8")));
+}
+
+function build(out, variant) {
+  stage(out);
   const file = (p) => path.join(out, p.replace(/^\//, ""), "index.html");
   for (const lang of LANGS) {
     const t = TXT[lang], P = PATHS[lang];
@@ -390,12 +396,48 @@ function build(out, variant) {
   write(path.join(out, "robots.txt"), LIVE ? `User-agent: *\nAllow: /\nDisallow: /api/\n\nSitemap: ${SITE}/sitemap.xml\n` : `User-agent: *\nAllow: /og.jpg\nDisallow: /\n`);
 }
 
+function buildPhase1(out) {
+  stage(out);
+  fs.rmSync(path.join(out, "app.js"), { force: true });
+  fs.copyFileSync(path.join(ROOT, "src/story-form.js"), path.join(out, "story-form.js"));
+  fs.copyFileSync(path.join(ROOT, "src/help-form.js"), path.join(out, "help-form.js"));
+  fs.copyFileSync(path.join(ROOT, "src/submit.js"), path.join(out, "submit.js"));
+  fs.copyFileSync(path.join(ROOT, "src/cookies.js"), path.join(out, "cookies.js"));
+  fs.copyFileSync(path.join(ROOT, "src/admin.js"), path.join(out, "admin.js"));
+  const supaUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
+  const supaKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || "";
+  const ads = {
+    meta: process.env.NEXT_PUBLIC_META_PIXEL_ID || "",
+    ga4: process.env.NEXT_PUBLIC_GA4_ID || "",
+    ads: process.env.NEXT_PUBLIC_GOOGLE_ADS_ID || "",
+    adsStory: process.env.NEXT_PUBLIC_GOOGLE_ADS_STORY_LABEL || "",
+    adsHelp: process.env.NEXT_PUBLIC_GOOGLE_ADS_HELP_LABEL || "",
+    adsShop: process.env.NEXT_PUBLIC_GOOGLE_ADS_SHOP_LABEL || "",
+    tiktok: process.env.NEXT_PUBLIC_TIKTOK_PIXEL_ID || "",
+  };
+  fs.writeFileSync(path.join(out, "config.js"), "window.NADBYTECNA_SUPABASE=" + JSON.stringify({ url: supaUrl, key: supaKey }) + ";\nwindow.NADBYTECNA_ADS=" + JSON.stringify(ads) + ";\n");
+  const { pages, robots, llms } = renderPhase1({ css, preload: PRELOAD, heart: HEART, logoAttrs: LOGO_ATTRS, draft: process.env.VERCEL_ENV !== "production" });
+  for (const [p, html] of Object.entries(pages)) {
+    const rel = p === "/" ? "index.html" : path.join(p.replace(/^\//, ""), "index.html");
+    write(path.join(out, rel), html);
+  }
+  write(path.join(out, "robots.txt"), robots);
+  write(path.join(out, "llms.txt"), llms);
+}
+
 const variant = Number(process.env.CLAIM || 1);
 if (!CLAIMS.cs[variant]) throw new Error("CLAIM musí být 1, 2 nebo 3");
-build(path.join(ROOT, "dist"), variant);
-if (process.argv.includes("--all")) for (const v of [1, 2, 3]) build(path.join(ROOT, "preview", `v${v}`), v);
+const out = process.env.OUT_DIR ? path.resolve(process.env.OUT_DIR) : path.join(ROOT, "dist");
+if (process.env.PHASE1 === "1") buildPhase1(out);
+else {
+  build(out, variant);
+  if (!process.env.OUT_DIR && process.argv.includes("--all")) for (const v of [1, 2, 3]) build(path.join(ROOT, "preview", `v${v}`), v);
+}
 
-const todo = [];
-if (!C.complete) todo.push("Správce údajů (CONTROLLER_NAME/ICO/ADDRESS/EMAIL) není vyplněn – text souhlasu a zásady mají zástupné údaje.");
-if (todo.length) console.warn("POZOR:\n- " + todo.join("\n- "));
-console.log(`Build OK (claim ${variant}, ${SITE})`);
+if (process.env.PHASE1 === "1") console.log(`Build OK (fáze 1, ${SITE})`);
+else {
+  const todo = [];
+  if (!C.complete) todo.push("Správce údajů (CONTROLLER_NAME/ICO/ADDRESS/EMAIL) není vyplněn – text souhlasu a zásady mají zástupné údaje.");
+  if (todo.length) console.warn("POZOR:\n- " + todo.join("\n- "));
+  console.log(`Build OK (claim ${variant}, ${SITE})`);
+}

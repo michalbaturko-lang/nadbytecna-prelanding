@@ -1,0 +1,111 @@
+{
+  "from": "Nadbytečná <veryvera@nadbytecna.cz>",
+  "reply_to": "veryvera@nadbytecna.cz",
+  "templates": [
+    {
+      "id": "share-anonymous-voice-also-help",
+      "subject": "Dostali jsme tvou hlasovou zprávu",
+      "html": "share-story/anonymous-voice-also-help.html",
+      "text": "share-story/anonymous-voice-also-help.txt",
+      "anonymous": true
+    },
+    {
+      "id": "share-anonymous-voice-story",
+      "subject": "Dostali jsme tvou hlasovou zprávu",
+      "html": "share-story/anonymous-voice-story.html",
+      "text": "share-story/anonymous-voice-story.txt",
+      "anonymous": true
+    },
+    {
+      "id": "share-anonymous-text-also-help",
+      "subject": "Dostali jsme tvůj příběh",
+      "html": "share-story/anonymous-text-also-help.html",
+      "text": "share-story/anonymous-text-also-help.txt",
+      "anonymous": true
+    },
+    {
+      "id": "share-anonymous-text-story",
+      "subject": "Dostali jsme tvůj příběh",
+      "html": "share-story/anonymous-text-story.html",
+      "text": "share-story/anonymous-text-story.txt",
+      "anonymous": true
+    },
+    {
+      "id": "share-named-voice-also-help",
+      "subject": "Dostali jsme tvou hlasovou zprávu",
+      "html": "share-story/named-voice-also-help.html",
+      "text": "share-story/named-voice-also-help.txt",
+      "anonymous": false
+    },
+    {
+      "id": "share-named-voice-story",
+      "subject": "Dostali jsme tvou hlasovou zprávu",
+      "html": "share-story/named-voice-story.html",
+      "text": "share-story/named-voice-story.txt",
+      "anonymous": false
+    },
+    {
+      "id": "share-named-text-also-help",
+      "subject": "Dostali jsme tvůj příběh",
+      "html": "share-story/named-text-also-help.html",
+      "text": "share-story/named-text-also-help.txt",
+      "anonymous": false
+    },
+    {
+      "id": "share-named-text-story",
+      "subject": "Dostali jsme tvůj příběh",
+      "html": "share-story/named-text-story.html",
+      "text": "share-story/named-text-story.txt",
+      "anonymous": false
+    },
+    {
+      "id": "help-been-through",
+      "subject": "Díky, že chceš pomoct",
+      "html": "can-help/been-through.html",
+      "text": "can-help/been-through.txt",
+      "anonymous": false
+    },
+    {
+      "id": "help-others",
+      "subject": "Díky za nabídku pomoci",
+      "html": "can-help/help-others.html",
+      "text": "can-help/help-others.txt",
+      "anonymous": false
+    },
+    {
+      "id": "help-others-prace",
+      "subject": "Díky za nabídku pomoci",
+      "html": "can-help/help-others-prace.html",
+      "text": "can-help/help-others-prace.txt",
+      "anonymous": false
+    },
+    {
+      "id": "help-others-terapie",
+      "subject": "Díky za nabídku pomoci",
+      "html": "can-help/help-others-terapie.html",
+      "text": "can-help/help-others-terapie.txt",
+      "anonymous": false
+    },
+    {
+      "id": "help-others-pravni",
+      "subject": "Díky za nabídku pomoci",
+      "html": "can-help/help-others-pravni.html",
+      "text": "can-help/help-others-pravni.txt",
+      "anonymous": false
+    },
+    {
+      "id": "help-others-vyrobky",
+      "subject": "Díky za nabídku pomoci",
+      "html": "can-help/help-others-vyrobky.html",
+      "text": "can-help/help-others-vyrobky.txt",
+      "anonymous": false
+    },
+    {
+      "id": "help-others-jine",
+      "subject": "Díky za nabídku pomoci",
+      "html": "can-help/help-others-jine.html",
+      "text": "can-help/help-others-jine.txt",
+      "anonymous": false
+    }
+  ]
+}

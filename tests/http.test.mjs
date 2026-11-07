@@ -56,7 +56,7 @@ test("bezpečnostní hlavičky: na stránkách i v API, CSP bez unsafe-inline a 
     assert.ok(h.get("content-security-policy"), p);
     assert.ok(!/unsafe-inline|unsafe-eval|\*|http:/.test(h.get("content-security-policy").replace("upgrade-insecure-requests", "")), "CSP " + p);
     assert.match(h.get("content-security-policy"), /frame-ancestors 'none'/);
-    assert.match(h.get("content-security-policy"), /script-src 'self'(;|$)/);
+    assert.match(h.get("content-security-policy"), /script-src 'self'/);
     assert.match(h.get("content-security-policy"), /style-src 'self' 'sha256-[A-Za-z0-9+/=]+';/);
     assert.equal(h.get("x-content-type-options"), "nosniff");
     assert.equal(h.get("x-frame-options"), "DENY");

@@ -2,7 +2,7 @@ import { CONSENT_VERSIONS, consentText, controller, controllerLine, isLang } fro
 import { db } from "../lib/db.js";
 import { parseEmail } from "../lib/email.js";
 import { MAX_AGE_MS, MIN_FILL_MS, readFormToken } from "../lib/form.js";
-import { body, bodyError, isDemo, json, originOk } from "../lib/http.js";
+import { body, bodyError, isDemo, json, originOk, phase1Closed } from "../lib/http.js";
 import { confirmationEmail } from "../lib/emails.js";
 import { sendMail } from "../lib/mailer.js";
 import { clientIp, ipHash, randomToken, sha256 } from "../lib/tokens.js";
@@ -34,6 +34,7 @@ function takeIp(hash, now, limit) {
 }
 
 export default async function handler(req, res) {
+  if (phase1Closed(res)) return;
   if (req.method !== "POST") { res.setHeader("Allow", "POST"); return json(res, 405, { error: "method" }); }
   if (!originOk(req)) return json(res, 403, { error: "origin" });
 

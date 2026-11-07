@@ -1,6 +1,6 @@
 import { cleanClaims, tally } from "../lib/claims.js";
 import { db } from "../lib/db.js";
-import { body, bodyError, isDemo, json, originOk } from "../lib/http.js";
+import { body, bodyError, isDemo, json, originOk, phase1Closed } from "../lib/http.js";
 import { verifyVote } from "../lib/tokens.js";
 
 // GET  /api/vote/ -> souhrnné počty (bez osobních údajů)
@@ -16,6 +16,7 @@ async function publicTally() {
 }
 
 export default async function handler(req, res) {
+  if (phase1Closed(res)) return;
   if (req.method === "GET") {
     if (isDemo(req)) return json(res, 200, { ...tally([]), demo: true });
     try { return json(res, 200, await publicTally()); }
