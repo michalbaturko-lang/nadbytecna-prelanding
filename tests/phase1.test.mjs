@@ -80,7 +80,13 @@ test("homepage má dvě volby, osm karet a formuláře nic neodesílají", () =>
   assert.match(home, /Žádná žena není nadbytečná\./);
   assert.match(home, /Místo pro ženy, které si prošly něčím podobným, a pro ty, kdo jim chtějí pomoci\./);
   assert.match(home, /Více ochrany našimi zákony pro ženy, manželky, partnerky, matky a podnikatelky\./);
-  assert.match(home, /href="https:\/\/veryvera\.cz" rel="noopener noreferrer"/);
+  assert.match(home, /Podpořte platformu Nadbytečná\.cz předobjednáním parfému!/);
+  assert.match(home, /Dodání do Vánoc!/);
+  assert.match(home, /Předobjednat parfém/);
+  assert.match(home, /loading="lazy"/);
+  assert.match(home, /src="\/img\/parfem-nadbytecna\.jpg"/);
+  assert.doesNotMatch(home, /E-shop Věry Komárové/);
+  assert.match(home, /class="vera-cta" href="https:\/\/veryvera\.cz" rel="noopener noreferrer"/);
   assert.match(home, /Správce osobních údajů: Věra Komárová, fyzická osoba\. Adresa: doplníme\. IČ: doplníme\./);
   assert.doesNotMatch(visible(home), /Zapsaný ústav/);
   assert.match(read("ochrana-osobnich-udaju/index.html"), /Správce osobních údajů je Věra Komárová, fyzická osoba/);

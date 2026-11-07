@@ -371,9 +371,17 @@ body[data-page="soon"] a.mail:hover{text-decoration:underline}
 .cat:hover{color:var(--magenta-deep)}
 .contact-cols{display:grid;gap:.75rem}
 .goal p{font-family:var(--serif);font-size:clamp(1.2rem,3vw,1.5rem);line-height:1.35}
-.vera-strip{margin-top:2.4rem;padding:1.2rem 1.15rem;background:var(--paper);border-radius:.7rem;border-top:3px solid var(--gold)}
-.vera-strip .kicker{margin:0 0 .3rem;font-weight:700;letter-spacing:.08em;color:var(--gold)}
-.vera-strip p{margin:.2rem 0 .4rem}
+.vera-strip{display:grid;gap:1.15rem;align-items:center;margin-top:2.4rem;padding:1rem;background:var(--paper);border-radius:.7rem;border-top:3px solid var(--gold)}
+.vera-strip img{display:block;width:100%;height:auto;border-radius:.55rem}
+.vera-strip h2{font-family:var(--serif);font-weight:600;font-size:clamp(1.45rem,3.2vw,2.05rem);line-height:1.2;margin:0 0 .45rem}
+.vera-strip p{margin:0 0 .9rem;font-size:1.15rem}
+.vera-cta{display:inline-flex;align-items:center;justify-content:center;min-height:48px;padding:.6rem 1.15rem;border-radius:.5rem;background:var(--magenta-deep);color:#fff;font-weight:700;text-decoration:none}
+body[data-page="phase1"] .main a.vera-cta,
+body[data-page="phase1"] .main a.vera-cta:hover{color:#fff;background:var(--magenta-deep)}
+body[data-page="phase1"] .main a.vera-cta:hover{background:#9F0842}
+@media (min-width:60rem){
+  .vera-strip{grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr);gap:clamp(1.25rem,3vw,2.4rem);padding:1.25rem}
+}
 .sos{position:fixed;z-index:5;left:1rem;bottom:1rem;width:min(18rem,calc(100% - 2rem))}
 .sos summary{display:flex;align-items:center;justify-content:center;min-height:44px;padding:.45rem .8rem;border-radius:.5rem;background:var(--magenta);color:#fff;font-weight:700;cursor:pointer;list-style:none}
 .sos summary::-webkit-details-marker{display:none}
