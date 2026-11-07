@@ -20,13 +20,13 @@
     say("");
     var hp = document.getElementById("brzy-hp");
     if (hp && String(hp.value || "").trim()) { showThanks(); return; }
-    if (Date.now() - started < MIN_MS) { say("Počkej chvilku a zkus to znovu."); return; }
+    if (Date.now() - started < MIN_MS) { say("Počkejte, prosím, chvilku a zkuste to znovu."); return; }
     var email = document.getElementById("brzy-email").value.trim().toLowerCase();
     var consent = document.getElementById("brzy-gdpr").checked;
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { say("Doplň e-mail."); return; }
-    if (!consent) { say("Bez souhlasu se zasíláním upozornění to uložit nemůžeme."); return; }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { say("Napište, prosím, svůj e-mail."); return; }
+    if (!consent) { say("Bez souhlasu se zasláním zprávy to uložit nemůžeme."); return; }
     var c = cfg();
-    if (!c.url || !c.key) { say("Odeslání se nepovedlo. Napiš na veryvera@nadbytecna.cz."); return; }
+    if (!c.url || !c.key) { say("Odeslání se nepovedlo. Napište nám na veryvera@nadbytecna.cz."); return; }
     send.disabled = true;
     fetch(c.url + "/rest/v1/launch_signups", {
       method: "POST",
@@ -38,12 +38,12 @@
       },
       body: JSON.stringify({ email: email, consent: true }),
     }).then(function (res) {
-      if (res.status === 409) { say("Tenhle e-mail už evidujeme. Ozveme se v den spuštění."); send.disabled = false; return; }
+      if (res.status === 409) { say("Tento e-mail už máme. 11. 11. se vám ozveme."); send.disabled = false; return; }
       if (!res.ok) throw new Error("insert");
       showThanks();
     }).catch(function () {
       send.disabled = false;
-      say("Odeslání se nepovedlo. Napiš na veryvera@nadbytecna.cz.");
+      say("Odeslání se nepovedlo. Napište nám na veryvera@nadbytecna.cz.");
     });
   });
 

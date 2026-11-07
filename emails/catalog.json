@@ -59,6 +59,13 @@
       "anonymous": false
     },
     {
+      "id": "launch-signup",
+      "subject": "Dáme vám vědět, až se otevřeme",
+      "html": "launch/signup.html",
+      "text": "launch/signup.txt",
+      "anonymous": true
+    },
+    {
       "id": "help-been-through",
       "subject": "Díky, že chceš pomoct",
       "html": "can-help/been-through.html",
