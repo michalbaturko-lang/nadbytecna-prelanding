@@ -64,7 +64,7 @@
   }
 
   function done(table, id, opts) {
-    ping("/api/notify", {
+    ping("/api/notify/", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ table: table, id: id }),
@@ -72,7 +72,7 @@
     if (opts && opts.audio) {
       var blob = opts.audio;
       var name = opts.filename || "hlas.webm";
-      ping("/api/transcribe", {
+      ping("/api/transcribe/", {
         method: "POST",
         headers: {
           "Content-Type": (blob && blob.type) || "application/octet-stream",

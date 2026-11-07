@@ -86,6 +86,8 @@ test("homepage má dvě volby, ne mřížku osmi kategorií, a formuláře nic n
   assert.match(story, /src="\/submit.js"/);
   const submitJs = fs.readFileSync(path.join(ROOT, "src/submit.js"), "utf8");
   assert.match(submitJs, /return=minimal/);
+  assert.match(submitJs, /\/api\/transcribe\//);
+  assert.match(submitJs, /\/api\/notify\//);
   assert.match(submitJs, /audio\/webm/);
   assert.doesNotMatch(submitJs, /return=representation/);
   assert.doesNotMatch(submitJs, /\.select\s*\(/);
