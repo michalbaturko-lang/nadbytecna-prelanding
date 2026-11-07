@@ -226,11 +226,30 @@ body[data-page="phase1"] .foot p{margin:.35rem 0}
 .foot-links a{display:inline-flex;align-items:center;min-height:44px}
 body[data-page="phase1"] .page{overflow-wrap:break-word}
 @media (min-width:60rem){
-  .hero{grid-template-columns:1fr 1fr;align-items:center;gap:4rem;padding:1rem 0 0}
-  .fork{grid-template-columns:1fr 1fr;gap:2rem;align-items:start}
-  .choices{display:flex;flex-direction:column;gap:0;justify-content:flex-start;padding-top:.35rem}
-  .choices .choice{flex:none}
+  body[data-page="phase1"] .page{padding:0 clamp(2rem,4vw,4.5rem)}
+  body[data-page="phase1"] .main{
+    display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+    column-gap:clamp(2.5rem,4vw,4.5rem);row-gap:2.75rem;
+    width:100%;max-width:72rem;margin-inline:auto;align-items:start;
+    padding:2.75rem 0 1rem;
+  }
+  body[data-page="phase1"] .hero,
+  body[data-page="phase1"] .fork{
+    display:grid;grid-template-columns:subgrid;grid-column:1 / -1;
+    column-gap:clamp(2.5rem,4vw,4.5rem);row-gap:0;
+    align-items:start;padding:0;margin:0;
+  }
+  body[data-page="phase1"] .hero{align-items:start}
+  body[data-page="phase1"] .brand{width:100%;max-width:none;margin-inline:auto}
+  body[data-page="phase1"] .logo{width:100%;max-width:100%}
+  body[data-page="phase1"] .rule{width:68%;max-width:none;margin-top:1.15rem;margin-inline:auto}
+  body[data-page="phase1"] .content{max-width:none;width:100%;margin:0;align-self:start}
+  body[data-page="phase1"] .fork .block,
+  body[data-page="phase1"] .choices{padding-top:0;margin-top:0}
+  body[data-page="phase1"] .choices{justify-content:flex-start}
+  body[data-page="phase1"] .choices .choice{flex:none}
   .prep{grid-template-columns:1fr 1fr;align-items:start}
+  body[data-page="phase1"] .foot{max-width:72rem}
 }
 @media (forced-colors:active){
   .banner,.choice,.placeholder,.slot{border:1px solid CanvasText}
@@ -281,6 +300,19 @@ body[data-page="phase1"] select{min-height:48px;font:inherit;background:var(--pa
 
 .picks[hidden],.vote .cta[hidden],.vote-sub[hidden]{display:none!important}
 
-@font-face{font-family:Damion;font-style:normal;font-weight:400;font-display:swap;src:url(/fonts/damion-latin-400-normal.woff2) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
-@font-face{font-family:Damion;font-style:normal;font-weight:400;font-display:swap;src:url(/fonts/damion-latin-ext-400-normal.woff2) format('woff2');unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}
+@font-face{font-family:Damion;font-style:normal;font-weight:400;font-display:swap;src:url(/fonts/damion-cs-400-normal.woff2) format("woff2");unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0100-024F,U+0259,U+1E00-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}
 .foot .lang,.doc .lang{display:inline-block;margin-top:.45rem;padding:.35rem .2rem;min-height:24px;font-weight:500}
+
+body[data-page="soon"] .soon{width:min(100%,34rem);margin:0 auto;padding:1.25rem 0 2.5rem;text-align:center}
+body[data-page="soon"] .soon-date{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.4vw,2.5rem);line-height:1.15;margin:1.2rem 0 .45rem}
+body[data-page="soon"] .soon-note{margin:0 auto 1.3rem;max-width:28rem;color:var(--ink-soft)}
+body[data-page="soon"] form{text-align:left}
+body[data-page="soon"] input[type="email"]{width:100%;max-width:100%;min-height:3.25rem;padding:.75rem 1rem;font:inherit;font-size:16px;color:var(--ink);background:var(--paper);border:1.5px solid #8A4A62;border-radius:.5rem}
+body[data-page="soon"] .consent{font-size:1rem;min-height:48px;align-items:center;touch-action:manipulation}
+body[data-page="soon"] .consent input{width:1.75rem;height:1.75rem;font-size:16px}
+body[data-page="soon"] button.send{min-height:48px;touch-action:manipulation}
+body[data-page="soon"] .soon-mail{margin:1.4rem 0 0}
+@media (min-width:60rem){
+  body[data-page="soon"] .logo{width:min(28rem,100%)}
+  body[data-page="soon"] .rule{width:min(22rem,80%)}
+}

@@ -53,12 +53,28 @@ Až má být web vidět ve vyhledávání:
 3. V `lib/phase1-html.js` nahraď obsah `robots` za soubor `launch/robots.txt` a při buildu zapiš `launch/sitemap.xml` jako `sitemap.xml`.
 4. Nové nasazení produkce. Ověř, že `https://nadbytecna.cz/robots.txt` obsahuje `Allow: /` a `Disallow: /admin/`, a že úvod nemá `noindex`.
 
-## 5. Doména a DNS
+## 5. Doména, coming soon a DNS
 
-Doménu `nadbytecna.cz` připoj v projektu Vercel. Záznamy ber z obrazovky domény. Obvykle:
+Domény `nadbytecna.cz` a `www.nadbytecna.cz` jsou v projektu Vercel připojené. DNS zatím není. Až se má jít na veřejnou adresu, záznamy ber z obrazovky domény. Obvykle:
 
 - apex `A` → `76.76.21.21`
 - `www` `CNAME` → `cname.vercel-dns.com`
+
+Do spuštění middleware (`middleware.js`) rozhoduje podle hostitele:
+
+- `www.nadbytecna.cz` trvale přesměruje na `https://nadbytecna.cz` se stejnou cestou.
+- `nadbytecna.cz` ukazuje jen coming soon (padající nápis, věta, datum 11. 11. 2026, e-mail k upozornění). Formuláře příběhu a pomoci tam nejsou. `noindex` zůstává.
+- Adresa `*.vercel.app` ukazuje plný web jako dosud.
+
+Přepínač je proměnná `SITE_LIVE`. Když chybí, nebo není přesně `true` či `1`, platí coming soon. Ve výchozím stavu ji nenastavuj.
+
+V den spuštění, až má apex ukázat plný web:
+
+1. Ve Vercelu pro **Production** nastav `SITE_LIVE` = `true`.
+2. Nasaď znovu. Middleware čte proměnnou při běhu, nové nasazení ji vezme jistě.
+3. Ověř, že `https://nadbytecna.cz/` je úvod fáze 1 a `https://www.nadbytecna.cz/` přesměruje na apex.
+
+Přihlášky k upozornění jsou v `public.launch_signups` (`email`, `created_at`, `consent`). Anon smí jen vložit řádek s `consent = true`. Číst je smí jen administrátor. Potvrzovací e-mail se neposílá.
 
 Resend, pro odesílání z `veryvera@nadbytecna.cz`: v Resendu přidej doménu a do DNS opiš přesně ty TXT a CNAME, které Resend ukáže (SPF, DKIM, return-path). Vlastní hodnoty sem nepatří, Resend je ukáže až pro tuto doménu.
 

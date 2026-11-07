@@ -112,6 +112,21 @@ test("homepage má dvě volby, ne mřížku osmi kategorií, a formuláře nic n
   for (const typ of ["práce", "terapie", "právní pomoc", "výrobky a služby", "jiné"]) assert.match(help, new RegExp(`<span>${typ}</span>`));
   assert.match(help, /Není povinné/);
   assert.doesNotMatch(visible(home), /50 %|Dermacol|Kateřina|Maruška|Miklíková|Golden Line|Malé nám|Dlouhá 34|Lázeňská|Supabase|Resend/i);
+  const soon = read("coming-soon/index.html");
+  assert.match(soon, /<img class="logo"[^>]*data-split="0\.5385"/);
+  assert.match(soon, /src="\/fluid\.js"/);
+  assert.match(soon, /Spouštíme 11\. 11\. 2026/);
+  assert.match(soon, /alt="VERY VERA – Nadbytečná\.cz"/);
+  assert.match(soon, /id="brzy-gdpr" type="checkbox"/);
+  assert.doesNotMatch(soon, /id="brzy-gdpr"[^>]*checked/);
+  assert.match(soon, /href="\/ochrana-osobnich-udaju\/"/);
+  assert.match(soon, /mailto:veryvera@nadbytecna\.cz/);
+  assert.match(soon, /noindex, nofollow, noarchive/);
+  assert.doesNotMatch(soon, /cookies\.js|submit\.js|story-form\.js/);
+  const launchJs = fs.readFileSync(path.join(ROOT, "src/launch-form.js"), "utf8");
+  assert.match(launchJs, /return=minimal/);
+  assert.match(launchJs, /launch_signups/);
+  assert.doesNotMatch(launchJs, /\.select\s*\(|innerHTML|\/api\/notify|\/api\/transcribe/);
 });
 
 test("právní stránky mluví o souhlasu a kontakt není krizová linka", () => {

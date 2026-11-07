@@ -74,6 +74,19 @@ test("retence: IP hash po expiraci pryč, nepotvrzené po 7 dnech smazané, potv
   assert.equal((await db.query("select count(*)::int n from public.preregistrations")).rows[0].n, 2);
 });
 
+test("launch_signups: anon vloží jen se souhlasem a řádek nečte", async () => {
+  const db = await fresh();
+  await db.exec("set role anon");
+  await assert.rejects(() => db.query("select * from public.launch_signups"), /permission denied/);
+  await db.query("insert into public.launch_signups (email, consent) values ('a@example.cz', true)");
+  await assert.rejects(() => db.query("insert into public.launch_signups (email, consent) values ('b@example.cz', false)"), /check|row-level|policy/i);
+  await assert.rejects(() => db.query("insert into public.launch_signups (email, consent) values ('A@Example.cz', true)"), /lower|check/i);
+  await db.exec("reset role");
+  assert.equal((await db.query("select email from public.launch_signups")).rows[0].email, "a@example.cz");
+  await db.exec("set role authenticated");
+  assert.equal((await db.query("select count(*)::int n from public.launch_signups")).rows[0].n, 0);
+});
+
 test("sloupec lang: výchozí cs, povoleno cs/sk, jiné odmítnuto", async () => {
   const db = await fresh();
   await db.exec("set role service_role");
