@@ -5,14 +5,22 @@ import {
   validateM365AuthConfig,
 } from "../lib/m365-auth.mjs";
 import { readM365DeltaPage } from "../lib/m365-readonly.mjs";
+import {
+  delegatedMode,
+  getDelegatedMailToken,
+} from "../lib/mail-oauth-service.mjs";
+import { readM365OAuthConfig } from "../lib/m365-oauth-client.mjs";
 try {
-  validateM365AuthConfig(process.env);
+  if (delegatedMode()) readM365OAuthConfig(process.env);
+  else validateM365AuthConfig(process.env);
   console.log(
-    "Konfigurace schránky a certifikátu: platná. Přístup Microsoftu zatím neověřen.",
+    "Formát konfigurace připojení: platný. Přístup Microsoftu zatím neověřen.",
   );
   if (process.argv.includes("--probe")) {
     if (process.env.M365_INGEST_ENABLED !== "true") throw new Error("disabled");
-    const auth = await getM365AccessToken();
+    const auth = delegatedMode()
+      ? await getDelegatedMailToken()
+      : await getM365AccessToken();
     const page = await readM365DeltaPage({ accessToken: auth.accessToken });
     console.log(
       JSON.stringify({
@@ -20,14 +28,15 @@ try {
         messages: page.messages.length,
         removals: page.removals.length,
         more: Boolean(page.nextLink),
-        persisted: false,
+        mailMessagesPersisted: false,
+        connectionCacheUpdated: delegatedMode(),
         aiCalls: 0,
       }),
     );
   }
 } catch {
   console.error(
-    "Kontrola neprošla. Prověřte schválenou konfiguraci, certifikát a oprávnění; citlivé podrobnosti se nevypisují.",
+    "Kontrola neprošla. Prověřte schválenou konfiguraci a přístup; citlivé podrobnosti se nevypisují.",
   );
   process.exitCode = 1;
 }
