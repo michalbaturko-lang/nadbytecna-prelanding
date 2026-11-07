@@ -559,3 +559,108 @@ dialog::backdrop {
 .secondary-counts summary {
   color: var(--muted);
 }
+
+.admin-sections {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0 0 24px;
+}
+.admin-sections [aria-pressed="true"] {
+  background: var(--rose);
+  border-color: var(--rose);
+  color: white;
+}
+.mail-heading {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: start;
+}
+.mail-heading h2 {
+  font:
+    600 clamp(28px, 3vw, 40px) / 1.2 Playfair,
+    Georgia,
+    serif;
+}
+.mail-notice {
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #f5eaf0;
+  overflow-wrap: anywhere;
+}
+#mail-msg:not(:empty) {
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #fff;
+}
+.mail-filter-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  margin: 16px 0;
+}
+.mail-results {
+  margin: 16px 0;
+}
+.mail-sender,
+.mail-card h2,
+.mail-message h3 {
+  overflow-wrap: anywhere;
+}
+.mail-message {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 16px;
+  margin: 16px 0;
+}
+.mail-message h3 {
+  margin-top: 0;
+}
+#mail-cards {
+  display: grid;
+  gap: 14px;
+}
+.mail-workspace:has(.detail:not([hidden])) {
+  align-items: start;
+}
+@media (min-width: 1024px) {
+  .mail-workspace:has(.detail:not([hidden])) {
+    grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+  }
+}
+@media (max-width: 767px) {
+  .mail-heading {
+    flex-direction: column;
+  }
+  .mail-heading > button {
+    width: 100%;
+  }
+  .mail-filter-grid {
+    grid-template-columns: 1fr;
+  }
+  .mail-detail-open #mail-list-panel {
+    display: none;
+  }
+  .mail-notice {
+    font-size: 16px;
+  }
+  .admin-sections button {
+    flex: 1;
+    min-width: 0;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+  .mail-detail-open #mail-list-panel {
+    display: none;
+  }
+}
+
+.admin-sections button[aria-pressed="true"]:hover:not(:disabled) {
+  background: var(--rose);
+  color: white;
+  border-color: var(--rose);
+}

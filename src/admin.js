@@ -123,6 +123,18 @@
     authEpoch: 0,
     pending: new Set(),
     busy: false,
+    view: "stories",
+  };
+  var M = {
+    rows: [],
+    filters: {},
+    page: 0,
+    total: 0,
+    serial: 0,
+    detailSerial: 0,
+    detail: null,
+    status: null,
+    pending: new Set(),
   };
   var STATUSES = {
     new: "Nový",
@@ -265,7 +277,7 @@
       );
     return box;
   }
-  async function api(body, download) {
+  async function api(body, download, endpoint) {
     var epoch = S.authEpoch;
     var s = await current();
     if (epoch !== S.authEpoch) throw new Error("cancelled");
@@ -275,8 +287,9 @@
     }
     var controller = new AbortController();
     S.pending.add(controller);
+    if (endpoint) M.pending.add(controller);
     try {
-      var r = await fetch("/api/admin/", {
+      var r = await fetch(endpoint || "/api/admin/", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -301,7 +314,11 @@
       var data = download ? await r.blob() : await r.json();
       if (epoch !== S.authEpoch) throw new Error("cancelled");
       lastActivity = Date.now();
-      if (!download && ["update", "person_erase"].includes(body.action)) {
+      if (
+        !endpoint &&
+        !download &&
+        ["update", "person_erase"].includes(body.action)
+      ) {
         api({ action: "init" })
           .then(function (d) {
             renderCounts(d.counts);
@@ -311,6 +328,7 @@
       return data;
     } finally {
       S.pending.delete(controller);
+      if (endpoint) M.pending.delete(controller);
     }
   }
   function downloadBlob(blob, name) {
@@ -346,6 +364,11 @@
       controller.abort();
     });
     S.pending.clear();
+    clearMail();
+    S.view = "stories";
+    $("admin-stories").hidden = false;
+    $("admin-mail").hidden = true;
+    setViewButtons();
     stopAudio();
     document.querySelectorAll("dialog").forEach(function (dialog) {
       if (dialog.open) dialog.close();
@@ -715,7 +738,7 @@
       node(
         "p",
         "",
-        "Smažou se všechny zprávy tohoto e-mailu, nahrávky, poznámky a páry. Tuto akci nelze vrátit.",
+        "Smažou se místní záznamy této osoby, nahrávky, poznámky, páry a místní kopie e-mailů. Zprávy ve schránce Microsoft 365 zůstanou beze změny. Tuto akci nelze vrátit.",
       ),
       node("p", "", row.email),
     );
@@ -782,7 +805,7 @@
       node(
         "p",
         "",
-        "Vyhledá příběhy, nabídky i registrace. Před výmazem ověřte oprávněnost žádosti.",
+        "Vyhledá příběhy, nabídky, registrace i místní kopie e-mailů. Neprovádí export ani výmaz ve schránce Microsoft 365. Před výmazem ověřte oprávněnost žádosti.",
       ),
       label,
       input,
@@ -1250,7 +1273,7 @@
       node(
         "p",
         "hint",
-        "Export a výmaz se vztahují na všechny záznamy se stejným e-mailem v příbězích, nabídkách a přihlášeních ke spuštění.",
+        "Export a výmaz se vztahují na místní záznamy se stejným e-mailem v příbězích, nabídkách, registracích a kopiích e-mailů. Zprávy ve schránce Microsoft 365 se tím nemění.",
       ),
     );
     gdpr.append(
@@ -1275,6 +1298,647 @@
     box.focus({ preventScroll: true });
     if (innerWidth < 1024) box.scrollIntoView({ block: "start" });
     renderCards();
+  }
+  var MAIL_STATUSES = {
+    new: "Nový",
+    in_progress: "V řešení",
+    contacted: "Kontaktováno",
+    archived: "Archiv",
+  };
+  var MAIL_TYPES = {
+    story: "Příběh",
+    help: "Nabídka pomoci",
+    other: "Ostatní",
+  };
+  function mailApi(body, download) {
+    return api(body, download, "/api/admin-mail/");
+  }
+  function mailSay(text) {
+    $("mail-msg").textContent = text || "";
+  }
+  function mailError(e) {
+    if (e && (e.name === "AbortError" || e.message === "cancelled")) return;
+    if (S.view !== "mail" || !loadSession()) return;
+    mailSay(
+      e && (e.message === "ai_disabled" || e.message === "mail_ai_disabled")
+        ? "AI nad e-maily čeká na schválení. Třídění můžete provést ručně."
+        : "Akci s místní kopií e-mailu se nepodařilo dokončit. Zkuste to znovu.",
+    );
+  }
+  function clearMail() {
+    M.serial++;
+    M.detailSerial++;
+    M.pending.forEach(function (controller) {
+      controller.abort();
+    });
+    M.pending.clear();
+    M.rows = [];
+    M.total = 0;
+    M.detail = null;
+    M.status = null;
+    M.filters = {};
+    M.page = 0;
+    clear($("mail-cards"));
+    clear($("mail-detail"));
+    clear($("mail-filter-fields"));
+    $("mail-detail").hidden = true;
+    $("mail-workspace").classList.remove("mail-detail-open");
+    $("mail-count").textContent = "";
+    $("mail-page").textContent = "";
+    $("mail-sync-status").textContent = "";
+    $("mail-filters").open = false;
+    mailSay("");
+    document
+      .querySelectorAll("dialog[data-mail-dialog]")
+      .forEach(function (dialog) {
+        if (dialog.open) dialog.close();
+        dialog.remove();
+      });
+  }
+  function setViewButtons() {
+    document
+      .querySelector(".skip")
+      .setAttribute("href", S.view === "mail" ? "#mail-cards" : "#admin-cards");
+    document.querySelectorAll("[data-admin-view]").forEach(function (b) {
+      b.setAttribute("aria-pressed", String(b.dataset.adminView === S.view));
+    });
+  }
+  async function selectView(view) {
+    if (!loadSession()) return;
+    if (view === S.view) return;
+    S.view = view;
+    setViewButtons();
+    $("admin-stories").hidden = view !== "stories";
+    $("admin-mail").hidden = view !== "mail";
+    if (view === "mail") {
+      S.serial++;
+      closeDetail();
+      clear($("admin-cards"));
+      S.rows = [];
+      $("admin-filters").hidden = true;
+      $("admin-filters-open").setAttribute("aria-expanded", "false");
+      await loadMail();
+    } else {
+      clearMail();
+      await loadList();
+    }
+  }
+  function mailCategory(row) {
+    return row.admin_category || row.category || row.ai_category || "";
+  }
+  function mailUrgency(row) {
+    return row.admin_urgency || row.urgency || row.ai_urgency || "";
+  }
+  function mailWhen(row) {
+    return row.last_received_at || row.received_at || row.created_at;
+  }
+  function mailSender(row) {
+    return (
+      [row.sender_name, row.sender_email].filter(Boolean).join(" · ") ||
+      "Odesílatel není uveden"
+    );
+  }
+  function mailTags(row) {
+    var box = node("div", "tag-row"),
+      urgency = mailUrgency(row);
+    box.append(
+      tag(MAIL_STATUSES[row.status] || "Nový"),
+      tag(MAIL_TYPES[row.email_type] || "Nezařazeno"),
+    );
+    if (mailCategory(row)) box.append(tag(category(mailCategory(row))));
+    if (urgency)
+      box.append(tag(URGENCIES[urgency] || urgency, urgency === "acute"));
+    return box;
+  }
+  function mailAiBlock(row) {
+    var box = node("div", "ai-block");
+    box.append(
+      node(
+        "p",
+        "kicker",
+        row.classified_at
+          ? "Ruční zařazení · " + when(row.classified_at)
+          : "Návrh AI · vyžaduje kontrolu",
+      ),
+    );
+    box.append(
+      node(
+        "p",
+        "",
+        row.ai_summary ||
+          "AI shrnutí zatím není k dispozici. E-mail můžete přečíst a zařadit ručně.",
+      ),
+    );
+    if (row.ai_help_type)
+      box.append(node("p", "", "Navržená pomoc: " + row.ai_help_type));
+    if (row.ai_model)
+      box.append(node("p", "hint", row.ai_model + " · " + when(row.ai_at)));
+    if (row.ai_error) box.append(node("p", "", "AI se nepodařilo spustit."));
+    return box;
+  }
+  function renderMailStatus(status) {
+    M.status = status;
+    var pieces = [];
+    if (!status.configured || status.needsSetup)
+      pieces.push("Připojení schránky čeká na dokončení nastavení.");
+    else if (!status.syncEnabled)
+      pieces.push("Načítání nových e-mailů je vypnuté.");
+    else pieces.push("Načítání příchozích e-mailů je zapnuté.");
+    pieces.push(
+      status.lastSyncAt
+        ? "Poslední načtení: " + when(status.lastSyncAt) + "."
+        : "Zatím není doložené žádné načtení ze schránky.",
+    );
+    if (status.lastError)
+      pieces.push(
+        "Poslední načtení se nezdařilo; zobrazené kopie mohou být neúplné.",
+      );
+    $("mail-sync-status").textContent = pieces.join(" ");
+  }
+  function renderMailFilters() {
+    var fields = $("mail-filter-fields");
+    clear(fields);
+    var searchWrap = node("div"),
+      searchLabel = node("label", "", "Hledat v e-mailech"),
+      search = node("input");
+    search.id = "mail-search";
+    search.type = "search";
+    search.maxLength = 200;
+    search.value = M.filters.q || "";
+    searchLabel.htmlFor = search.id;
+    searchWrap.append(searchLabel, search);
+    fields.append(searchWrap);
+    var timer;
+    search.addEventListener("input", function () {
+      clearTimeout(timer);
+      timer = setTimeout(function () {
+        if (S.view !== "mail") return;
+        M.filters.q = search.value;
+        M.page = 0;
+        closeMailDetail();
+        loadMailList().catch(mailError);
+      }, 300);
+    });
+    [
+      ["status", "Stav", Object.entries(MAIL_STATUSES)],
+      ["email_type", "Druh e-mailu", Object.entries(MAIL_TYPES)],
+      [
+        "category",
+        "Kategorie",
+        S.categories.map(function (c) {
+          return [c.code, c.name];
+        }),
+      ],
+      ["urgency", "Naléhavost", Object.entries(URGENCIES)],
+    ].forEach(function (f) {
+      var p = pick(f[1], "mail-filter-" + f[0], f[2], M.filters[f[0]]);
+      p.input.addEventListener("change", function () {
+        M.filters[f[0]] = p.input.value;
+        M.page = 0;
+        closeMailDetail();
+        loadMailList().catch(mailError);
+      });
+      fields.append(p.wrap);
+    });
+  }
+  function renderMailList() {
+    var cards = $("mail-cards");
+    clear(cards);
+    $("mail-count").textContent = M.total + " e-mailových vláken";
+    if (!M.rows.length)
+      cards.append(
+        node(
+          "p",
+          "panel",
+          "Žádné místní e-mailové vlákno neodpovídá filtrům. Připojení schránky a poslední načtení vidíte výše.",
+        ),
+      );
+    M.rows.forEach(function (row) {
+      var article = node(
+        "article",
+        "story-card mail-card" +
+          (mailUrgency(row) === "acute" ? " is-acute" : ""),
+      );
+      article.append(
+        mailAiBlock(row),
+        node("h2", "", row.subject || "Bez předmětu"),
+        node("p", "mail-sender", mailSender(row)),
+        node("p", "meta", when(mailWhen(row))),
+        mailTags(row),
+      );
+      article.append(
+        button(
+          "Otevřít e-mailové vlákno",
+          function () {
+            return openMailDetail(row.id);
+          },
+          "card-open",
+        ),
+      );
+      cards.append(article);
+    });
+    $("mail-prev").disabled = M.page === 0;
+    $("mail-next").disabled = (M.page + 1) * 25 >= M.total;
+    $("mail-page").textContent = "Strana " + (M.page + 1);
+  }
+  async function loadMailList() {
+    var serial = ++M.serial;
+    var data = await mailApi({
+      action: "list",
+      filters: Object.assign({}, M.filters, { page: M.page }),
+    });
+    if (serial !== M.serial || S.view !== "mail") return;
+    if (
+      !Array.isArray(data.rows) ||
+      !Number.isFinite(Number(data.total)) ||
+      Number(data.total) < 0
+    )
+      throw new Error("mail_list_invalid");
+    M.rows = data.rows;
+    M.total = Number(data.total);
+    renderMailList();
+  }
+  async function loadMail() {
+    var serial = ++M.serial;
+    mailSay("Načítám místní kopie e-mailů…");
+    var status = await mailApi({ action: "status" });
+    if (serial !== M.serial || S.view !== "mail") return;
+    renderMailStatus(status);
+    renderMailFilters();
+    await loadMailList();
+    if (S.view === "mail") mailSay("");
+  }
+  function closeMailDetail() {
+    M.detailSerial++;
+    M.detail = null;
+    clear($("mail-detail"));
+    $("mail-detail").hidden = true;
+    $("mail-workspace").classList.remove("mail-detail-open");
+  }
+  function askEraseMail(row) {
+    var d = node("dialog"),
+      title = node("h2", "", "Smazat místní kopii vlákna?");
+    d.dataset.mailDialog = "true";
+    title.id = "mail-erase-title";
+    d.setAttribute("aria-labelledby", title.id);
+    d.append(
+      title,
+      node(
+        "p",
+        "",
+        "Smaže se místní kopie tohoto vlákna a jeho poznámky. Zprávy ve schránce Microsoft 365 zůstanou beze změny. Smazané vlákno se do tohoto přehledu znovu nenačte.",
+      ),
+      node("p", "body-text", row.subject || "Bez předmětu"),
+    );
+    var label = node("label", "", "Pro potvrzení napište SMAZAT"),
+      input = node("input"),
+      message = node("p");
+    input.id = "mail-erase-confirm";
+    label.htmlFor = input.id;
+    message.setAttribute("role", "status");
+    var actions = node("div", "actions"),
+      erase = button(
+        "Smazat místní kopii",
+        async function () {
+          var epoch = S.authEpoch;
+          erase.disabled = true;
+          try {
+            await mailApi({
+              action: "erase",
+              id: row.id,
+              confirm: input.value,
+            });
+            if (epoch !== S.authEpoch || S.view !== "mail") return;
+            d.close();
+            closeMailDetail();
+            await loadMailList();
+            mailSay(
+              "Místní kopie vlákna byla smazána. Zprávy ve schránce Microsoft 365 zůstaly beze změny.",
+            );
+          } catch (e) {
+            if (
+              epoch === S.authEpoch &&
+              S.view === "mail" &&
+              e.name !== "AbortError" &&
+              e.message !== "cancelled"
+            )
+              message.textContent =
+                "Místní kopii se nepodařilo smazat. Zkuste to znovu.";
+          } finally {
+            if (epoch === S.authEpoch)
+              erase.disabled = input.value !== "SMAZAT";
+          }
+        },
+        "danger",
+      );
+    erase.disabled = true;
+    input.addEventListener("input", function () {
+      erase.disabled = input.value !== "SMAZAT";
+    });
+    actions.append(
+      button("Zrušit", function () {
+        d.close();
+      }),
+      erase,
+    );
+    d.append(label, input, message, actions);
+    d.addEventListener("close", function () {
+      d.remove();
+    });
+    document.body.append(d);
+    d.showModal();
+  }
+  async function openMailDetail(id, messagePage) {
+    messagePage = Math.max(0, Math.floor(Number(messagePage) || 0));
+    var serial = ++M.detailSerial;
+    var data = await mailApi({
+      action: "detail",
+      id: id,
+      message_page: messagePage,
+    });
+    if (serial !== M.detailSerial || S.view !== "mail") return;
+    var row = data.thread,
+      box = $("mail-detail");
+    if (!row) throw new Error("missing");
+    M.detail = row;
+    clear(box);
+    box.hidden = false;
+    $("mail-workspace").classList.add("mail-detail-open");
+    var head = node("div", "detail-top");
+    head.append(
+      node("span", "kicker", "Místní kopie e-mailu"),
+      button("Zpět na e-maily", function () {
+        closeMailDetail();
+        $("mail-cards").querySelector("button")?.focus();
+      }),
+    );
+    box.append(
+      head,
+      node("h2", "", row.subject || "Bez předmětu"),
+      node("p", "mail-sender", mailSender(row)),
+      node("p", "meta", when(mailWhen(row))),
+      mailTags(row),
+      mailAiBlock(row),
+    );
+    if (mailUrgency(row) === "acute")
+      box.append(
+        node(
+          "div",
+          "crisis",
+          "Akutní případ — vyžaduje bezodkladné lidské posouzení. Platforma není krizová služba.",
+        ),
+      );
+    var run = button(
+      row.ai_error
+        ? "Zkusit AI znovu"
+        : row.ai_at
+          ? "Spustit AI znovu"
+          : "Spustit AI nad e-mailem",
+      async function () {
+        run.disabled = true;
+        try {
+          await mailApi({ action: "ai", id: row.id });
+          if (serial !== M.detailSerial || S.view !== "mail") return;
+          await openMailDetail(row.id);
+          await loadMailList();
+        } finally {
+          if (serial === M.detailSerial) run.disabled = !M.status?.aiEnabled;
+        }
+      },
+    );
+    run.disabled = !M.status?.aiEnabled;
+    box.append(run);
+    box.append(
+      node(
+        "p",
+        "hint",
+        "Návrh AI vychází nejvýše z 20 nejnovějších zpráv a 20 000 znaků. U dlouhého vlákna zkontrolujte také starší zprávy.",
+      ),
+    );
+    if (!M.status?.aiEnabled)
+      box.append(
+        node(
+          "p",
+          "hint",
+          "AI nad e-maily je vypnutá a čeká na schválení. Kategorie, naléhavost i stav můžete nastavit ručně.",
+        ),
+      );
+    var mailCategoryChoices = S.categories.map(function (c) {
+      return [c.code, c.name];
+    });
+    if (
+      row.admin_category &&
+      !mailCategoryChoices.some(function (choice) {
+        return choice[0] === row.admin_category;
+      })
+    ) {
+      mailCategoryChoices.push([
+        row.admin_category,
+        row.admin_category + " (neaktivní kategorie)",
+      ]);
+    }
+    var edit = section("Zařazení a další krok"),
+      kind = pick(
+        "Druh e-mailu",
+        "mail-edit-type",
+        Object.entries(MAIL_TYPES),
+        row.email_type,
+      ),
+      cat = pick(
+        "Kategorie",
+        "mail-edit-category",
+        mailCategoryChoices,
+        row.admin_category,
+        "Použít návrh AI",
+      ),
+      urgency = pick(
+        "Naléhavost",
+        "mail-edit-urgency",
+        Object.entries(URGENCIES),
+        row.admin_urgency,
+        "Použít návrh AI",
+      ),
+      status = pick(
+        "Stav",
+        "mail-edit-status",
+        Object.entries(MAIL_STATUSES),
+        row.status || "new",
+      );
+    kind.input.querySelector('option[value=""]').textContent = "Nezařazeno";
+    status.input.querySelector('option[value=""]').remove();
+    var grid = node("div", "edit-grid");
+    grid.append(kind.wrap, cat.wrap, urgency.wrap, status.wrap);
+    edit.append(
+      grid,
+      node(
+        "p",
+        "hint",
+        "Zařazení e-mailu samo o sobě neuděluje souhlas se zveřejněním a nevytváří veřejný příběh.",
+      ),
+    );
+    var save = button(
+      "Uložit zařazení e-mailu",
+      async function () {
+        var patch = {};
+        if (status.input.value !== (row.status || "new"))
+          patch.status = status.input.value;
+        if (kind.input.value && kind.input.value !== row.email_type)
+          patch.email_type = kind.input.value;
+        if ((cat.input.value || null) !== (row.admin_category || null))
+          patch.admin_category = cat.input.value || null;
+        if ((urgency.input.value || null) !== (row.admin_urgency || null))
+          patch.admin_urgency = urgency.input.value || null;
+        if (!Object.keys(patch).length) {
+          mailSay("Zařazení e-mailu se nezměnilo.");
+          return;
+        }
+        save.disabled = true;
+        try {
+          await mailApi({ action: "update", id: row.id, patch: patch });
+          if (serial !== M.detailSerial || S.view !== "mail") return;
+          await openMailDetail(row.id);
+          await loadMailList();
+          mailSay("Zařazení místní kopie e-mailu je uložené.");
+        } finally {
+          if (serial === M.detailSerial) save.disabled = false;
+        }
+      },
+      "primary",
+    );
+    var bar = node("div", "save-bar actions");
+    bar.append(save);
+    edit.append(bar);
+    box.append(edit);
+    var messages = section("Zprávy ve vlákně");
+    var messageCount = Number.isFinite(Number(data.message_count))
+      ? Number(data.message_count)
+      : data.messages?.length || 0;
+    var currentMessagePage = Number.isFinite(Number(data.message_page))
+      ? Number(data.message_page)
+      : messagePage;
+    if (messageCount > 20 || data.messages_truncated)
+      messages.append(
+        node(
+          "p",
+          "mail-notice",
+          "Stránka " +
+            (currentMessagePage + 1) +
+            " z " +
+            Math.ceil(messageCount / 20) +
+            ". Ve vlákně je celkem " +
+            messageCount +
+            " zpráv. Zobrazujeme je po 20 od nejnovějších; starší zprávy otevřete tlačítkem níže.",
+        ),
+      );
+    (Array.isArray(data.messages) ? data.messages : []).forEach(function (m) {
+      var article = node("article", "mail-message");
+      article.append(
+        node("h3", "", m.subject || row.subject || "Zpráva"),
+        node(
+          "p",
+          "meta",
+          mailSender(m) + " · " + when(m.received_at || m.created_at),
+        ),
+        node("p", "body-text", m.body_text || "Text zprávy není k dispozici."),
+      );
+      messages.append(article);
+    });
+    if (!data.messages?.length)
+      messages.append(
+        node("p", "hint", "V místní kopii zatím nejsou uložené zprávy."),
+      );
+    if (messageCount > 20) {
+      var messagePager = node("nav", "pager");
+      messagePager.setAttribute("aria-label", "Stránkování zpráv ve vlákně");
+      var newer = button("Novější zprávy", function () {
+        return openMailDetail(row.id, currentMessagePage - 1);
+      });
+      var older = button("Starší zprávy", function () {
+        return openMailDetail(row.id, currentMessagePage + 1);
+      });
+      newer.disabled = currentMessagePage === 0;
+      older.disabled = (currentMessagePage + 1) * 20 >= messageCount;
+      messagePager.append(
+        newer,
+        node(
+          "span",
+          "",
+          currentMessagePage + 1 + " / " + Math.ceil(messageCount / 20),
+        ),
+        older,
+      );
+      messages.append(messagePager);
+    }
+    box.append(messages);
+    var notes = section("Interní poznámky k e-mailu");
+    (Array.isArray(data.notes) ? data.notes : []).forEach(function (n) {
+      var note = node("div", "note");
+      note.append(
+        node(
+          "p",
+          "hint",
+          (n.author || "Administrátor") + " · " + when(n.created_at || n.at),
+        ),
+        node("p", "body-text", n.body || n.text || ""),
+      );
+      notes.append(note);
+    });
+    var noteLabel = node("label", "", "Nová poznámka k e-mailu"),
+      noteText = node("textarea");
+    noteText.id = "mail-new-note";
+    noteText.maxLength = 5000;
+    noteLabel.htmlFor = noteText.id;
+    var add = button("Přidat poznámku k e-mailu", async function () {
+      if (!noteText.value.trim()) {
+        noteText.focus();
+        return;
+      }
+      add.disabled = true;
+      try {
+        await mailApi({ action: "note", id: row.id, text: noteText.value });
+        if (serial !== M.detailSerial || S.view !== "mail") return;
+        await openMailDetail(row.id);
+      } finally {
+        if (serial === M.detailSerial) add.disabled = false;
+      }
+    });
+    notes.append(noteLabel, noteText, add);
+    box.append(notes);
+    var privacy = section("Místní kopie a údaje");
+    privacy.append(
+      node(
+        "p",
+        "hint",
+        "Tyto akce zahrnují pouze toto vlákno uložené v adminu. Neprovádějí export ani výmaz ze schránky Microsoft 365. Žádost vztahující se ke všem záznamům osoby vyřiďte přes Údaje osoby.",
+      ),
+    );
+    var exportButton = button(
+      "Exportovat místní vlákno (JSON)",
+      async function () {
+        var epoch = S.authEpoch;
+        exportButton.disabled = true;
+        try {
+          var blob = await mailApi({ action: "export", id: row.id }, true);
+          if (epoch !== S.authEpoch || S.view !== "mail") return;
+          downloadBlob(blob, "emailove-vlakno.json");
+        } finally {
+          if (epoch === S.authEpoch) exportButton.disabled = false;
+        }
+      },
+    );
+    privacy.append(
+      exportButton,
+      button(
+        "Smazat místní kopii vlákna",
+        function () {
+          askEraseMail(row);
+        },
+        "danger",
+      ),
+    );
+    box.append(privacy);
+    box.focus({ preventScroll: true });
+    if (innerWidth < 1024) box.scrollIntoView({ block: "start" });
   }
   async function load() {
     var data = await api({ action: "init" });
@@ -1434,5 +2098,33 @@
     }
   });
   $("admin-person").addEventListener("click", openPersonTools);
+  document.querySelectorAll("[data-admin-view]").forEach(function (b) {
+    b.addEventListener("click", function () {
+      selectView(b.dataset.adminView).catch(mailError);
+    });
+  });
+  $("mail-refresh").addEventListener("click", function () {
+    closeMailDetail();
+    loadMail().catch(mailError);
+  });
+  $("mail-reset").addEventListener("click", function () {
+    M.filters = {};
+    M.page = 0;
+    closeMailDetail();
+    renderMailFilters();
+    loadMailList().catch(mailError);
+  });
+  $("mail-prev").addEventListener("click", function () {
+    if (M.page > 0) {
+      M.page--;
+      closeMailDetail();
+      loadMailList().catch(mailError);
+    }
+  });
+  $("mail-next").addEventListener("click", function () {
+    M.page++;
+    closeMailDetail();
+    loadMailList().catch(mailError);
+  });
   boot().catch(error);
 })(window);
