@@ -1,10 +1,11 @@
 import { db } from "../lib/db.js";
-import { body, bodyError, json, originOk } from "../lib/http.js";
+import { body, bodyError, json, originOk, phase1Closed } from "../lib/http.js";
 import { sha256, signVote } from "../lib/tokens.js";
 
 // Potvrzení e-mailu je POST po kliknutí na tlačítko na stránce /potvrzeni/ (ne GET z odkazu),
 // aby e-mailové skenery odkazů nepotvrzovaly adresy za ženy.
 export default async function handler(req, res) {
+  if (phase1Closed(res)) return;
   if (req.method !== "POST") { res.setHeader("Allow", "POST"); return json(res, 405, { error: "method" }); }
   if (!originOk(req)) return json(res, 403, { error: "origin" });
   let b;

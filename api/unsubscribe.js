@@ -1,11 +1,12 @@
 import { db } from "../lib/db.js";
-import { body, bodyError, json, originOk } from "../lib/http.js";
+import { body, bodyError, json, originOk, phase1Closed } from "../lib/http.js";
 import { verifyUnsub } from "../lib/tokens.js";
 
 // Odhlášení jedním klikem. Dvě cesty:
 //  - POST s JSON { t } ze stránky /odhlaseni/
 //  - POST na /api/unsubscribe/?t=... z poštovního klienta (RFC 8058, hlavička List-Unsubscribe-Post)
 export default async function handler(req, res) {
+  if (phase1Closed(res)) return;
   if (req.method !== "POST") { res.setHeader("Allow", "POST"); return json(res, 405, { error: "method" }); }
   if (!originOk(req)) return json(res, 403, { error: "origin" });
   try {
