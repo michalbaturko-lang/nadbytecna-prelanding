@@ -156,79 +156,65 @@
     var box = document.createElement("div");
     box.className = "cookie";
     box.setAttribute("role", "dialog");
-    box.setAttribute("aria-labelledby", "cookie-title");
+    box.setAttribute("aria-label", "Cookies");
     var text = document.createElement("p");
-    text.appendChild(document.createTextNode("Cookies jen po souhlasu. "));
-    var link = document.createElement("a");
-    link.href = "/zasady/";
-    link.textContent = "Zásady";
-    text.appendChild(link);
+    text.textContent = "Používáme cookies.";
     var row = document.createElement("div");
     row.className = "cookie-row";
-    var no = document.createElement("button");
-    no.type = "button";
-    no.textContent = "Jen nezbytné";
     var yes = document.createElement("button");
     yes.type = "button";
-    yes.textContent = "Přijmout vše";
-    var set = document.createElement("button");
-    set.type = "button";
+    yes.textContent = "Přijmout";
+    var no = document.createElement("button");
+    no.type = "button";
+    no.textContent = "Odmítnout";
+    var set = document.createElement("a");
+    set.href = "/cookies/";
+    set.className = "cookie-more";
     set.textContent = "Nastavení";
-    var panel = document.createElement("div");
-    panel.className = "cookie-settings";
-    panel.hidden = true;
-    var analytics = document.createElement("label");
-    analytics.className = "opt";
-    var analyticsBox = document.createElement("input");
-    analyticsBox.type = "checkbox";
-    analytics.appendChild(analyticsBox);
-    analytics.appendChild(document.createTextNode(" Analytické (GA4)"));
-    var marketing = document.createElement("label");
-    marketing.className = "opt";
-    var marketingBox = document.createElement("input");
-    marketingBox.type = "checkbox";
-    marketing.appendChild(marketingBox);
-    marketing.appendChild(document.createTextNode(" Marketing (reklama)"));
-    var save = document.createElement("button");
-    save.type = "button";
-    save.textContent = "Uložit volbu";
-    panel.appendChild(analytics);
-    panel.appendChild(marketing);
-    panel.appendChild(save);
     function close(value) { remember(value); hide(box); enable(); }
     no.addEventListener("click", function () { close("denied"); });
     yes.addEventListener("click", function () { close("granted"); });
-    set.addEventListener("click", function () { panel.hidden = false; box.classList.add("is-open"); });
-    save.addEventListener("click", function () { close({ analytics: analyticsBox.checked, marketing: marketingBox.checked }); });
-    row.appendChild(no);
     row.appendChild(yes);
+    row.appendChild(no);
     row.appendChild(set);
-    var title = document.createElement("p");
-    title.id = "cookie-title";
-    title.className = "cookie-title";
-    title.textContent = "Cookies";
-    box.appendChild(title);
     box.appendChild(text);
     box.appendChild(row);
-    box.appendChild(panel);
     document.body.appendChild(box);
   }
 
-  function openSettings() {
-    var old = document.querySelector(".cookie");
-    if (old) old.hidden = false;
-    else banner();
+  function bindPage() {
+    var detail = document.getElementById("cookie-detail");
+    if (!detail) return;
+    var analytics = document.getElementById("cookie-analytics");
+    var marketing = document.getElementById("cookie-marketing");
+    var current = prefs();
+    if (current) {
+      if (analytics) analytics.checked = current.analytics;
+      if (marketing) marketing.checked = current.marketing;
+    }
+    var save = document.getElementById("cookie-save");
+    if (!save) return;
+    save.addEventListener("click", function () {
+      remember({ analytics: Boolean(analytics && analytics.checked), marketing: Boolean(marketing && marketing.checked) });
+      enable();
+      var box = document.querySelector(".cookie");
+      hide(box);
+    });
   }
 
   document.addEventListener("click", function (e) {
     var t = e.target;
-    if (t && t.id === "cookie-settings") { e.preventDefault(); openSettings(); return; }
+    if (t && t.id === "cookie-settings") {
+      if (!document.getElementById("cookie-detail")) window.location.href = "/cookies/";
+      return;
+    }
     var a = t && t.closest ? t.closest("a[href='https://veryvera.cz'], a[href^='https://veryvera.cz/']") : null;
     if (a && global.NadbytecnaAds) global.NadbytecnaAds.shop();
   });
 
   if (prefs()) enable();
   else banner();
+  bindPage();
 
   var settings = document.getElementById("cookie-settings");
   if (settings) settings.hidden = false;
