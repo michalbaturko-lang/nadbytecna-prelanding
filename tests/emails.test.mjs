@@ -24,12 +24,15 @@ test("šablony pro Resend jsou v repu a nic neposílají", () => {
   for (const t of templates) {
     const text = fs.readFileSync(path.join(root, "emails", t.text), "utf8");
     const html = fs.readFileSync(path.join(root, "emails", t.html), "utf8");
-    assert.match(text, /veryvera@nadbytecna\.cz/);
     if (t.id === "launch-signup") {
-      assert.match(text, /Souhlasím se zasláním zprávy o spuštění platformy/);
-      assert.match(text, /https:\/\/nadbytecna\.cz\/zasady\//);
-      assert.doesNotMatch(text + html, /Správce osobních údajů|\{\{jmeno\}\}/);
+      assert.equal(t.subject, "Děkujeme, že chcete být u toho");
+      assert.match(text, /děkujeme, že chcete být u otevření platformy Nadbytečná\. Spouštíme ji 11\. 11\. 2026 a vám dáme vědět jako prvním\./);
+      assert.match(text, /S úctou\nVěra Komárová\nNadbytečná\.cz\nVERY VERA/);
+      assert.doesNotMatch(text + html, /Správce osobních údajů|\{\{jmeno\}\}|fetch\(/);
     } else {
+      assert.match(text, /veryvera@nadbytecna\.cz/);
+      assert.match(text, /Nadbytečná\.cz\nVERY VERA/);
+      assert.match(html, /Nadbytečná\.cz<br>VERY VERA/);
       assert.match(text, /Věra Komárová/);
       if (t.anonymous) assert.doesNotMatch(text + html, /\{\{jmeno\}\}/);
       else assert.match(text, /\{\{jmeno\}\}/);

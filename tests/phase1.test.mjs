@@ -115,7 +115,8 @@ test("homepage má dvě volby, ne mřížku osmi kategorií, a formuláře nic n
   const soon = read("coming-soon/index.html");
   assert.match(soon, /<img class="logo"[^>]*data-split="0\.5385"/);
   assert.match(soon, /src="\/fluid\.js"/);
-  assert.match(soon, /Dáme vám vědět, až se otevřeme\./);
+  assert.match(soon, /Spouštíme 11\. 11\. 2026/);
+  assert.match(soon, /Zanechte nám e-mail a o spuštění se dozvíte jako první\./);
   assert.match(soon, /placeholder="Váš e-mail"/);
   assert.match(soon, /Chci být u toho/);
   assert.match(soon, /Děkujeme\. 11\. 11\. se vám ozveme jako prvním\./);
