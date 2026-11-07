@@ -1,0 +1,106 @@
+{
+  "date": "2026-11-07",
+  "lighthouseVersion": "13.6.0",
+  "environment": "offline synthetic authenticated admin",
+  "mode": "snapshot",
+  "viewport": 1440,
+  "score": 100,
+  "audits": {
+    "aria-allowed-attr": {
+      "score": 1,
+      "title": "`[aria-*]` attributes match their roles"
+    },
+    "aria-conditional-attr": {
+      "score": 1,
+      "title": "ARIA attributes are used as specified for the element's role"
+    },
+    "aria-deprecated-role": {
+      "score": 1,
+      "title": "Deprecated ARIA roles were not used"
+    },
+    "aria-hidden-body": {
+      "score": 1,
+      "title": "`[aria-hidden=\"true\"]` is not present on the document `<body>`"
+    },
+    "aria-prohibited-attr": {
+      "score": 1,
+      "title": "Elements use only permitted ARIA attributes"
+    },
+    "aria-required-attr": {
+      "score": 1,
+      "title": "`[role]`s have all required `[aria-*]` attributes"
+    },
+    "aria-roles": {
+      "score": 1,
+      "title": "`[role]` values are valid"
+    },
+    "aria-valid-attr-value": {
+      "score": 1,
+      "title": "`[aria-*]` attributes have valid values"
+    },
+    "aria-valid-attr": {
+      "score": 1,
+      "title": "`[aria-*]` attributes are valid and not misspelled"
+    },
+    "button-name": {
+      "score": 1,
+      "title": "Buttons have an accessible name"
+    },
+    "color-contrast": {
+      "score": 1,
+      "title": "Background and foreground colors have a sufficient contrast ratio"
+    },
+    "document-title": {
+      "score": 1,
+      "title": "Document has a `<title>` element"
+    },
+    "heading-order": {
+      "score": 1,
+      "title": "Heading elements appear in a sequentially-descending order"
+    },
+    "html-has-lang": {
+      "score": 1,
+      "title": "`<html>` element has a `[lang]` attribute"
+    },
+    "html-lang-valid": {
+      "score": 1,
+      "title": "`<html>` element has a valid value for its `[lang]` attribute"
+    },
+    "image-alt": {
+      "score": 1,
+      "title": "Image elements have `[alt]` attributes"
+    },
+    "label": {
+      "score": 1,
+      "title": "Form elements have associated labels"
+    },
+    "landmark-one-main": {
+      "score": 1,
+      "title": "Document has a main landmark."
+    },
+    "link-name": {
+      "score": 1,
+      "title": "Links have a discernible name"
+    },
+    "meta-viewport": {
+      "score": 1,
+      "title": "`[user-scalable=\"no\"]` is not used in the `<meta name=\"viewport\">` element and the `[maximum-scale]` attribute is not less than 5."
+    },
+    "select-name": {
+      "score": 1,
+      "title": "Select elements have associated label elements."
+    },
+    "skip-link": {
+      "score": 1,
+      "title": "Skip links are focusable."
+    },
+    "tabindex": {
+      "score": 1,
+      "title": "No element has a `[tabindex]` value greater than 0"
+    },
+    "target-size": {
+      "score": 1,
+      "title": "Touch targets have sufficient size and spacing."
+    }
+  }
+}

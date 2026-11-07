@@ -1,0 +1,162 @@
+{
+  "date": "2026-11-07",
+  "environment": "offline synthetic PostgreSQL fixture; not Supabase production",
+  "results": [
+    {
+      "label": "320 list",
+      "overflow": false,
+      "smallTargets": 0,
+      "axeViolations": 0
+    },
+    {
+      "label": "320 filters",
+      "overflow": false,
+      "smallTargets": 0,
+      "axeViolations": 0
+    },
+    {
+      "label": "320 detail",
+      "overflow": false,
+      "smallTargets": 0,
+      "axeViolations": 0
+    },
+    {
+      "label": "375 list",
+      "overflow": false,
+      "smallTargets": 0,
+      "axeViolations": 0
+    },
+    {
+      "label": "375 filters",
+      "overflow": false,
+      "smallTargets": 0,
+      "axeViolations": 0
+    },
+    {
+      "label": "375 detail",
+      "overflow": false,
+      "smallTargets": 0,
+      "axeViolations": 0
+    },
+    {
+      "label": "768 list",
+      "overflow": false,
+      "smallTargets": 0,
+      "axeViolations": 0
+    },
+    {
+      "label": "768 filters",
+      "overflow": false,
+      "smallTargets": 0,
+      "axeViolations": 0
+    },
+    {
+      "label": "768 detail",
+      "overflow": false,
+      "smallTargets": 0,
+      "axeViolations": 0
+    },
+    {
+      "label": "1024 list",
+      "overflow": false,
+      "smallTargets": 0,
+      "axeViolations": 0
+    },
+    {
+      "label": "1024 filters",
+      "overflow": false,
+      "smallTargets": 0,
+      "axeViolations": 0
+    },
+    {
+      "label": "1024 detail",
+      "overflow": false,
+      "smallTargets": 0,
+      "axeViolations": 0
+    },
+    {
+      "label": "1440 list",
+      "overflow": false,
+      "smallTargets": 0,
+      "axeViolations": 0
+    },
+    {
+      "label": "1440 filters",
+      "overflow": false,
+      "smallTargets": 0,
+      "axeViolations": 0
+    },
+    {
+      "label": "1440 detail",
+      "overflow": false,
+      "smallTargets": 0,
+      "axeViolations": 0
+    },
+    {
+      "label": "1920 list",
+      "overflow": false,
+      "smallTargets": 0,
+      "axeViolations": 0
+    },
+    {
+      "label": "1920 filters",
+      "overflow": false,
+      "smallTargets": 0,
+      "axeViolations": 0
+    },
+    {
+      "label": "1920 detail",
+      "overflow": false,
+      "smallTargets": 0,
+      "axeViolations": 0
+    },
+    {
+      "label": "login",
+      "overflow": false,
+      "smallTargets": 0,
+      "axeViolations": 0
+    },
+    {
+      "label": "public story text",
+      "pass": true
+    },
+    {
+      "label": "public story file",
+      "pass": true
+    },
+    {
+      "label": "public story recording",
+      "pass": true
+    },
+    {
+      "label": "public help offer",
+      "pass": true
+    },
+    {
+      "label": "coming soon signup and no tracking before consent",
+      "pass": true
+    },
+    {
+      "label": "global GDPR email dialog export and erasure",
+      "pass": true
+    },
+    {
+      "label": "unchanged save is a no-op; workflow update excludes unchanged classification",
+      "pass": true
+    },
+    {
+      "label": "late detail response cannot replace newer selection",
+      "pass": true
+    },
+    {
+      "label": "logout rejects pending protected responses",
+      "pass": true
+    },
+    {
+      "label": "long audio survives signing TTL and closes safely; idle logout removes private dialogs",
+      "pass": true
+    }
+  ],
+  "externalCalls": 0,
+  "emailsSent": 0
+}
