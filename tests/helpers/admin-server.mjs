@@ -33,7 +33,43 @@ const ident = (s) => {
 };
 export async function startAdminServer({ port = 0, autoLogin = false } = {}) {
   const db = await freshAdminDb();
+  await db.exec(
+    fs.readFileSync(
+      new URL(
+        "../../supabase/migrations/20261109000000_admin_mail.sql",
+        import.meta.url,
+      ),
+      "utf8",
+    ),
+  );
   await seed(db);
+  const mailLease = (
+    await db.query(
+      "SELECT public.mail_sync_claim($1,'inbox','2026-11-01T00:00:00Z') d",
+      ["veryvera@nadbytecna.cz"],
+    )
+  ).rows[0].d;
+  await db.query(
+    "SELECT public.mail_sync_commit($1,$2::jsonb,'[]'::jsonb,$3,true,$4)",
+    [
+      mailLease.lease,
+      JSON.stringify([
+        {
+          external_id: "synthetic-email-1",
+          conversation_id: "synthetic-thread-1",
+          sender_name: "Ukázková pisatelka",
+          sender_email: "pisatelka@example.invalid",
+          subject: "Ukázkový e-mail: prosba o podporu",
+          body_text:
+            "Toto je smyšlený e-mail pro místní ukázku. Potřebuji poradit s hledáním práce.",
+          received_at: "2026-11-06T12:00:00Z",
+          has_attachments: false,
+        },
+      ]),
+      "https://graph.microsoft.com/v1.0/users/veryvera%40nadbytecna.cz/mailFolders/inbox/messages/delta?$deltatoken=synthetic",
+      "synthetic-only-hash-secret-for-local-tests",
+    ],
+  );
   await db.query(
     `UPDATE stories SET admin_category='pravni',admin_urgency='acute',ai_summary='Ukázková osoba potřebuje podporu při řešení rodinné situace. Vhodný je bezpečný kontakt a právní konzultace.',ai_help_type='Ověřit bezpečný kontakt a nabídnout právní konzultaci.',ai_model='ukázková data',ai_at=now(),audio_path=$2 WHERE id=$1`,
     [STORY, STORY + "/ukazka.wav"],
@@ -53,8 +89,16 @@ export async function startAdminServer({ port = 0, autoLogin = false } = {}) {
       ],
     );
   const originalFetch = globalThis.fetch;
-  const metrics = { external: 0, mail: 0, ai: 0, signed: 0 };
+  const metrics = {
+    external: 0,
+    mail: 0,
+    ai: 0,
+    signed: 0,
+    graph: 0,
+    oauth: 0,
+  };
   let aiMode = null;
+  let mailMode = null;
   const wav = Buffer.alloc(44 + 22050 * 2);
   wav.write("RIFF", 0);
   wav.writeUInt32LE(wav.length - 8, 4);
@@ -76,6 +120,47 @@ export async function startAdminServer({ port = 0, autoLogin = false } = {}) {
   const storage = new Map([[STORY + "/ukazka.wav", wav]]);
   async function adapter(input, opts = {}) {
     const u = new URL(String(input));
+    if (mailMode && u.hostname === "login.microsoftonline.com") {
+      metrics.oauth++;
+      return Response.json({
+        access_token: "synthetic-graph-token",
+        token_type: "Bearer",
+        expires_in: 3600,
+      });
+    }
+    if (mailMode && u.hostname === "graph.microsoft.com") {
+      metrics.graph++;
+      if (mailMode === "throttled")
+        return Response.json(
+          { error: "synthetic" },
+          { status: 429, headers: { "Retry-After": "60" } },
+        );
+      if (mailMode === "expired")
+        return Response.json({ error: "synthetic" }, { status: 410 });
+      return Response.json({
+        value: [
+          {
+            id: "synthetic-email-1",
+            conversationId: "synthetic-thread-1",
+            from: {
+              emailAddress: {
+                name: "Ukázková pisatelka",
+                address: "pisatelka@example.invalid",
+              },
+            },
+            subject: "Smyšlený e-mail",
+            body: {
+              contentType: "text",
+              content: "Smyšlený obsah pro test opakovaného importu.",
+            },
+            receivedDateTime: "2026-11-06T12:00:00Z",
+            hasAttachments: false,
+          },
+        ],
+        "@odata.deltaLink":
+          "https://graph.microsoft.com/v1.0/users/veryvera%40nadbytecna.cz/mailFolders/inbox/messages/delta?$deltatoken=synthetic2",
+      });
+    }
     if (u.hostname === "api.openai.com" && aiMode) {
       metrics.ai++;
       if (aiMode === "timeout")
@@ -87,6 +172,11 @@ export async function startAdminServer({ port = 0, autoLogin = false } = {}) {
         urgency: "medium",
         help_type: "Osobně ověřit potřeby.",
       };
+      if (
+        JSON.parse(opts.body).response_format?.json_schema?.name ===
+        "mail_classification"
+      )
+        output.email_type = "story";
       return new Response(
         JSON.stringify({
           choices: [{ message: { content: JSON.stringify(output) } }],
@@ -319,11 +409,17 @@ export async function startAdminServer({ port = 0, autoLogin = false } = {}) {
     GDPR_HASH_SECRET: "synthetic-only-hash-secret-for-local-tests",
     CRON_SECRET: "synthetic-only-cron-secret-for-local-tests",
     RETENTION_ENABLED: "false",
+    M365_INGEST_ENABLED: "false",
+    AI_EMAIL_CLASSIFICATION_ENABLED: "false",
+    AI_EMAIL_PROCESSING_APPROVED: "false",
+    M365_RETENTION_ENABLED: "false",
   });
   const admin = (await import("../../api/admin.js")).default;
   const triage = (await import("../../api/triage.js")).default;
   const retention = (await import("../../api/retention.js")).default;
   const worker = (await import("../../api/ai-worker.js")).default;
+  const adminMail = (await import("../../api/admin-mail.js")).default;
+  const mailSync = (await import("../../api/mail-sync.js")).default;
   const server = http.createServer(async (req, res) => {
     const u = new URL(req.url, "http://localhost");
     res.setHeader("Cache-Control", "no-store");
@@ -359,6 +455,8 @@ export async function startAdminServer({ port = 0, autoLogin = false } = {}) {
       "/api/triage/": triage,
       "/api/retention/": retention,
       "/api/ai-worker/": worker,
+      "/api/admin-mail/": adminMail,
+      "/api/mail-sync/": mailSync,
     };
     if (routes[u.pathname]) {
       try {
@@ -406,6 +504,9 @@ export async function startAdminServer({ port = 0, autoLogin = false } = {}) {
   return {
     setAIResponse: (mode) => {
       aiMode = mode;
+    },
+    setMailResponse: (mode) => {
+      mailMode = mode;
     },
     adapter,
     url: "http://127.0.0.1:" + server.address().port,
