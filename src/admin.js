@@ -135,6 +135,10 @@
     detail: null,
     status: null,
     pending: new Set(),
+    connectSerial: 0,
+    connectBusy: false,
+    inviteExpiresAt: 0,
+    inviteTimer: null,
   };
   var STATUSES = {
     new: "Nový",
@@ -1326,6 +1330,13 @@
     );
   }
   function clearMail() {
+    M.connectSerial++;
+    M.connectBusy = false;
+    clearMailInvite();
+    $("mail-connection-status").textContent = "";
+    $("mail-connect-msg").textContent = "";
+    $("mail-connect-invite").disabled = true;
+    $("mail-connect-disconnect").hidden = true;
     M.serial++;
     M.detailSerial++;
     M.pending.forEach(function (controller) {
@@ -1439,7 +1450,9 @@
   function renderMailStatus(status) {
     M.status = status;
     var pieces = [];
-    if (!status.configured || status.needsSetup)
+    if (status.authMode === "delegated" && status.connected !== true)
+      pieces.push("Načítání nových e-mailů čeká na připojení schránky.");
+    else if (!status.configured || status.needsSetup)
       pieces.push("Připojení schránky čeká na dokončení nastavení.");
     else if (!status.syncEnabled)
       pieces.push("Načítání nových e-mailů je vypnuté.");
@@ -1454,6 +1467,297 @@
         "Poslední načtení se nezdařilo; zobrazené kopie mohou být neúplné.",
       );
     $("mail-sync-status").textContent = pieces.join(" ");
+    renderMailConnection(status);
+  }
+  function clearMailInvite() {
+    if (M.inviteTimer) clearTimeout(M.inviteTimer);
+    M.inviteTimer = null;
+    M.inviteExpiresAt = 0;
+    $("mail-connect-url").value = "";
+    $("mail-connect-copy").disabled = true;
+    $("mail-connect-expiry").textContent = "";
+    $("mail-connect-link").hidden = true;
+  }
+  function inviteAllowed(status) {
+    return (
+      status &&
+      status.authMode !== "certificate" &&
+      status.connectConfigured === true &&
+      status.connectInviteEnabled === true
+    );
+  }
+  function updateMailConnectionButtons() {
+    $("mail-connect-invite").disabled =
+      M.connectBusy || !inviteAllowed(M.status);
+    $("mail-connect-disconnect").hidden =
+      !M.status ||
+      M.status.authMode === "certificate" ||
+      M.status.connected !== true;
+    $("mail-connect-disconnect").disabled = M.connectBusy;
+  }
+  function renderMailConnection(status) {
+    M.connectSerial++;
+    M.connectBusy = false;
+    clearMailInvite();
+    var text;
+    if (status.authMode === "certificate") {
+      text = status.configured
+        ? "Konfigurace správcovského certifikátu je připravená. Úspěšné čtení potvrzuje až poslední načtení zpráv. Připojovací odkazy se v tomto režimu nepoužívají."
+        : "Připojení používá správcovský certifikát; jeho nastavení zatím není dokončené. Připojovací odkazy se v tomto režimu nepoužívají.";
+    } else if (!status.connectConfigured) {
+      text = "Čeká na nastavení Microsoft aplikace.";
+      if (status.connected)
+        text +=
+          " Dřívější připojení je uložené, ale nastavení aplikace nyní není úplné.";
+    } else if (status.connected) {
+      text = "Připojení schránky je uložené.";
+      if (status.connectionUpdatedAt)
+        text +=
+          " Poslední změna připojení: " +
+          when(status.connectionUpdatedAt) +
+          ".";
+    } else {
+      text =
+        "Schránka zatím není připojená. Vytvořte odkaz a předejte jej osobě s přístupem ke schránce veryvera@nadbytecna.cz.";
+    }
+    if (
+      status.authMode !== "certificate" &&
+      status.connectConfigured &&
+      !status.connectInviteEnabled
+    )
+      text += " Vytváření připojovacích odkazů zatím není povolené.";
+    $("mail-connection-status").textContent = text;
+    $("mail-connect-msg").textContent = "";
+    updateMailConnectionButtons();
+  }
+  async function createMailInvite() {
+    if (!inviteAllowed(M.status) || M.connectBusy) return;
+    var epoch = S.authEpoch,
+      serial = ++M.connectSerial;
+    clearMailInvite();
+    M.connectBusy = true;
+    updateMailConnectionButtons();
+    $("mail-connect-msg").textContent =
+      "Připravuji soukromý připojovací odkaz…";
+    try {
+      var data = await mailApi({ action: "connect_invite" });
+      if (
+        epoch !== S.authEpoch ||
+        serial !== M.connectSerial ||
+        S.view !== "mail"
+      )
+        return;
+      var expires = Date.parse(data.expiresAt),
+        link;
+      try {
+        link = new URL(data.url);
+      } catch {
+        throw new Error("invalid_invite");
+      }
+      var localHttp =
+        link.protocol === "http:" &&
+        link.origin === location.origin &&
+        ["localhost", "127.0.0.1"].includes(link.hostname);
+      var sameOriginPreview =
+        link.protocol === "https:" &&
+        location.protocol === "https:" &&
+        link.origin === location.origin &&
+        link.hostname.endsWith(".vercel.app");
+      var allowedOrigin =
+        link.origin === "https://nadbytecna.cz" ||
+        sameOriginPreview ||
+        localHttp;
+      if (
+        !Number.isFinite(expires) ||
+        expires <= Date.now() ||
+        (!localHttp && link.protocol !== "https:") ||
+        !allowedOrigin ||
+        link.pathname !== "/api/mail-connect/" ||
+        !/^#invite=[A-Za-z0-9_-]{43}$/.test(link.hash) ||
+        link.search !== "" ||
+        link.username ||
+        link.password
+      )
+        throw new Error("invalid_invite");
+      $("mail-connect-url").value = link.href;
+      M.inviteExpiresAt = expires;
+      $("mail-connect-expiry").textContent =
+        "Platnost do " + when(data.expiresAt) + ". Odkaz je jednorázový.";
+      $("mail-connect-link").hidden = false;
+      $("mail-connect-copy").disabled = false;
+      $("mail-connect-msg").textContent =
+        "Odkaz je připravený pouze zde. Zkopírujte jej a předejte soukromě příjemci; účet v adminu nepotřebuje.";
+      M.inviteTimer = setTimeout(
+        function () {
+          if (
+            epoch !== S.authEpoch ||
+            serial !== M.connectSerial ||
+            S.view !== "mail"
+          )
+            return;
+          clearMailInvite();
+          $("mail-connect-msg").textContent =
+            "Platnost připojovacího odkazu vypršela. Vytvořte nový.";
+        },
+        Math.min(2147483647, expires - Date.now()),
+      );
+    } catch (e) {
+      if (
+        epoch === S.authEpoch &&
+        serial === M.connectSerial &&
+        S.view === "mail" &&
+        e.name !== "AbortError" &&
+        e.message !== "cancelled"
+      ) {
+        clearMailInvite();
+        $("mail-connect-msg").textContent =
+          "Připojovací odkaz se nepodařilo připravit. Zkuste to znovu.";
+      }
+    } finally {
+      if (
+        epoch === S.authEpoch &&
+        serial === M.connectSerial &&
+        S.view === "mail"
+      ) {
+        M.connectBusy = false;
+        updateMailConnectionButtons();
+      }
+    }
+  }
+  async function copyMailInvite() {
+    if (
+      !M.inviteExpiresAt ||
+      M.inviteExpiresAt <= Date.now() ||
+      !$("mail-connect-url").value
+    ) {
+      clearMailInvite();
+      $("mail-connect-msg").textContent =
+        "Odkaz už není dostupný. Vytvořte nový.";
+      return;
+    }
+    var epoch = S.authEpoch,
+      serial = M.connectSerial;
+    try {
+      await navigator.clipboard.writeText($("mail-connect-url").value);
+      if (
+        epoch === S.authEpoch &&
+        serial === M.connectSerial &&
+        S.view === "mail"
+      )
+        $("mail-connect-msg").textContent =
+          "Odkaz zkopírován. Předejte jej soukromě určenému příjemci; automaticky se nic neodeslalo.";
+    } catch {
+      if (
+        epoch === S.authEpoch &&
+        serial === M.connectSerial &&
+        S.view === "mail"
+      )
+        $("mail-connect-msg").textContent =
+          "Kopírování se nepodařilo. Označte odkaz v poli a zkopírujte jej ručně.";
+    }
+  }
+  function askDisconnectMail() {
+    if (
+      !M.status ||
+      M.status.authMode === "certificate" ||
+      M.status.connected !== true ||
+      M.connectBusy
+    )
+      return;
+    var d = node("dialog"),
+      title = node("h2", "", "Odpojit načítání schránky?");
+    d.dataset.mailDialog = "true";
+    title.id = "mail-disconnect-title";
+    d.setAttribute("aria-labelledby", title.id);
+    var message = node("p");
+    message.setAttribute("role", "status");
+    d.append(
+      title,
+      node(
+        "p",
+        "",
+        "Zruší se uložené připojení pro načítání e-mailů. Místní kopie i zprávy ve schránce Microsoft 365 zůstanou beze změny. Pro další načítání bude potřeba schránku znovu připojit.",
+      ),
+      message,
+    );
+    var actions = node("div", "actions"),
+      confirm = button(
+        "Odpojit schránku",
+        async function () {
+          var epoch = S.authEpoch,
+            serial = ++M.connectSerial;
+          M.connectBusy = true;
+          confirm.disabled = true;
+          clearMailInvite();
+          updateMailConnectionButtons();
+          try {
+            await mailApi({ action: "disconnect", confirm: "ODPOJIT" });
+            if (
+              epoch !== S.authEpoch ||
+              serial !== M.connectSerial ||
+              S.view !== "mail"
+            )
+              return;
+            d.close();
+            renderMailStatus(Object.assign({}, M.status, { connected: false }));
+            $("mail-connect-msg").textContent =
+              "Načítání schránky bylo odpojeno. Žádné zprávy se nesmazaly.";
+            var refreshSerial = M.connectSerial;
+            try {
+              var status = await mailApi({ action: "status" });
+              if (
+                epoch !== S.authEpoch ||
+                refreshSerial !== M.connectSerial ||
+                S.view !== "mail"
+              )
+                return;
+              renderMailStatus(status);
+              $("mail-connect-msg").textContent = status.connected
+                ? "Aktuální stav připojení byl obnoven."
+                : "Načítání schránky bylo odpojeno. Žádné zprávy se nesmazaly.";
+            } catch (refreshError) {
+              if (
+                epoch === S.authEpoch &&
+                refreshSerial === M.connectSerial &&
+                S.view === "mail" &&
+                refreshError.name !== "AbortError" &&
+                refreshError.message !== "cancelled"
+              )
+                $("mail-connect-msg").textContent =
+                  "Připojení bylo odpojeno. Aktuální stav se nepodařilo znovu načíst; použijte Obnovit přehled. Žádné zprávy se nesmazaly.";
+            }
+          } catch (e) {
+            if (
+              epoch === S.authEpoch &&
+              serial === M.connectSerial &&
+              S.view === "mail" &&
+              e.name !== "AbortError" &&
+              e.message !== "cancelled"
+            )
+              message.textContent =
+                "Připojení se nepodařilo odpojit. Zkuste to znovu.";
+          } finally {
+            if (epoch === S.authEpoch && serial === M.connectSerial) {
+              M.connectBusy = false;
+              confirm.disabled = false;
+              updateMailConnectionButtons();
+            }
+          }
+        },
+        "danger",
+      );
+    actions.append(
+      button("Zrušit", function () {
+        d.close();
+      }),
+      confirm,
+    );
+    d.append(actions);
+    d.addEventListener("close", function () {
+      d.remove();
+    });
+    document.body.append(d);
+    d.showModal();
   }
   function renderMailFilters() {
     var fields = $("mail-filter-fields");
@@ -2103,6 +2407,9 @@
       selectView(b.dataset.adminView).catch(mailError);
     });
   });
+  $("mail-connect-invite").addEventListener("click", createMailInvite);
+  $("mail-connect-copy").addEventListener("click", copyMailInvite);
+  $("mail-connect-disconnect").addEventListener("click", askDisconnectMail);
   $("mail-refresh").addEventListener("click", function () {
     closeMailDetail();
     loadMail().catch(mailError);

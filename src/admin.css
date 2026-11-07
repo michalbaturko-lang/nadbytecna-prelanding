@@ -664,3 +664,46 @@ dialog::backdrop {
   color: white;
   border-color: var(--rose);
 }
+
+.mail-connection {
+  margin: 20px 0;
+}
+.mail-connection h3 {
+  margin-top: 0;
+}
+.mail-invite-copy {
+  display: flex;
+  align-items: stretch;
+  gap: 10px;
+  margin: 8px 0;
+}
+.mail-invite-copy input {
+  min-width: 0;
+  flex: 1;
+}
+.mail-invite-copy button {
+  flex-shrink: 0;
+}
+.mail-invite-warning {
+  padding: 12px;
+  border-left: 3px solid var(--rose);
+  background: #f7f0f3;
+  overflow-wrap: anywhere;
+}
+#mail-connect-msg:not(:empty) {
+  margin-top: 12px;
+}
+@media (max-width: 767px) {
+  .mail-invite-copy {
+    flex-direction: column;
+  }
+  .mail-connection .actions > button {
+    width: 100%;
+  }
+}
+
+button.primary:hover:not(:disabled) {
+  background: var(--rose);
+  color: white;
+  border-color: var(--rose);
+}
