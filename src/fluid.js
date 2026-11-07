@@ -22,7 +22,9 @@
 
   var MX = 0.12, MYB = 1.0;                                       // okraj vlevo/vpravo; prostor pro pád dolů (násobek výšky rukopisu)
   var wrap = document.createElement("span");
-  wrap.style.cssText = "position:relative;display:block;width:100%;line-height:0;max-width:100%;touch-action:pan-y;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none";
+  var soon = document.body.getAttribute("data-page") === "soon";
+  wrap.style.cssText = "position:relative;display:block;line-height:0;max-width:100%;margin-inline:auto;touch-action:pan-y;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none";
+  wrap.style.width = soon ? "fit-content" : "100%";
   img.parentNode.insertBefore(wrap, img);
   wrap.appendChild(img);
   var cv = document.createElement("canvas");
