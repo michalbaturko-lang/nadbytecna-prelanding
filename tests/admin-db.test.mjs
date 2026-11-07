@@ -2,6 +2,8 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {
   freshAdminDb,
+  applyAdminWorkspace,
+  ADMIN_SCHEMA,
   seed,
   ADMIN,
   OTHER,
@@ -47,12 +49,12 @@ test("admin migration: categories, RLS, anon metadata guard and age", async () =
   await assert.rejects(
     () =>
       db.query(
-        `INSERT INTO stories(email,consent) VALUES('young@example.invalid',true)`,
+        `INSERT INTO stories(email,consent,input_type) VALUES('young@example.invalid',true,'text')`,
       ),
     /row-level|policy/,
   );
   await db.query(
-    `INSERT INTO stories(id,email,consent,age_confirmed,ai_summary,admin_note,admin_category) VALUES('66666666-6666-4666-8666-666666666666','new@example.invalid',true,true,'injected','injected','pravni')`,
+    `INSERT INTO stories(id,email,consent,age_confirmed,input_type,ai_summary,admin_note,admin_category) VALUES('66666666-6666-4666-8666-666666666666','new@example.invalid',true,true,'text','injected','injected','pravni')`,
   );
   await db.exec("reset role");
   const r = (
@@ -229,7 +231,7 @@ test("GDPR person erasure cascades notes, history and matches and preserves only
     /missing/,
   );
   await db.query(
-    `INSERT INTO stories(email,consent,story_text) VALUES('osoba@example.invalid',true,'Nový syntetický záznam po zahájení výmazu.')`,
+    `INSERT INTO stories(email,consent,input_type,story_text) VALUES('osoba@example.invalid',true,'text','Nový syntetický záznam po zahájení výmazu.')`,
   );
   await db.query(
     `select admin_erase('osoba@example.invalid',$1,$2,'admin@example.invalid',false)`,
@@ -257,13 +259,13 @@ test("GDPR person erasure cascades notes, history and matches and preserves only
 });
 test("retention deletes only expired record, preserves published stories and fresh related offers", async () => {
   await db.query(
-    `INSERT INTO stories(id,email,created_at,status,consent,consent_publish,age_confirmed) VALUES('77777777-7777-4777-8777-777777777777','retention@example.invalid',now()-interval '13 months','new',true,true,true),('88888888-8888-4888-8888-888888888888','retention@example.invalid',now()-interval '13 months','published',true,true,true)`,
+    `INSERT INTO stories(id,email,created_at,status,consent,consent_publish,age_confirmed,input_type) VALUES('77777777-7777-4777-8777-777777777777','retention@example.invalid',now()-interval '13 months','new',true,true,true,'text'),('88888888-8888-4888-8888-888888888888','retention@example.invalid',now()-interval '13 months','published',true,true,true,'text')`,
   );
   await db.exec(
     `UPDATE stories SET status='published' WHERE id='88888888-8888-4888-8888-888888888888'`,
   );
   await db.query(
-    `INSERT INTO help_offers(id,email,created_at,last_contact_at,consent) VALUES('99999999-9999-4999-8999-999999999999','retention@example.invalid',now()-interval '25 months',now(),true)`,
+    `INSERT INTO help_offers(id,email,created_at,last_contact_at,consent,helper_type) VALUES('99999999-9999-4999-8999-999999999999','retention@example.invalid',now()-interval '25 months',now(),true,'professional')`,
   );
   await db.exec("set role service_role");
   for (const [id, expected] of [
@@ -306,7 +308,7 @@ test("audio retention claims only transcribed or 30-day-old audio", async () => 
     [2, 2, null],
   ])
     await db.query(
-      `INSERT INTO stories(id,email,created_at,audio_path,transcript,consent) VALUES($1,$2,now()-make_interval(days=>$3),$4,$5,true)`,
+      `INSERT INTO stories(id,email,created_at,audio_path,transcript,consent,input_type) VALUES($1,$2,now()-make_interval(days=>$3),$4,$5,true,'upload')`,
       [
         "a000000" + i + "-0000-4000-8000-000000000000",
         "audio" + i + "@example.invalid",
@@ -353,7 +355,7 @@ test("automatic AI queue retries at most twice and cannot overwrite manual class
   await db.exec(`UPDATE private.ai_jobs SET done=true`);
   await db.exec("reset role");
   await db.query(
-    `INSERT INTO stories(id,email,consent,admin_category,admin_urgency) VALUES('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa','queue@example.invalid',true,'pravni','high')`,
+    `INSERT INTO stories(id,email,consent,admin_category,admin_urgency,input_type) VALUES('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa','queue@example.invalid',true,'pravni','high','text')`,
   );
   await db.exec("set role service_role");
   for (let i = 0; i < 3; i++) {
@@ -430,7 +432,7 @@ test("anon cannot bind a story to another story's audio or unsafe filenames", as
 test("status-only saves do not confirm AI classification and clearing both overrides removes confirmation", async () => {
   const id = "eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee";
   await db.query(
-    `INSERT INTO stories(id,email,consent) VALUES($1,'classification@example.invalid',true)`,
+    `INSERT INTO stories(id,email,consent,input_type) VALUES($1,'classification@example.invalid',true,'text')`,
     [id],
   );
   await db.exec("set role service_role");
@@ -463,4 +465,162 @@ test("status-only saves do not confirm AI classification and clearing both overr
   assert.equal(r.classified_by, null);
   assert.equal(r.classified_email, null);
   await db.exec("reset role");
+});
+test("workspace applies over captured production metadata without auth.users grants or legacy table", async () => {
+  const productionBase = await freshAdminDb({ applyWorkspace: false });
+  try {
+    const tables = [...new Set(ADMIN_SCHEMA.columns.map((c) => c.table))];
+    const actual = (
+      await productionBase.query(
+        `SELECT table_name AS "table",column_name AS "column",data_type AS "type",udt_name AS udt,column_default AS "default",is_nullable AS nullable FROM information_schema.columns WHERE table_schema='public' AND table_name=ANY($1::text[])`,
+        ["{" + tables.join(",") + "}"],
+      )
+    ).rows;
+    const sorted = (rows) =>
+      rows
+        .slice()
+        .sort((a, b) =>
+          (a.table + "." + a.column).localeCompare(b.table + "." + b.column),
+        );
+    assert.deepEqual(sorted(actual), sorted(ADMIN_SCHEMA.columns));
+    assert.equal(
+      (
+        await productionBase.query(
+          "SELECT to_regclass('public.preregistrations') name",
+        )
+      ).rows[0].name,
+      null,
+    );
+    assert.equal(
+      (
+        await productionBase.query(
+          "SELECT has_table_privilege('service_role','auth.users','SELECT') allowed",
+        )
+      ).rows[0].allowed,
+      false,
+    );
+    await assert.rejects(
+      () =>
+        productionBase.query(
+          "INSERT INTO stories(email,consent) VALUES('strict@example.invalid',true)",
+        ),
+      /input_type.*not-null|null value.*input_type/,
+    );
+    await assert.rejects(
+      () =>
+        productionBase.query(
+          "INSERT INTO help_offers(email,consent) VALUES('strict@example.invalid',true)",
+        ),
+      /helper_type.*not-null|null value.*helper_type/,
+    );
+    await applyAdminWorkspace(productionBase);
+    assert.equal(
+      (
+        await productionBase.query(
+          "SELECT to_regclass('public.preregistrations') name",
+        )
+      ).rows[0].name,
+      null,
+    );
+    await productionBase.exec("SET ROLE service_role");
+    await assert.rejects(
+      () => productionBase.query("SELECT * FROM auth.users"),
+      /permission denied/,
+    );
+    assert.equal(
+      (
+        await productionBase.query(
+          "SELECT admin_access($1,'admin@example.invalid',$2) allowed",
+          [ADMIN, SESSION],
+        )
+      ).rows[0].allowed,
+      true,
+    );
+    assert.equal(
+      (
+        await productionBase.query(
+          "SELECT private.verified_admin_identity($1,'other@example.invalid') allowed",
+          [ADMIN],
+        )
+      ).rows[0].allowed,
+      false,
+    );
+    await productionBase.exec("RESET ROLE");
+    for (const role of ["anon", "authenticated"]) {
+      await productionBase.exec("SET ROLE " + role);
+      await assert.rejects(
+        () =>
+          productionBase.query(
+            "SELECT private.verified_admin_identity($1,'admin@example.invalid')",
+            [ADMIN],
+          ),
+        /permission denied/,
+      );
+      await productionBase.exec("RESET ROLE");
+    }
+  } finally {
+    await productionBase.close();
+  }
+});
+test("privacy RPCs support absent and explicitly installed legacy preregistrations", async () => {
+  for (const optionalPreregistrations of [false, true]) {
+    const privacyDb = await freshAdminDb({ optionalPreregistrations });
+    try {
+      await privacyDb.query(
+        "INSERT INTO launch_signups(id,email,consent) VALUES('99999999-1111-4111-8111-111111111111','optional@example.invalid',true)",
+      );
+      if (optionalPreregistrations)
+        await privacyDb.query(
+          "INSERT INTO preregistrations(email,email_normalized,consent_version,consent_text,confirm_token_hash) VALUES('optional@example.invalid','optional@example.invalid','synthetic-v1','Syntetický souhlas','never_export_this_hash')",
+        );
+      await privacyDb.exec("SET ROLE service_role");
+      const data = (
+        await privacyDb.query(
+          "SELECT admin_person('optional@example.invalid') result",
+        )
+      ).rows[0].result;
+      assert.equal(data.signups.length, 1);
+      assert.equal(
+        data.preregistrations.length,
+        optionalPreregistrations ? 1 : 0,
+      );
+      assert.ok(!JSON.stringify(data).includes("never_export_this_hash"));
+      await privacyDb.query(
+        "SELECT admin_erase('optional@example.invalid',$1,$2,'admin@example.invalid',true)",
+        ["f".repeat(64), ADMIN],
+      );
+      await privacyDb.query(
+        "SELECT admin_erase('optional@example.invalid',$1,$2,'admin@example.invalid',false)",
+        ["f".repeat(64), ADMIN],
+      );
+      assert.equal(
+        (
+          await privacyDb.query(
+            "SELECT count(*)::int n FROM launch_signups WHERE email='optional@example.invalid'",
+          )
+        ).rows[0].n,
+        0,
+      );
+      if (optionalPreregistrations)
+        assert.equal(
+          (
+            await privacyDb.query(
+              "SELECT count(*)::int n FROM preregistrations",
+            )
+          ).rows[0].n,
+          0,
+        );
+      const after = (
+        await privacyDb.query(
+          "SELECT admin_person('optional@example.invalid') result",
+        )
+      ).rows[0].result;
+      assert.deepEqual(after.records, []);
+      assert.deepEqual(after.signups, []);
+      assert.deepEqual(after.preregistrations, []);
+      await privacyDb.exec("RESET ROLE");
+    } finally {
+      await privacyDb.close();
+    }
+  }
 });

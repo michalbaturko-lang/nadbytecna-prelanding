@@ -5,7 +5,7 @@ import {
   token,
   otherToken,
 } from "./helpers/admin-server.mjs";
-import { STORY } from "./helpers/admin-db.mjs";
+import { STORY, installOptionalPreregistrations } from "./helpers/admin-db.mjs";
 import { unzipSync, strFromU8 } from "fflate";
 let s;
 test.before(async () => {
@@ -183,6 +183,7 @@ test("person erasure removes stored audio and record; audit retains hash only", 
 });
 
 test("email-based GDPR handles a signup without a story and exports original preregistration", async () => {
+  await installOptionalPreregistrations(s.db);
   await s.db.query(
     `INSERT INTO preregistrations(email,email_normalized,consent_version,consent_text) VALUES('gdpr@example.invalid','gdpr@example.invalid','synthetic-v1','Syntetický souhlas')`,
   );
@@ -219,11 +220,11 @@ test("legacy foreign audio reference fails closed for signing, export, erasure, 
   const legacy = "eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee";
   const victimPath = victim + "/victim.wav";
   await s.db.query(
-    `INSERT INTO stories(id,email,consent,age_confirmed,audio_path) VALUES($1,'victim@example.invalid',true,true,$2)`,
+    `INSERT INTO stories(id,email,consent,age_confirmed,audio_path,input_type) VALUES($1,'victim@example.invalid',true,true,$2,'upload')`,
     [victim, victimPath],
   );
   await s.db.query(
-    `INSERT INTO stories(id,email,consent,consent_transcript,age_confirmed,created_at,audio_path) VALUES($1,'legacy-binding@example.invalid',true,true,true,now()-interval '13 months',$2)`,
+    `INSERT INTO stories(id,email,consent,consent_transcript,age_confirmed,created_at,audio_path,input_type) VALUES($1,'legacy-binding@example.invalid',true,true,true,now()-interval '13 months',$2,'upload')`,
     [legacy, legacy + "/legacy.wav"],
   );
   s.storage.set(victimPath, Buffer.from("synthetic-victim-audio"));
@@ -311,7 +312,7 @@ test("legacy foreign audio reference fails closed for signing, export, erasure, 
 test("manual AI requires processing consent even when the global flag is enabled", async () => {
   const id = "dddddddd-dddd-4ddd-8ddd-dddddddddddd";
   await s.db.query(
-    `INSERT INTO stories(id,email,consent,story_text) VALUES($1,'no-consent@example.invalid',false,'Syntetická zpráva bez souhlasu.')`,
+    `INSERT INTO stories(id,email,consent,story_text,input_type) VALUES($1,'no-consent@example.invalid',false,'Syntetická zpráva bez souhlasu.','text')`,
     [id],
   );
   process.env.AI_TRIAGE_ENABLED = "true";
