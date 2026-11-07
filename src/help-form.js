@@ -25,6 +25,7 @@
     var consent = document.getElementById("pomoc-gdpr").checked;
     if (!name || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { say("Doplň jméno a e-mail."); return; }
     if (!type) { say("Vyber, jestli sis tím prošla, nebo pomáháš takovým lidem."); return; }
+    if (!document.getElementById("pomoc-age").checked) { say("Potvrď, že ti je 18 let."); return; }
     if (!consent) { say("Bez souhlasu se zpracováním nabídky to poslat nemůžeme."); return; }
     var kinds = Array.prototype.map.call(document.querySelectorAll('#help-form input[name="kind"]:checked'), function (el) { return el.value; });
     var links = {
@@ -45,6 +46,7 @@
       message: val("pomoc-text") || null,
       links: JSON.stringify(links),
       consent: true,
+      age_confirmed: true,
       consent_publish: null,
     }).then(function () {
       api.done("help_offers", id);
