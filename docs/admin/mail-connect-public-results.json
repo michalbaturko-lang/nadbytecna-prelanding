@@ -1,0 +1,21 @@
+{
+  "date": "2026-11-07",
+  "environment": "synthetic public page; Microsoft navigation intercepted and aborted",
+  "checks": 11,
+  "results": [
+    "missing Microsoft setup cannot begin",
+    "invalid invitation cannot begin",
+    "320 public landing responsive/privacy/no automatic consume",
+    "375 public landing responsive/privacy/no automatic consume",
+    "768 public landing responsive/privacy/no automatic consume",
+    "1024 public landing responsive/privacy/no automatic consume",
+    "1440 public landing responsive/privacy/no automatic consume",
+    "1920 public landing responsive/privacy/no automatic consume",
+    "expired or rejected invitation stays local with clear error",
+    "non-Microsoft redirect rejected before navigation",
+    "explicit click navigates only to validated Microsoft authorization URL (aborted by test)"
+  ],
+  "realMicrosoftRequests": 0,
+  "automaticBeginRequests": 0,
+  "inviteInHttpUrls": false
+}

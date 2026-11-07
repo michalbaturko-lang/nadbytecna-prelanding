@@ -3,20 +3,26 @@
   "environment": "local PostgreSQL reconstructed from read-only actual schema metadata; synthetic records and Auth/Storage adapters",
   "unitAndIntegration": {
     "command": "npm test",
-    "total": 129,
-    "passed": 129,
+    "total": 160,
+    "passed": 160,
     "failed": 0
   },
   "browser": {
     "command": "node tools/admin-browser.mjs",
-    "checks": 51,
-    "passed": 51,
-    "screenshots": 22,
+    "checks": 76,
+    "passed": 76,
+    "screenshots": 26,
     "breakdown": {
       "original": 29,
-      "mailIntegration": 22
+      "mailIntegration": 22,
+      "adminInvitation": 14,
+      "publicConnect": 11
     },
-    "mailCommand": "MAIL_UI_EXTENDED=true node tools/admin-mail-integration.mjs"
+    "mailCommand": "MAIL_UI_EXTENDED=true node tools/admin-mail-integration.mjs",
+    "connectCommands": [
+      "node tools/admin-mail-connect-browser.mjs",
+      "node tools/mail-connect-public-browser.mjs"
+    ]
   },
   "lighthouseAccessibility": {
     "mobileList": 100,
@@ -31,5 +37,6 @@
   "productionDeployment": "not performed",
   "realMicrosoftGraphCalls": 0,
   "realMicrosoftOAuthCalls": 0,
-  "mailboxConnected": false
+  "mailboxConnected": false,
+  "realOAuthCallbackRoundtrip": "not verified; requires approved HTTPS host and registered Microsoft app"
 }

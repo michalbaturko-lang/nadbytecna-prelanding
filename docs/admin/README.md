@@ -17,9 +17,13 @@ Připravená samostatná záložka pro veryvera@nadbytecna.cz: vlákna a stránk
 
 Schránka není připojena. Po předání přístupu zbývá schválit/aplikovat připravené migrace na oddělené testovací DB, doplnit konfiguraci a ověřit skutečný Microsoft. [Přesný postup a omezení](microsoft365.md), [22 integračních kontrol](mail-integration-results.json), [desktop ukázka](screenshots/1440-mail-detail.png), [mobil](screenshots/375-mail-detail.png).
 
+## Připojení schránky odkazem
+
+Připravená delegovaná varianta: admin vytvoří soukromý jednorázový odkaz, příjemce se přihlásí přímo u Microsoftu bez účtu v adminu. Pozvánka platí 30 minut; správný tenant a schránka se ověřují před uložením šifrované cache. Přístup do adminu tím nevzniká. [Krátké nastavení správce a provozní postup](microsoft365-odkaz.md). Registrace aplikace, serverové tajemství a schválené HTTPS/DB nasazení zatím chybí, takže nebyla vydána ostrá funkční pozvánka.
+
 ## Ověření a ukázky
 
-- [Souhrn výsledků](test-results.json): 129/129 lokálních unit a integračních testů, 51 prohlížečových kontrol (29 původních + 22 e-mailových), 22 screenshotů.
+- [Souhrn výsledků](test-results.json): 160/160 lokálních unit a integračních testů, 76 prohlížečových kontrol (29 původních + 22 e-mailových + 14 admin pozvánky + 11 veřejná stránka), 26 screenshotů.
 - [Prohlížečové výsledky](browser-results.json): seznam, detail a filtry na 320, 375, 768, 1024, 1440 a 1920 px; veřejné formuláře a globální GDPR dialog. Bez zjištěného přetékání a nálezů axe v testovaných pohledech.
 - [Regrese veřejného webu](public-regression.json): porovnání devíti veřejných HTML se základním commitem, povolená změna 18+; vybrané vizuální soubory a cookie skript shodné.
 - Lighthouse Accessibility v režimu snapshot: [mobilní seznam](lighthouse-mobile-list.json), [mobilní detail](lighthouse-mobile-detail.json), [desktopový seznam](lighthouse-desktop-list.json), [desktopový detail](lighthouse-desktop-detail.json), všechny 100/100. Nejde o produkční měření výkonu.

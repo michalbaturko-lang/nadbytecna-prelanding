@@ -74,3 +74,17 @@ Připraveno k revizi, schránka **nepřipojena**. [Konfigurace a předání spr�
 - ČEKÁ: správce aplikace a certifikát, ověření RBAC omezení jediné schránky, schválení a aplikace nové migrace, staging skutečného delta/HTML-to-text chování, počáteční složka a datum, retenční lhůta a samostatné schválení AI zdroje. Lokální nakonfigurováno neznamená funkční připojení.
 
 AI v e-mailové verzi 1 se spouští ručně nad nejnovějšími 20 zprávami a nejvýše 20 000 znaky, nezávisle na aktuálně prohlížené stránce. Zveřejnění e-mailů není povoleno. Sender export zachovává poznámky se značkou requires_review, protože poznámky a citace mohou obsahovat údaje dalších osob. Nejde o automaticky hotovou odpověď na GDPR žádost. Nadlimitní export selže před SQL agregací (2.5 MiB) nebo při serverové kontrole (3 MiB); nikdy se netváří jako úplný zkrácený export.
+
+
+## Jednorázové delegované připojení bez účtu v adminu
+
+[Postup připojení odkazem](microsoft365-odkaz.md). Nová varianta nevyžaduje certifikát ani Exchange PowerShell; vyžaduje ale registraci Microsoft Web aplikace, delegovaná User.Read/Mail.Read, serverový client secret a schválené DB/HTTPS nasazení. Žádná ostrá pozvánka zatím nebyla vydána.
+
+- 160/160 lokálních testů celého projektu, včetně 13 MSAL/crypto, 11 OAuth DB, 5 veřejné API flow a delegovaných Graph cest. Skutečný MSAL 7.2.1 byl ověřen s mock discovery; skutečné přihlášení/token Microsoftu neproběhlo.
+- [14 admin UI kontrol](mail-connect-admin-results.json): gated vydání a kopírování pozvánky, expirace, vyčištění po odchodu/logout, potvrzené odpojení a bezpečný preview origin.
+- [11 veřejných UI kontrol](mail-connect-public-results.json): šest šířek, žádný overflow/axe nález, bez admin účtu, skrytí fragmentu, žádný automatický begin, POST po kliknutí a blokování cizího redirectu.
+- Celkem 76 prohlížečových kontrol (29 původní, 22 e-mailová integrace, 14 pozvánka, 11 veřejná stránka) a 26 screenshotů, vše syntetické. [Mobil veřejná stránka](screenshots/375-mail-connect-public.png), [desktop veřejná stránka](screenshots/1440-mail-connect-public.png), [mobil admin pozvánka](screenshots/375-mail-connect-admin.png), [desktop admin pozvánka](screenshots/1440-mail-connect-admin.png).
+- Nezávislá revize nenašla potvrzenou cestu k obcházení state/cookie/PKCE, vytvoření admin přístupu nebo obnovení cache/commitnutí synchronizace po odpojení. Ověřené lokální zámky/revize nenahrazují provozní souběžný zátěžový test.
+- ČEKÁ: registrace skutečné aplikace, serverové hodnoty, schválení a aplikace migrací, skutečný HTTPS cookie roundtrip (__Host/Secure/HttpOnly/SameSite), tenant consent a owner účet. Nastavená konfigurace ani uložená cache nejsou důkazem funkčního trvalého přístupu.
+
+Veškeré Microsoft/OAuth/Graph odpovědi v automatických kontrolách byly mockované; úmyslnou navigaci na Microsoft test zachytil a zablokoval. AI a skutečné načítání pošty zůstávají vypnuté.

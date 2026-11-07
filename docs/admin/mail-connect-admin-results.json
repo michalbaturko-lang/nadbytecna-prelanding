@@ -1,0 +1,23 @@
+{
+  "date": "2026-11-07",
+  "environment": "synthetic admin invitation UI contract; no OAuth",
+  "checks": 14,
+  "results": [
+    "missing application config remains disabled",
+    "explicit invitation gate required",
+    "320 invite responsive/copy/no persistence/leave cleanup",
+    "375 invite responsive/copy/no persistence/leave cleanup",
+    "768 invite responsive/copy/no persistence/leave cleanup",
+    "1024 invite responsive/copy/no persistence/leave cleanup",
+    "1440 invite responsive/copy/no persistence/leave cleanup",
+    "1920 invite responsive/copy/no persistence/leave cleanup",
+    "invalid expiry never produces a usable invitation",
+    "late invite response cannot restore sensitive DOM after logout",
+    "disconnect requires confirmation and refreshes connection status",
+    "certificate mode retains its setup and disables invitation flow",
+    "HTTPS Vercel staging accepts only a link from the same preview origin",
+    "cross-origin Vercel preview invitation rejected"
+  ],
+  "publicInvitationVisits": 0,
+  "automaticEmails": 0
+}

@@ -42,3 +42,8 @@ Kód a lokální ověření jsou připravené k revizi. Žádná migrace nebyla 
 ## E-mailový zdroj Microsoft 365
 
 Nové rozšíření vyžaduje po admin_workspace ještě migraci `supabase/migrations/20261109000000_admin_mail.sql`, kterou agent připravil a testoval pouze lokálně. Produkční změny nebyly aplikovány. Kompletní postup, proměnné, certifikát, RBAC a kontrolní příkazy jsou v [microsoft365.md](microsoft365.md). Nejprve staging, pak výslovné schválení nasazení. Výchozí ingest i zdrojová AI vypnuté, žádné reálné připojení schránky neproběhlo.
+
+
+## Jednorázový odkaz bez admin účtu příjemce
+
+Delegované připojení používá MSAL Node a novou migraci `20261110000000_mail_oauth.sql` po admin_mail. Postup [microsoft365-odkaz.md](microsoft365-odkaz.md) nahrazuje PowerShell/certifikátový návod pro zvolenou jednodušší variantu. Vyžaduje registraci Web redirect URI, delegované User.Read/Mail.Read a serverový client secret; nic z toho nebylo v tenantovi nastaveno agentem. M365_CONNECT_ENABLED a M365_INGEST_ENABLED jsou oddělené; AI zůstává samostatně vypnutá. Nejprve schválené HTTPS preview s oddělenou DB a explicitním preview callbackem, potom schválení produkce.

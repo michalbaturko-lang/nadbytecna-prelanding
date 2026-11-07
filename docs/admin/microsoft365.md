@@ -1,5 +1,7 @@
 # Microsoft 365 — příprava integrace, 7. 11. 2026
 
+**Aktualizace:** pro jednodušší připojení jednorázovým odkazem bez přístupu příjemce do adminu použijte [nový postup](microsoft365-odkaz.md). Níže zůstává alternativní certifikátový servisní přístup. Obě varianty jsou k revizi; skutečná schránka není připojena.
+
 Stav: návrh a lokální příprava, nikoli připojená schránka. Uživatel potvrdil, že veryvera@nadbytecna.cz je vyhrazená schránka projektu. V Microsoft Entra není dostupné přihlášení správce. Nebyla registrována aplikace, udělena oprávnění ani čtena pošta.
 
 ## Zadání pro správce
