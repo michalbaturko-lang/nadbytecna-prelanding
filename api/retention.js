@@ -1,5 +1,6 @@
 import crypto from "node:crypto";
 import { json } from "../lib/http.js";
+import { mailRetention } from "../lib/mail-service.mjs";
 import {
   supa,
   rpc,
@@ -78,11 +79,13 @@ export default async function handler(req, res) {
       records: expired.length,
       audio: audio.length,
     });
+    const email = await mailRetention();
     return json(res, 200, {
       ok: true,
       dryRun,
       records: expired.length,
       audio: audio.length,
+      email,
     });
   } catch {
     return json(res, 503, { error: "retention_failed" });

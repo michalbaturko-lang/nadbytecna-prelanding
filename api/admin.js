@@ -20,6 +20,7 @@ import { listRecords, allFiltered, dashboard } from "../lib/admin-query.mjs";
 import { STATUSES, URGENCIES, UUID, toCsv } from "../lib/admin-model.mjs";
 import { triageEnabled, triageText } from "../lib/triage.mjs";
 import { zipSync, strToU8 } from "fflate";
+import { mailRpc, mailHashSecret } from "../lib/mail-service.mjs";
 
 export default async function handler(req, res) {
   res.setHeader("X-Robots-Tag", "noindex, nofollow, noarchive");
@@ -82,6 +83,11 @@ export default async function handler(req, res) {
       }
       const person = await rpc("admin_person", { p_email: row.email });
       if (b.action === "person_export") {
+        person.email_source = await mailRpc("export", {
+          email: row.email,
+          actor_id: user.id,
+          actor_email: user.email,
+        });
         const files = { "data.json": strToU8(JSON.stringify(person, null, 2)) };
         let size = 0;
         for (const r of person.records)
@@ -115,6 +121,15 @@ export default async function handler(req, res) {
         p_actor: user.id,
         p_actor_email: user.email,
       };
+      // Local e-mail copies only. Suppression is committed before the web/audio erasure;
+      // repeating a partly completed cross-source request is safe.
+      await mailRpc("erase", {
+        email: row.email,
+        email_hash: emailHash(row.email),
+        hash_secret: mailHashSecret(),
+        actor_id: user.id,
+        actor_email: user.email,
+      });
       const locked = await rpc("admin_erase", { ...args, p_mark_only: true });
       for (const r of locked.records)
         if (r.audio_path) await removeAudio(r.audio_path, r.id);
