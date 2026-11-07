@@ -15,7 +15,7 @@ execFileSync(process.execPath, ["build.mjs"], {
 });
 
 const read = (p) => fs.readFileSync(path.join(OUT, p), "utf8");
-const pages = ["index.html", "sdilet-pribeh/index.html", "mohu-pomoci/index.html", "potrebuji-pomoc/index.html", "ochrana-osobnich-udaju/index.html", "pravidla-zverejnovani/index.html", "kontakt/index.html"];
+const pages = ["index.html", "sdilet-pribeh/index.html", "mohu-pomoci/index.html", "potrebuji-pomoc/index.html", "verin-pribeh/index.html", "o-nas/index.html", "proverene-kontakty/index.html", "cookies/index.html", "ochrana-osobnich-udaju/index.html", "pravidla-zverejnovani/index.html", "kontakt/index.html"];
 const home = read("index.html");
 const visible = (h) => h.replace(/<style>[\s\S]*?<\/style>/g, "").replace(/<script[\s\S]*?<\/script>/g, "");
 
@@ -54,22 +54,35 @@ test("hero má stejný lockup a stejné fluid.js, app.js se nenačítá", () => 
   assert.equal(fluidSrc.includes("/*LETTERS*/null"), true);
 });
 
-test("homepage má dvě volby, ne mřížku osmi kategorií, a formuláře nic neodesílají", () => {
+test("homepage má dvě volby, osm karet a formuláře nic neodesílají", () => {
   assert.match(home, /<a class="choice" href="\/sdilet-pribeh\/"><span class="choice-title">Sdílej svůj příběh<\/span><\/a>/);
   assert.match(home, /<a class="choice" href="\/mohu-pomoci\/"><span class="choice-title">Mohu pomoci<\/span><\/a>/);
   assert.equal(visible(home).match(/class="choice"/g).length, 2);
-  assert.doesNotMatch(visible(home), /<summary>|Nabídni terapii|Nabídni právní pomoc|Chci pomoci|chci-pomoci/);
-  assert.match(home, /<footer[\s\S]*href="\/potrebuji-pomoc\/">Potřebuji pomoc<\/a>/);
+  assert.equal(visible(home).match(/class="cat"/g).length, 8);
+  assert.match(home, /Nabídni terapii/);
+  assert.match(home, /Nabídni právní pomoc/);
+  assert.match(home, /href="\/mohu-pomoci\/\?typ=potencial"/);
+  assert.match(home, /class="top-cta" href="\/potrebuji-pomoc\/"/);
+  assert.match(home, /Okamžitá pomoc/);
+  assert.match(home, /href="tel:155"/);
+  assert.match(home, /href="tel:158"/);
+  assert.doesNotMatch(visible(home), /Hlavní cíl -|Cíl, jak ho napsala Věra/);
+  assert.match(home, /<footer[\s\S]*href="\/ochrana-osobnich-udaju\/">Ochrana osobních údajů<\/a>/);
+  assert.match(home, /href="\/cookies\/"/);
+  assert.match(read("sitemap.xml"), /<loc>https:\/\/nadbytecna\.cz\/verin-pribeh\/<\/loc>/);
+  assert.doesNotMatch(read("sitemap.xml"), /\/admin\/|\/coming-soon\//);
+  assert.match(read("robots.txt"), /Disallow: \//);
   const choices = [...home.matchAll(/<a class="choice"[^>]*>([\s\S]*?)<\/a>/g)].map((m) => m[1]);
   assert.equal(choices.length, 2);
   assert.ok(choices.every((c) => !c.includes("Potřebuji pomoc")));
   const pribeh = home.slice(home.indexOf('id="pribeh"'), home.indexOf("</section>"));
   assert.match(pribeh, /Tady bude osobní výpověď Věry Komárové\. Čekáme na její text\./);
   assert.equal(pribeh.includes("<img"), false);
-  assert.doesNotMatch(visible(home), /Připravujeme|připravujeme|Spouštíme|Pracovní náhled|neběží|zatím není/);
+  assert.doesNotMatch(visible(home), /Spouštíme|Pracovní náhled|neběží|zatím není/);
   assert.match(home, /Žádná žena není nadbytečná\./);
-  assert.match(home, /Místo pro ženy, které si prošly něčím podobným\./);
-  assert.match(home, /Hlavní cíl - změnit systém - více ochrany našimi zákony pro ženy, manželky, partnerky, matky, podnikatelky\./);
+  assert.match(home, /Místo pro ženy, které si prošly něčím podobným, a pro ty, kdo jim chtějí pomoci\./);
+  assert.match(home, /Více ochrany našimi zákony pro ženy, manželky, partnerky, matky a podnikatelky\./);
+  assert.match(home, /připravujeme/);
   assert.match(home, /href="https:\/\/veryvera\.cz" rel="noopener noreferrer"/);
   assert.match(home, /Správce osobních údajů: Věra Komárová, fyzická osoba\. Adresa: doplníme\. IČ: doplníme\./);
   assert.doesNotMatch(visible(home), /Zapsaný ústav/);
@@ -94,7 +107,7 @@ test("homepage má dvě volby, ne mřížku osmi kategorií, a formuláře nic n
   assert.doesNotMatch(visible(story), /Připravujeme|Spouštíme|zatím není|neodesílá/);
   assert.match(story, /Chci sdílet anonymně/);
   assert.match(story, /Chci sdílet se jménem/);
-  assert.match(story, /Chci i pomáhat \(být aktivní a podílet se na platformě\)/);
+  assert.match(story, /Už jsem si tím prošla a chci i pomáhat/);
   assert.match(story, /Hlasové zprávy přepisujeme na text/);
   assert.match(story, /accept="audio\/\*,\.m4a/);
   assert.match(story, /<script src="\/story-form\.js" defer><\/script>/);
@@ -106,11 +119,11 @@ test("homepage má dvě volby, ne mřížku osmi kategorií, a formuláře nic n
   assert.doesNotMatch(storyJs, /fetch\(|localStorage|sessionStorage|indexedDB|sendBeacon|XMLHttpRequest|supabase\.|innerHTML/);
   const help = read("mohu-pomoci/index.html");
   assert.match(help, /<h1>Mohu pomoci<\/h1>/);
-  assert.match(help, /Už jsem si tím prošla \/ prošel/);
-  assert.match(help, /Pomáhám takovým lidem/);
-  assert.equal(visible(help).match(/type="radio"/g).length, 2);
-  for (const typ of ["práce", "terapie", "právní pomoc", "výrobky a služby", "jiné"]) assert.match(help, new RegExp(`<span>${typ}</span>`));
-  assert.match(help, /Není povinné/);
+  assert.match(help, /Nabídni svůj potenciál \(hledám práci\)/);
+  assert.match(help, /Nabídni pomoc – přidej se k nám/);
+  assert.equal(visible(help).match(/type="radio"/g).length, 6);
+  assert.doesNotMatch(help, /Už jsem si tím prošla/);
+  assert.doesNotMatch(read("potrebuji-pomoc/index.html"), /Instagram|Facebook|e-shop|Odkaz na web/);
   assert.doesNotMatch(visible(home), /50 %|Dermacol|Kateřina|Maruška|Miklíková|Golden Line|Malé nám|Dlouhá 34|Lázeňská|Supabase|Resend/i);
   const soon = read("coming-soon/index.html");
   assert.match(soon, /<img class="logo"[^>]*data-split="0\.5385"/);
@@ -149,7 +162,10 @@ test("homepage má dvě volby, ne mřížku osmi kategorií, a formuláře nic n
 test("právní stránky mluví o souhlasu a kontakt není krizová linka", () => {
   assert.match(read("pravidla-zverejnovani/index.html"), /Souhlas se zpracováním údajů a souhlas se zveřejněním příběhu jsou dvě různé věci/);
   assert.match(read("pravidla-zverejnovani/index.html"), /Příběh zveřejníme jen tehdy/);
+  assert.match(read("o-nas/index.html"), /Není to krizová linka/);
   assert.match(read("kontakt/index.html"), /Není to krizová linka/);
+  assert.match(read("cookies/index.html"), /jen po souhlasu/);
+  assert.match(read("verin-pribeh/index.html"), /Čekáme na její text/);
   const policy = read("ochrana-osobnich-udaju/index.html");
   assert.match(policy, /<p class="draft">Návrh<\/p>/);
   assert.match(policy, /\[DOPLNIT\]/);
