@@ -8,7 +8,9 @@
     "test:admin:browser": "PHASE1=1 node build.mjs && node tools/admin-browser.mjs",
     "test:admin:public": "node tools/admin-public-regression.mjs",
     "test:admin:lighthouse": "PHASE1=1 node build.mjs && node tools/admin-lighthouse.mjs",
-    "preview:admin": "PHASE1=1 node build.mjs && node tools/admin-preview.mjs"
+    "preview:admin": "PHASE1=1 node build.mjs && node tools/admin-preview.mjs",
+    "test:admin:mail": "PHASE1=1 node build.mjs && node tools/admin-mail-browser.mjs && MAIL_UI_EXTENDED=true node tools/admin-mail-integration.mjs",
+    "check:m365": "node tools/m365-check.mjs"
   },
   "dependencies": {
     "@fontsource-variable/fraunces": "^5.3.0",
