@@ -132,7 +132,7 @@ test("homepage má dvě volby, ne mřížku osmi kategorií, a formuláře nic n
   assert.match(soon, /src="\/cookies\.js"/);
   assert.match(soon, /<title>Nadbytečná\.cz — spouštíme 11\. 11\. 2026<\/title>/);
   const soonDesc = soon.match(/<meta name="description" content="([^"]*)"/)[1];
-  assert.equal(soonDesc, "11. 11. 2026 otevíráme Nadbytečná.cz. Zanechte e-mail a o spuštění se dozvíte jako první.");
+  assert.equal(soonDesc, "11. 11. 2026 spouštíme Nadbytečná.cz. Zanechte e-mail a o spuštění se dozvíte jako první.");
   assert.equal(soonDesc.length, 89);
   assert.match(soon, /property="og:image" content="https:\/\/nadbytecna\.cz\/og-v2\.jpg"/);
   assert.match(soon, /og:image:width" content="1200"/);
