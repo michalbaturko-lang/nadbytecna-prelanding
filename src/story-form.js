@@ -93,7 +93,7 @@
         document.getElementById("mic-start").hidden = true;
         say("mic-status", "Nahrávka je připravená. Hlasové zprávy přepisujeme na text.");
       };
-      rec.start();
+      try { rec.start(250); } catch (e) { rec.start(); }
       document.getElementById("mic-start").hidden = true;
       document.getElementById("mic-stop").hidden = false;
     }).catch(function () {
