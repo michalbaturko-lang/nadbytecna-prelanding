@@ -303,16 +303,21 @@ body[data-page="phase1"] select{min-height:48px;font:inherit;background:var(--pa
 @font-face{font-family:Damion;font-style:normal;font-weight:400;font-display:swap;src:url(/fonts/damion-cs-400-normal.woff2) format("woff2");unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0100-024F,U+0259,U+1E00-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}
 .foot .lang,.doc .lang{display:inline-block;margin-top:.45rem;padding:.35rem .2rem;min-height:24px;font-weight:500}
 
-body[data-page="soon"] .soon{width:min(100%,34rem);margin:0 auto;padding:1.25rem 0 2.5rem;text-align:center}
-body[data-page="soon"] .soon-date{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.4vw,2.5rem);line-height:1.15;margin:1.2rem 0 .4rem}
-body[data-page="soon"] .soon-note{margin:0 auto 1.3rem;max-width:28rem;color:var(--ink-soft);font-size:1.05rem}
-body[data-page="soon"] form{text-align:left}
+body[data-page="soon"] .soon{width:min(100%,32rem);margin-inline:auto;padding:1.25rem 0 2.5rem;text-align:center}
+body[data-page="soon"] .brand{width:100%;align-items:center}
+body[data-page="soon"] .logo{width:min(78vw,22rem);margin-inline:auto}
+body[data-page="soon"] .rule{width:min(68vw,16rem);margin-inline:auto}
+body[data-page="soon"] .soon-date{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.4vw,2.5rem);line-height:1.15;margin:1.2rem auto .4rem}
+body[data-page="soon"] .soon-note{margin:0 auto 1.3rem;max-width:26rem;color:var(--ink-soft);font-size:1.05rem}
+body[data-page="soon"] form{width:min(100%,26rem);max-width:26rem;margin-inline:auto;text-align:left}
 body[data-page="soon"] input[type="email"]{width:100%;max-width:100%;min-height:3.25rem;padding:.75rem 1rem;font:inherit;font-size:16px;color:var(--ink);background:var(--paper);border:1.5px solid #8A4A62;border-radius:.5rem}
 body[data-page="soon"] .consent{font-size:1rem;min-height:48px;align-items:center;touch-action:manipulation}
 body[data-page="soon"] .consent input{width:1.75rem;height:1.75rem;font-size:16px}
 body[data-page="soon"] button.send{min-height:48px;touch-action:manipulation}
-body[data-page="soon"] .soon-mail{margin:1.4rem 0 0}
+body[data-page="soon"] .soon-mail{margin:1.4rem auto 0;text-align:center}
+body[data-page="soon"] a.mail{color:var(--magenta-deep);text-decoration:none}
+body[data-page="soon"] a.mail:hover{text-decoration:underline}
 @media (min-width:60rem){
   body[data-page="soon"] .logo{width:min(28rem,100%)}
-  body[data-page="soon"] .rule{width:min(22rem,80%)}
+  body[data-page="soon"] .rule{width:min(20rem,72%)}
 }
