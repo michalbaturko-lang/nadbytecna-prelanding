@@ -304,8 +304,8 @@ body[data-page="phase1"] select{min-height:48px;font:inherit;background:var(--pa
 .foot .lang,.doc .lang{display:inline-block;margin-top:.45rem;padding:.35rem .2rem;min-height:24px;font-weight:500}
 
 body[data-page="soon"] .soon{width:min(100%,34rem);margin:0 auto;padding:1.25rem 0 2.5rem;text-align:center}
-body[data-page="soon"] .soon-kicker{margin:1.3rem 0 .35rem;letter-spacing:.08em;font-weight:600;color:var(--ink-soft)}
-body[data-page="soon"] .soon-date{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.4vw,2.5rem);line-height:1.15;margin:0 0 1.3rem}
+body[data-page="soon"] .soon-date{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4.4vw,2.5rem);line-height:1.15;margin:1.2rem 0 .4rem}
+body[data-page="soon"] .soon-note{margin:0 auto 1.3rem;max-width:28rem;color:var(--ink-soft);font-size:1.05rem}
 body[data-page="soon"] form{text-align:left}
 body[data-page="soon"] input[type="email"]{width:100%;max-width:100%;min-height:3.25rem;padding:.75rem 1rem;font:inherit;font-size:16px;color:var(--ink);background:var(--paper);border:1.5px solid #8A4A62;border-radius:.5rem}
 body[data-page="soon"] .consent{font-size:1rem;min-height:48px;align-items:center;touch-action:manipulation}

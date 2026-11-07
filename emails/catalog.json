@@ -60,7 +60,7 @@
     },
     {
       "id": "launch-signup",
-      "subject": "Dáme vám vědět, až se otevřeme",
+      "subject": "Děkujeme, že chcete být u toho",
       "html": "launch/signup.html",
       "text": "launch/signup.txt",
       "anonymous": true
