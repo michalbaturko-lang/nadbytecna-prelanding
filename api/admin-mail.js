@@ -11,6 +11,13 @@ import { UUID, STATUSES, URGENCIES } from "../lib/admin-model.mjs";
 import { MAILBOX, mailRpc, mailHashSecret } from "../lib/mail-service.mjs";
 import { mailAiEnabled, classifyMail } from "../lib/mail-ai.mjs";
 import { validateM365AuthConfig } from "../lib/m365-auth.mjs";
+import {
+  delegatedMode,
+  oauthReadiness,
+  oauthRpc,
+  issueMailInvitation,
+  disconnectMail,
+} from "../lib/mail-oauth-service.mjs";
 
 const idOf = (b) => {
   if (!UUID.test(b.id || "")) throw fail(400, "identity");
@@ -30,11 +37,15 @@ export default async function handler(req, res) {
     const actor = { actor_id: user.id, actor_email: user.email };
     if (b.action === "status") {
       let configured = false;
-      try {
-        validateM365AuthConfig(process.env);
-        configured = true;
-      } catch {}
+      const readiness = oauthReadiness();
+      if (delegatedMode()) configured = readiness.connectConfigured;
+      else
+        try {
+          validateM365AuthConfig(process.env);
+          configured = true;
+        } catch {}
       const state = await mailRpc("status");
+      const connection = delegatedMode() ? await oauthRpc("status") : null;
       return json(res, 200, {
         ...state,
         mailbox: MAILBOX,
@@ -42,7 +53,16 @@ export default async function handler(req, res) {
         syncEnabled: process.env.M365_INGEST_ENABLED === "true",
         aiEnabled: mailAiEnabled(),
         needsSetup: !configured,
+        ...readiness,
+        connected: connection?.connected === true,
+        connectionUpdatedAt: connection?.connected_at || null,
       });
+    }
+    if (b.action === "connect_invite")
+      return json(res, 200, await issueMailInvitation(user));
+    if (b.action === "disconnect") {
+      if (b.confirm !== "ODPOJIT") throw fail(400, "confirmation");
+      return json(res, 200, await disconnectMail(user));
     }
     if (b.action === "list") {
       const f = b.filters || {};

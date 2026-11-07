@@ -6,6 +6,11 @@ import {
   validateM365AuthConfig,
 } from "../lib/m365-auth.mjs";
 import { readM365DeltaPage } from "../lib/m365-readonly.mjs";
+import {
+  delegatedMode,
+  getDelegatedMailToken,
+} from "../lib/mail-oauth-service.mjs";
+import { readM365OAuthConfig } from "../lib/m365-oauth-client.mjs";
 
 export default async function handler(req, res) {
   res.setHeader("X-Robots-Tag", "noindex, nofollow, noarchive");
@@ -18,7 +23,8 @@ export default async function handler(req, res) {
   let lease;
   try {
     const secret = mailHashSecret();
-    validateM365AuthConfig(process.env);
+    if (delegatedMode()) readM365OAuthConfig(process.env);
+    else validateM365AuthConfig(process.env);
     const state = await rpc("mail_sync_claim", {
       p_mailbox: process.env.M365_MAILBOX,
       p_folder: process.env.M365_FOLDER_ID,
@@ -26,7 +32,9 @@ export default async function handler(req, res) {
     });
     if (!state) return json(res, 200, { busy: true });
     lease = state.lease;
-    const auth = await getM365AccessToken({});
+    const auth = delegatedMode()
+      ? await getDelegatedMailToken()
+      : await getM365AccessToken({});
     const page = await readM365DeltaPage({
       env: { ...process.env, M365_SINCE: new Date(state.since).toISOString() },
       accessToken: auth.accessToken,
@@ -66,6 +74,9 @@ export default async function handler(req, res) {
       "invalid_configuration",
       "token_request_failed",
       "timeout",
+      "mail_reconnect_required",
+      "mail_connection_changed",
+      "oauth_interaction_required",
     ].includes(e.code)
       ? e.code
       : "mail_sync_failed";
