@@ -404,6 +404,7 @@ function buildPhase1(out) {
   fs.copyFileSync(path.join(ROOT, "src/submit.js"), path.join(out, "submit.js"));
   fs.copyFileSync(path.join(ROOT, "src/cookies.js"), path.join(out, "cookies.js"));
   fs.copyFileSync(path.join(ROOT, "src/admin.js"), path.join(out, "admin.js"));
+  fs.copyFileSync(path.join(ROOT, "src/admin.css"), path.join(out, "admin.css"));
   fs.copyFileSync(path.join(ROOT, "src/launch-form.js"), path.join(out, "launch-form.js"));
   const supaUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
   const supaKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || "";
