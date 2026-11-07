@@ -81,8 +81,14 @@ test("homepage má dvě volby, ne mřížku osmi kategorií, a formuláře nic n
     assert.doesNotMatch(visible(read(p)), /<form\b|<\/form>|method=|action=|\brequired\b|\bchecked\b|localStorage|sessionStorage|fetch\(|XMLHttpRequest|sendBeacon|\/api\//i, p);
   }
   const story = read("sdilet-pribeh/index.html");
-  assert.equal(story.match(/<button type="button" class="send" disabled/g).length, 1);
-  assert.match(story, />Odeslat</);
+  assert.match(story, /<button type="button" class="send" id="sdilet-send">Odeslat<\/button>/);
+  assert.match(story, /src="\/config.js"/);
+  assert.match(story, /src="\/submit.js"/);
+  const submitJs = fs.readFileSync(path.join(ROOT, "src/submit.js"), "utf8");
+  assert.match(submitJs, /return=minimal/);
+  assert.match(submitJs, /audio\/webm/);
+  assert.doesNotMatch(submitJs, /return=representation/);
+  assert.doesNotMatch(submitJs, /\.select\s*\(/);
   assert.doesNotMatch(visible(story), /Připravujeme|Spouštíme|zatím není|neodesílá/);
   assert.match(story, /Chci sdílet anonymně/);
   assert.match(story, /Chci sdílet se jménem/);

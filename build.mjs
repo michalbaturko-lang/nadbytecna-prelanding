@@ -400,6 +400,11 @@ function buildPhase1(out) {
   stage(out);
   fs.rmSync(path.join(out, "app.js"), { force: true });
   fs.copyFileSync(path.join(ROOT, "src/story-form.js"), path.join(out, "story-form.js"));
+  fs.copyFileSync(path.join(ROOT, "src/help-form.js"), path.join(out, "help-form.js"));
+  fs.copyFileSync(path.join(ROOT, "src/submit.js"), path.join(out, "submit.js"));
+  const supaUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
+  const supaKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || "";
+  fs.writeFileSync(path.join(out, "config.js"), "window.NADBYTECNA_SUPABASE=" + JSON.stringify({ url: supaUrl, key: supaKey }) + ";\n");
   const { pages, robots, llms } = renderPhase1({ css, preload: PRELOAD, heart: HEART, logoAttrs: LOGO_ATTRS });
   for (const [p, html] of Object.entries(pages)) {
     const rel = p === "/" ? "index.html" : path.join(p.replace(/^\//, ""), "index.html");

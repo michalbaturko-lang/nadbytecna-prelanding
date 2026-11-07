@@ -1,8 +1,7 @@
-// Příběh se nikam neposílá. Blob žije jen v paměti stránky.
-// Až se sběr otevře, storyDraft() je tvar pro tabulku stories a Storage story-audio:
-//   full_name, email, share_mode, also_help, input, body_text,
-//   audio_source, audio_mime, audio_filename, audio_bytes, audio (Blob)
-//   transcript zůstane prázdný, dokud nepřibude přepis.
+// Příběh se odesílá přes submit.js. Blob žije jen v paměti stránky, dokud se nenahraje.
+// storyDraft() drží tvar nahrávky: full_name, email, share_mode, also_help, input, body_text,
+// audio_source, audio_mime, audio_filename, audio_bytes, audio (Blob).
+// transcript zůstane prázdný, dokud nepřibude přepis. Cesta v bucketu je story-audio.
 (function () {
   "use strict";
   var root = document.getElementById("story-form");
@@ -146,6 +145,65 @@
       document.getElementById(t.getAttribute("aria-controls")).hidden = !on;
     });
   }
+  var started = Date.now();
+  var sendBtn = document.getElementById("sdilet-send");
+  function storySay(text) { document.getElementById("sdilet-msg").textContent = text; }
+  function showThanks(text) {
+    document.getElementById("sdilet-fields").hidden = true;
+    document.getElementById("sdilet-thanks-text").textContent = text;
+    document.getElementById("sdilet-thanks").hidden = false;
+  }
+  sendBtn.addEventListener("click", function () {
+    storySay("");
+    var api = window.NadbytecnaSubmit;
+    if (!api) { storySay("Odeslání se nepovedlo. Napiš na veryvera@nadbytecna.cz."); return; }
+    var spam = api.gate(document.getElementById("sdilet-hp"), started);
+    if (spam === "fast") { storySay("Počkej chvilku a zkus to znovu."); return; }
+    var name = document.getElementById("sdilet-jmeno").value.trim();
+    var email = document.getElementById("sdilet-email").value.trim();
+    var share = document.querySelector('#story-form input[name="share"]:checked');
+    var tab = document.querySelector("#story-modes [role=tab][aria-selected=true]");
+    var input = tab ? tab.getAttribute("data-input") : "text";
+    var text = document.getElementById("sdilet-text").value.trim();
+    var help = document.getElementById("sdilet-help").checked;
+    var consent = document.getElementById("sdilet-gdpr").checked;
+    if (spam === "bot") { showThanks("Děkujeme. Ozveme se na e-mail, který jsi uvedla."); return; }
+    if (!name || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { storySay("Doplň jméno a e-mail."); return; }
+    if (!share) { storySay("Vyber, jestli chceš sdílet anonymně, nebo se jménem."); return; }
+    if (!consent) { storySay("Bez souhlasu se zpracováním to poslat nemůžeme."); return; }
+    if (input === "text" && !text) { storySay("Napiš příběh, nebo přepni na hlas."); return; }
+    if (input === "recording" && !micBlob) { storySay("Nejdřív nahraj hlasovou zprávu."); return; }
+    if (input === "file" && !fileBlob) { storySay("Nejdřív vyber audio soubor."); return; }
+    var id = api.uuid();
+    var blob = input === "recording" ? micBlob : input === "file" ? fileBlob : null;
+    var fname = input === "file" ? fileName : (micMime.indexOf("webm") >= 0 ? "hlas.webm" : "hlas.m4a");
+    sendBtn.disabled = true;
+    var uploaded = blob ? api.uploadAudio(id, blob, fname) : Promise.resolve(null);
+    uploaded.then(function (audioPath) {
+      return api.insertRow("stories", {
+        id: id,
+        full_name: name,
+        email: email,
+        anonymous: share.value === "anonymous",
+        wants_to_help: help,
+        input_type: input === "file" ? "upload" : input,
+        story_text: input === "text" ? text : (text || null),
+        audio_path: audioPath,
+        consent: true,
+      });
+    }).then(function () {
+      var msg = input === "text"
+        ? "Dostali jsme tvůj příběh. Ozveme se na e-mail, který jsi uvedla."
+        : "Dostali jsme tvou hlasovou zprávu. Přepíšeme ji na text a ozveme se na e-mail.";
+      if (share.value === "anonymous") msg += " Jméno k příběhu nepřidáme.";
+      if (help) msg += " Ozveme se i k tomu, že chceš pomáhat.";
+      showThanks(msg);
+    }).catch(function () {
+      sendBtn.disabled = false;
+      storySay("Odeslání se nepovedlo. Napiš na veryvera@nadbytecna.cz.");
+    });
+  });
+
   tabs.forEach(function (tab, i) {
     tab.addEventListener("click", function () { select(tab); });
     tab.addEventListener("keydown", function (e) {
