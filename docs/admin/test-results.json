@@ -3,15 +3,20 @@
   "environment": "local PostgreSQL reconstructed from read-only actual schema metadata; synthetic records and Auth/Storage adapters",
   "unitAndIntegration": {
     "command": "npm test",
-    "total": 96,
-    "passed": 96,
+    "total": 129,
+    "passed": 129,
     "failed": 0
   },
   "browser": {
     "command": "node tools/admin-browser.mjs",
-    "checks": 29,
-    "passed": 29,
-    "screenshots": 18
+    "checks": 51,
+    "passed": 51,
+    "screenshots": 22,
+    "breakdown": {
+      "original": 29,
+      "mailIntegration": 22
+    },
+    "mailCommand": "MAIL_UI_EXTENDED=true node tools/admin-mail-integration.mjs"
   },
   "lighthouseAccessibility": {
     "mobileList": 100,
@@ -23,5 +28,8 @@
   "productionDatabaseWrites": 0,
   "realEmailsSent": 0,
   "realOpenAICalls": 0,
-  "productionDeployment": "not performed"
+  "productionDeployment": "not performed",
+  "realMicrosoftGraphCalls": 0,
+  "realMicrosoftOAuthCalls": 0,
+  "mailboxConnected": false
 }

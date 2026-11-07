@@ -61,3 +61,16 @@
 Strojové výsledky: [browser](browser-results.json), [regrese veřejného webu](public-regression.json), [Lighthouse mobil seznam](lighthouse-mobile-list.json), [mobil detail](lighthouse-mobile-detail.json), [desktop seznam](lighthouse-desktop-list.json), [desktop detail](lighthouse-desktop-detail.json).
 
 Read-only metadata navíc potvrdila prázdný allowlist, privátní bucket story-audio (limit 50 MiB), chybějící SELECT service_role na auth.users a nepřítomnost volitelné tabulky preregistrations. Tyto skutečné podmínky jsou zahrnuté do migračních testů; žádná data osob se nečetla.
+
+
+## Rozšíření Microsoft 365
+
+Připraveno k revizi, schránka **nepřipojena**. [Konfigurace a předání správci](microsoft365.md). 10 lokálních DB testů, 6 API testů, 14 Graph/auth mock testů a 3 testy e-mailové AI jsou součástí celkem 129 testů. [22 e-mailových prohlížečových kontrol](mail-integration-results.json) doplňuje původních 29; celkem 51.
+
+- PASS lokálně: anon/outsider odmítnutí, explicitní jedna schránka/složka/datum, OAuth certifikát PS256, Graph GET bez zápisů, kontrolované next/delta URL, velikostní limity, neznámé souhlasy a klasifikace.
+- PASS lokálně: deduplikace, transakční kurzor a lease, Retry-After, potlačení obnovení po výmazu či změně složky, výmaz jen starých zpráv při retenci a zachování mladších zpráv ve stejném vlákně. Zámky a revize jsou ověřené v lokálním PostgreSQL; nezávislá paralelní hostingová zátěž zůstává staging test.
+- PASS lokálně: vlákna a starší zprávy (20+2), ruční klasifikace zachovaná i u neaktivní kategorie, poznámky, export, lokální výmaz, nulová volání skutečného Graph/OAuth/OpenAI/odesílání pošty.
+- PASS na 320/375/768/1024/1440/1920: seznam/filtry/detail bez overflow, malé klikací cíle 0 a nálezy axe 0. [Mobil seznam](screenshots/375-mail-list.png), [detail](screenshots/375-mail-detail.png), [desktop seznam](screenshots/1440-mail-list.png), [detail](screenshots/1440-mail-detail.png). Vše smyšlená data.
+- ČEKÁ: správce aplikace a certifikát, ověření RBAC omezení jediné schránky, schválení a aplikace nové migrace, staging skutečného delta/HTML-to-text chování, počáteční složka a datum, retenční lhůta a samostatné schválení AI zdroje. Lokální nakonfigurováno neznamená funkční připojení.
+
+AI v e-mailové verzi 1 se spouští ručně nad nejnovějšími 20 zprávami a nejvýše 20 000 znaky, nezávisle na aktuálně prohlížené stránce. Zveřejnění e-mailů není povoleno. Sender export zachovává poznámky se značkou requires_review, protože poznámky a citace mohou obsahovat údaje dalších osob. Nejde o automaticky hotovou odpověď na GDPR žádost. Nadlimitní export selže před SQL agregací (2.5 MiB) nebo při serverové kontrole (3 MiB); nikdy se netváří jako úplný zkrácený export.

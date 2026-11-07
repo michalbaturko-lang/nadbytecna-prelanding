@@ -37,3 +37,8 @@ Kód a lokální ověření jsou připravené k revizi. Žádná migrace nebyla 
 
 ## Zdroje ověřené při implementaci
 [Supabase RLS](https://supabase.com/docs/guides/database/postgres/row-level-security), [Storage](https://supabase.com/docs/guides/storage/security/access-control), [OpenAI Structured Outputs](https://developers.openai.com/api/docs/guides/structured-outputs). Ověřený formát `json_schema`, `strict`, enum a `additionalProperties:false`; žádné skutečné texty nebyly odeslány modelu.
+
+
+## E-mailový zdroj Microsoft 365
+
+Nové rozšíření vyžaduje po admin_workspace ještě migraci `supabase/migrations/20261109000000_admin_mail.sql`, kterou agent připravil a testoval pouze lokálně. Produkční změny nebyly aplikovány. Kompletní postup, proměnné, certifikát, RBAC a kontrolní příkazy jsou v [microsoft365.md](microsoft365.md). Nejprve staging, pak výslovné schválení nasazení. Výchozí ingest i zdrojová AI vypnuté, žádné reálné připojení schránky neproběhlo.

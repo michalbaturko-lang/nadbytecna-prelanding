@@ -11,9 +11,15 @@ Stav k 7. 11. 2026: implementace a lokální ověření jsou připravené k revi
 - Retenční běh s výchozím náhledem, fronta pro budoucí AI, validace výstupů a zachování lidských rozhodnutí. AI i přepis zůstávají ve výchozím stavu vypnuté.
 - Další zprávy stejného kontaktu, koncept odpovědi a upozornění na akutní případy i blížící se výmaz.
 
+## E-maily Microsoft 365
+
+Připravená samostatná záložka pro veryvera@nadbytecna.cz: vlákna a stránkované zprávy, hledání a filtry, ruční zařazení, poznámky, JSON export a výmaz místní kopie. Serverový import používá pouze Graph GET, certifikát aplikace, kontrolované pokračovací odkazy, transakční kurzor, deduplikaci, backoff a ochranu před opětovným importem vymazaných kopií. AI pouze ručně po odděleném schválení a zapnutí; žádné odesílání e-mailů.
+
+Schránka není připojena. Po předání přístupu zbývá schválit/aplikovat připravené migrace na oddělené testovací DB, doplnit konfiguraci a ověřit skutečný Microsoft. [Přesný postup a omezení](microsoft365.md), [22 integračních kontrol](mail-integration-results.json), [desktop ukázka](screenshots/1440-mail-detail.png), [mobil](screenshots/375-mail-detail.png).
+
 ## Ověření a ukázky
 
-- [Souhrn výsledků](test-results.json): 96/96 lokálních unit a integračních testů, 29 prohlížečových kontrol, 18 screenshotů.
+- [Souhrn výsledků](test-results.json): 129/129 lokálních unit a integračních testů, 51 prohlížečových kontrol (29 původních + 22 e-mailových), 22 screenshotů.
 - [Prohlížečové výsledky](browser-results.json): seznam, detail a filtry na 320, 375, 768, 1024, 1440 a 1920 px; veřejné formuláře a globální GDPR dialog. Bez zjištěného přetékání a nálezů axe v testovaných pohledech.
 - [Regrese veřejného webu](public-regression.json): porovnání devíti veřejných HTML se základním commitem, povolená změna 18+; vybrané vizuální soubory a cookie skript shodné.
 - Lighthouse Accessibility v režimu snapshot: [mobilní seznam](lighthouse-mobile-list.json), [mobilní detail](lighthouse-mobile-detail.json), [desktopový seznam](lighthouse-desktop-list.json), [desktopový detail](lighthouse-desktop-detail.json), všechny 100/100. Nejde o produkční měření výkonu.
@@ -33,6 +39,7 @@ Automatická AI v této variantě čeká na pětiminutový worker, který zpracu
 
 ## Dokumenty pro revizi
 
+- [Microsoft 365: e-mailový zdroj, přístup a ověření po schválení](microsoft365.md) — lokálně připravené rozšíření pro vyhrazenou schránku veryvera@nadbytecna.cz; není připojena a zatím nebyly čteny skutečné zprávy.
 - [Návrh a odůvodnění](../admin-plan.md)
 - [Úplný akceptační checklist, funkce a omezení](checklist.md)
 - [Předání, konfigurace a postup nasazení](deployment.md)
