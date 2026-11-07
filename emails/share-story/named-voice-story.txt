@@ -1,0 +1,11 @@
+Ahoj {{jmeno}},
+
+Dostali jsme tvou hlasovou zprávu a přepíšeme ji na text.
+U příběhu uvedeme tvé jméno.
+Ozveme se na tenhle e-mail, kdybychom potřebovali něco upřesnit.
+
+Věra
+Nadbytečná
+veryvera@nadbytecna.cz
+
+Správce osobních údajů: Věra Komárová, fyzická osoba.

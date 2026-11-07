@@ -15,7 +15,7 @@ execFileSync(process.execPath, ["build.mjs"], {
 });
 
 const read = (p) => fs.readFileSync(path.join(OUT, p), "utf8");
-const pages = ["index.html", "sdilet-pribeh/index.html", "mohu-pomoci/index.html", "potrebuji-pomoc/index.html", "pripravujeme/index.html", "ochrana-osobnich-udaju/index.html", "pravidla-zverejnovani/index.html", "kontakt/index.html"];
+const pages = ["index.html", "sdilet-pribeh/index.html", "mohu-pomoci/index.html", "potrebuji-pomoc/index.html", "ochrana-osobnich-udaju/index.html", "pravidla-zverejnovani/index.html", "kontakt/index.html"];
 const home = read("index.html");
 const visible = (h) => h.replace(/<style>[\s\S]*?<\/style>/g, "").replace(/<script[\s\S]*?<\/script>/g, "");
 
@@ -66,9 +66,9 @@ test("homepage má dvě volby, ne mřížku osmi kategorií, a formuláře nic n
   const pribeh = home.slice(home.indexOf('id="pribeh"'), home.indexOf("</section>"));
   assert.match(pribeh, /Tady bude osobní výpověď Věry Komárové\. Čekáme na její text\./);
   assert.equal(pribeh.includes("<img"), false);
-  assert.match(home, /Pracovní náhled — formuláře zatím nic neodesílají\./);
+  assert.doesNotMatch(visible(home), /Připravujeme|připravujeme|Spouštíme|Pracovní náhled|neběží|zatím není/);
   assert.match(home, /Žádná žena není nadbytečná\./);
-  assert.match(home, /Připravujeme místo pro ženy, které si prošly něčím podobným\./);
+  assert.match(home, /Místo pro ženy, které si prošly něčím podobným\./);
   assert.match(home, /Hlavní cíl - změnit systém - více ochrany našimi zákony pro ženy, manželky, partnerky, matky, podnikatelky\./);
   assert.match(home, /href="https:\/\/veryvera\.cz" rel="noopener noreferrer"/);
   assert.match(home, /Správce osobních údajů: Věra Komárová, fyzická osoba\. Adresa: doplníme\. IČ: doplníme\./);
@@ -82,7 +82,8 @@ test("homepage má dvě volby, ne mřížku osmi kategorií, a formuláře nic n
   }
   const story = read("sdilet-pribeh/index.html");
   assert.equal(story.match(/<button type="button" class="send" disabled/g).length, 1);
-  assert.match(story, /Odesílání zatím není spuštěné\./);
+  assert.match(story, />Odeslat</);
+  assert.doesNotMatch(visible(story), /Připravujeme|Spouštíme|zatím není|neodesílá/);
   assert.match(story, /Chci sdílet anonymně/);
   assert.match(story, /Chci sdílet se jménem/);
   assert.match(story, /Chci i pomáhat \(být aktivní a podílet se na platformě\)/);
@@ -105,16 +106,12 @@ test("homepage má dvě volby, ne mřížku osmi kategorií, a formuláře nic n
   assert.doesNotMatch(visible(home), /50 %|Dermacol|Kateřina|Maruška|Miklíková|Golden Line|Malé nám|Dlouhá 34|Lázeňská|Supabase|Resend/i);
 });
 
-test("kontakty a chat jsou připravované, právní texty jsou návrhy", () => {
-  const prep = read("pripravujeme/index.html");
-  assert.match(prep, /Prověřené kontakty/);
-  assert.match(prep, /Žádný kontakt tu není a nic tu není prověřené\./);
-  assert.match(prep, /Chat neběží/);
-  assert.match(prep, /Právní i jinou pomoc připravujeme\./);
-  for (const p of ["ochrana-osobnich-udaju/index.html", "pravidla-zverejnovani/index.html"]) assert.match(read(p), /Pracovní návrh/);
-  assert.match(read("ochrana-osobnich-udaju/index.html"), /Souhlas se zpracováním údajů a souhlas se zveřejněním jsou dvě různé věci/);
-  assert.match(read("kontakt/index.html"), /Tohle není krizová linka/);
+test("právní stránky mluví o souhlasu a kontakt není krizová linka", () => {
+  assert.match(read("ochrana-osobnich-udaju/index.html"), /Souhlas se zpracováním údajů a souhlas se zveřejněním příběhu jsou dvě různé věci/);
+  assert.match(read("pravidla-zverejnovani/index.html"), /Příběh zveřejníme jen tehdy/);
+  assert.match(read("kontakt/index.html"), /Není to krizová linka/);
   assert.match(read("potrebuji-pomoc/index.html"), /Není to krizová linka/);
+  assert.equal(fs.existsSync(path.join(OUT, "pripravujeme/index.html")), false);
 });
 
 test("preview API požadavek odmítne dřív, než přečte tělo", () => {

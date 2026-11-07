@@ -92,7 +92,7 @@
         document.getElementById("mic-actions").hidden = false;
         document.getElementById("mic-stop").hidden = true;
         document.getElementById("mic-start").hidden = true;
-        say("mic-status", "Nahrávka je jen v tomto okně. Nic se neodeslalo.");
+        say("mic-status", "Nahrávka je připravená. Hlasové zprávy přepisujeme na text.");
       };
       rec.start();
       document.getElementById("mic-start").hidden = true;
@@ -134,7 +134,7 @@
     fileMime = file.type || "audio/mp4";
     playable(player, file);
     var kb = Math.max(1, Math.round(file.size / 1024));
-    say("file-status", file.name + " · " + kb + " kB. Nic se neodeslalo.");
+    say("file-status", file.name + " · " + kb + " kB. Hlasové zprávy přepisujeme na text.");
   });
 
   var tabs = Array.prototype.slice.call(document.querySelectorAll("#story-modes [role=tab]"));
