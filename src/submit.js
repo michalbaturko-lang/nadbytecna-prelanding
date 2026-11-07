@@ -69,6 +69,11 @@
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ table: table, id: id }),
     });
+    ping("/api/triage/", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ table: table, id: id }),
+    });
     if (opts && opts.audio) {
       var blob = opts.audio;
       var name = opts.filename || "hlas.webm";
