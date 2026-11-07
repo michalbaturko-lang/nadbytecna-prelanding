@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { hostGate, requestHost, siteLive } from "../lib/host-gate.mjs";
+import { hostGate, requestHost, siteLive, withOrigin } from "../lib/host-gate.mjs";
 
 test("SITE_LIVE je zapnuté jen pro true a 1", () => {
   assert.equal(siteLive(undefined), false);
@@ -37,6 +37,13 @@ test("coming soon pustí jen úvod, zásady a soubory", () => {
     assert.deepEqual(hostGate({ host: "nadbytecna.cz", pathname: path }), { type: "redirect", status: 302, url: "https://nadbytecna.cz/" }, path);
     assert.deepEqual(hostGate({ host: "www.nadbytecna.cz", pathname: path }), { type: "redirect", status: 302, url: "https://nadbytecna.cz/" }, path);
   }
+});
+
+test("og adresa se přepíše podle hostitele", () => {
+  const html = '<meta property="og:image" content="https://nadbytecna.cz/og.jpg"><link rel="canonical" href="https://nadbytecna.cz/">';
+  const out = withOrigin(html, "https://nadbytecna-prelanding.vercel.app");
+  assert.match(out, /https:\/\/nadbytecna-prelanding\.vercel\.app\/og\.jpg/);
+  assert.match(out, /href="https:\/\/nadbytecna-prelanding\.vercel\.app\/"/);
 });
 
 test("Host i x-forwarded-host poznají veřejnou doménu", () => {

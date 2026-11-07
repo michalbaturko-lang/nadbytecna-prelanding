@@ -1,16 +1,27 @@
-// Přehled pro administrátory. Magic link posílá Supabase Auth, tenhle skript e-mail neposílá sám od sebe.
+// Přehled pro administrátory. Magic link posílá Supabase Auth.
 (function (global) {
   "use strict";
-  var STATUSES = ["new", "read", "contacted", "archived"];
-  var STATUS_CS = { new: "nové", read: "přečtené", contacted: "kontaktované", archived: "archiv" };
+  var STATUSES = ["new", "read", "in_progress", "resolved", "published"];
+  var STATUS_CS = { new: "nový", read: "přečtený", in_progress: "v řešení", resolved: "vyřešený", published: "zveřejněný", contacted: "v řešení", archived: "archiv" };
+  var CATS = ["práce", "rodina a děti", "zdraví", "finance", "šikana/obtěžování", "bydlení", "jiné"];
+  var HELPS = ["právník", "terapeut", "práce", "jiné"];
+  var OFFERS = ["právník", "terapeut", "práce", "výrobky/služby", "jiné"];
   var sessionKey = "nadbytecna-admin";
+  var state = { tab: "stories", stories: [], help: [], filters: { q: "", named: "", publish: "", help: "", voice: "", category: "", urgency: "", status: "" }, open: null };
 
   function cfg() {
     var c = global.NADBYTECNA_SUPABASE || {};
     return { url: String(c.url || "").replace(/\/$/, ""), key: String(c.key || "") };
   }
   function $(id) { return document.getElementById(id); }
-  function say(text) { $("admin-msg").textContent = text || ""; }
+  function say(text) { var el = $("admin-msg"); if (el) el.textContent = text || ""; }
+  function clear(el) { while (el && el.firstChild) el.removeChild(el.firstChild); }
+  function el(tag, cls, text) {
+    var node = document.createElement(tag);
+    if (cls) node.className = cls;
+    if (text != null) node.textContent = text;
+    return node;
+  }
   function b64url(bytes) {
     var s = btoa(String.fromCharCode.apply(null, bytes));
     return s.replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
@@ -22,20 +33,13 @@
     var digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(verifier));
     return { verifier: verifier, challenge: b64url(new Uint8Array(digest)) };
   }
-  function loadSession() {
-    try { return JSON.parse(sessionStorage.getItem(sessionKey) || "null"); } catch (e) { return null; }
-  }
-  function saveSession(s) {
-    if (!s) sessionStorage.removeItem(sessionKey);
-    else sessionStorage.setItem(sessionKey, JSON.stringify(s));
-  }
+  function loadSession() { try { return JSON.parse(sessionStorage.getItem(sessionKey) || "null"); } catch (e) { return null; } }
+  function saveSession(s) { if (!s) sessionStorage.removeItem(sessionKey); else sessionStorage.setItem(sessionKey, JSON.stringify(s)); }
   async function authFetch(path, opt) {
     var c = cfg();
     var headers = Object.assign({ apikey: c.key, "Content-Type": "application/json" }, (opt && opt.headers) || {});
-    if (opt && opt.token) headers.Authorization = "Bearer " + opt.token;
-    else headers.Authorization = "Bearer " + c.key;
-    var res = await fetch(c.url + path, { method: (opt && opt.method) || "GET", headers: headers, body: opt && opt.body });
-    return res;
+    headers.Authorization = "Bearer " + ((opt && opt.token) || c.key);
+    return fetch(c.url + path, { method: (opt && opt.method) || "GET", headers: headers, body: opt && opt.body });
   }
   async function tokenFromCode(code, verifier) {
     var c = cfg();
@@ -69,95 +73,184 @@
     }
     return s;
   }
+  function when(value) { try { return new Date(value).toLocaleString("cs-CZ"); } catch (e) { return ""; } }
+  function labelStatus(value) { return STATUS_CS[value] || value || ""; }
+  function storyText(row) { return row.story_text || row.transcript || ""; }
+  function isVoice(row) { return row.input_type === "recording" || row.input_type === "upload"; }
 
-  var state = { tab: "stories", stories: [], help: [], filterType: "", filterStatus: "" };
-
-  function labelStatus(value) { return STATUS_CS[value] || value; }
-  function when(value) {
-    try { return new Date(value).toLocaleString("cs-CZ"); } catch (e) { return ""; }
-  }
-  function clear(el) { while (el.firstChild) el.removeChild(el.firstChild); }
-  function td(text) {
-    var cell = document.createElement("td");
-    cell.textContent = text == null ? "" : String(text);
-    return cell;
-  }
-  function filtered(rows, typeKey) {
-    return rows.filter(function (row) {
-      if (state.filterStatus && row.status !== state.filterStatus) return false;
-      if (state.filterType && row[typeKey] !== state.filterType) return false;
-      return true;
-    });
-  }
-
-  function renderList() {
-    var body = $("admin-rows");
-    clear(body);
+  function filtered() {
     var stories = state.tab === "stories";
-    var rows = filtered(stories ? state.stories : state.help, stories ? "input_type" : "helper_type");
-    $("admin-count").textContent = rows.length + " záznamů";
-    rows.forEach(function (row) {
-      var tr = document.createElement("tr");
-      tr.appendChild(td(when(row.created_at)));
-      tr.appendChild(td(row.full_name || ""));
-      tr.appendChild(td(stories ? (row.anonymous ? "anonymně" : "se jménem") : (row.helper_type === "lived_experience" ? "prošla/prošel" : "pomáhá")));
-      tr.appendChild(td(labelStatus(row.status)));
-      var action = document.createElement("td");
-      var btn = document.createElement("button");
-      btn.type = "button";
-      btn.textContent = "Detail";
-      btn.addEventListener("click", function () { showDetail(row); });
-      action.appendChild(btn);
-      tr.appendChild(action);
-      body.appendChild(tr);
+    var rows = stories ? state.stories : state.help;
+    var f = state.filters;
+    var q = f.q.trim().toLowerCase();
+    return rows.filter(function (row) {
+      if (f.status && row.status !== f.status) return false;
+      if (f.category && row.ai_category !== f.category) return false;
+      if (f.urgency && row.ai_urgency !== f.urgency) return false;
+      if (stories) {
+        if (f.named === "named" && row.anonymous) return false;
+        if (f.named === "anon" && !row.anonymous) return false;
+        if (f.publish === "yes" && row.consent_publish !== true) return false;
+        if (f.publish === "no" && row.consent_publish === true) return false;
+        if (f.help === "yes" && !row.wants_to_help) return false;
+        if (f.voice === "voice" && !isVoice(row)) return false;
+        if (f.voice === "text" && isVoice(row)) return false;
+      }
+      if (!q) return true;
+      var blob = [row.full_name, row.email, row.phone, storyText(row), row.message, row.transcript, row.ai_summary, row.admin_note, row.ai_category].join(" ").toLowerCase();
+      return blob.indexOf(q) >= 0;
     });
   }
 
-  function showDetail(row) {
-    var box = $("admin-detail");
-    clear(box);
-    box.hidden = false;
-    var title = document.createElement("h2");
-    title.textContent = row.full_name || "Bez jména";
-    box.appendChild(title);
-    var meta = document.createElement("p");
-    meta.textContent = row.email + " · " + when(row.created_at);
-    box.appendChild(meta);
-    var text = document.createElement("p");
-    text.textContent = row.story_text || row.message || "";
-    box.appendChild(text);
-    if (row.transcript) {
-      var tr = document.createElement("p");
-      tr.textContent = "Přepis: " + row.transcript;
-      box.appendChild(tr);
-    }
+  function chip(text, cls) { return el("span", "tag" + (cls ? " " + cls : ""), text); }
+
+  function aiBlock(row, stories) {
+    var box = el("div", "ai-block");
+    box.appendChild(el("p", "kicker", "Návrh třídění"));
+    box.appendChild(el("p", "ai-summary", row.ai_summary || "Shrnutí zatím není. Můžete ho spustit ručně."));
+    var row1 = el("div", "ai-row");
+    row1.appendChild(el("span", "tag", row.ai_category || "bez kategorie"));
+    row1.appendChild(el("span", "tag", row.ai_help_type || "bez typu pomoci"));
+    if (row.ai_urgency === "acute") row1.appendChild(chip("akutní", "tag-acute"));
+    else if (row.ai_urgency === "watch") row1.appendChild(chip("k hlídání", "tag-watch"));
+    box.appendChild(row1);
+    var cats = stories ? CATS : OFFERS;
+    var picks = el("div", "ai-picks");
+    cats.forEach(function (cat) {
+      var b = el("button", "mini" + (row.ai_category === cat ? " is-on" : ""), cat);
+      b.type = "button";
+      b.addEventListener("click", function () { confirmCategory(row, cat); });
+      picks.appendChild(b);
+    });
+    box.appendChild(picks);
+    var run = el("button", "mini", "Spustit AI");
+    run.type = "button";
+    run.addEventListener("click", function () { runAi(row); });
+    box.appendChild(run);
+    if (!stories && row.ai_matches) box.appendChild(el("p", "hint", "Shoda: " + row.ai_matches));
+    if (!stories) box.appendChild(matches(row));
+    return box;
+  }
+
+  function matches(offer) {
+    var box = el("div", "matches");
+    var hits = state.stories.filter(function (s) {
+      if (offer.ai_help_type && s.ai_help_type === offer.ai_help_type) return true;
+      if (offer.ai_category && s.ai_category === offer.ai_category) return true;
+      return false;
+    }).slice(0, 3);
+    if (!hits.length) return box;
+    box.appendChild(el("p", "kicker", "Podobné příběhy"));
+    hits.forEach(function (s) {
+      box.appendChild(el("p", "hint", (s.ai_summary || storyText(s) || s.full_name || "Příběh").slice(0, 160)));
+    });
+    return box;
+  }
+
+  function card(row) {
+    var stories = state.tab === "stories";
+    var art = el("article", "story-card" + (row.ai_urgency === "acute" ? " is-acute" : ""));
+    art.appendChild(aiBlock(row, stories));
+    var head = el("div", "card-head");
+    head.appendChild(el("h2", "", row.anonymous ? "Anonymně" : (row.full_name || "Bez jména")));
+    head.appendChild(chip(labelStatus(row.status)));
+    art.appendChild(head);
+    var meta = [];
+    if (stories) meta.push(row.anonymous ? "anonymně" : "se jménem");
+    if (stories && row.consent_publish) meta.push("chce zveřejnit");
+    if (stories && row.wants_to_help) meta.push("chce i pomáhat");
+    if (stories) meta.push(isVoice(row) ? "hlas" : "text");
+    meta.push(when(row.created_at));
+    art.appendChild(el("p", "hint", meta.join(" · ")));
+    var body = storyText(row) || row.message || "";
+    art.appendChild(el("p", "card-text", body));
+    if (row.transcript && row.transcript !== row.story_text) art.appendChild(el("p", "hint", "Přepis: " + row.transcript));
+    art.appendChild(el("p", "hint", [row.email, row.phone].filter(Boolean).join(" · ")));
     if (row.audio_path) {
-      var play = document.createElement("button");
+      var play = el("button", "mini", "Přehrát audio");
       play.type = "button";
-      play.textContent = "Přehrát audio";
-      play.addEventListener("click", function () { playAudio(row.audio_path, box); });
-      box.appendChild(play);
+      play.addEventListener("click", function () { playAudio(row.audio_path, art); });
+      art.appendChild(play);
     }
-    var label = document.createElement("label");
-    label.className = "lbl";
-    label.htmlFor = "admin-status";
-    label.textContent = "Stav";
-    var select = document.createElement("select");
-    select.id = "admin-status";
+    var note = document.createElement("textarea");
+    note.className = "admin-note";
+    note.rows = 2;
+    note.placeholder = "Interní poznámka";
+    note.value = row.admin_note || "";
+    var saveNote = el("button", "mini", "Uložit poznámku");
+    saveNote.type = "button";
+    saveNote.addEventListener("click", function () { saveFields(row, { admin_note: note.value }); });
+    art.appendChild(note);
+    art.appendChild(saveNote);
+    var status = document.createElement("select");
+    status.className = "admin-status";
     STATUSES.forEach(function (value) {
       var opt = document.createElement("option");
       opt.value = value;
       opt.textContent = labelStatus(value);
       if (value === row.status) opt.selected = true;
-      select.appendChild(opt);
+      status.appendChild(opt);
     });
-    var save = document.createElement("button");
-    save.type = "button";
-    save.textContent = "Uložit stav";
-    save.addEventListener("click", function () { saveStatus(row, select.value); });
-    box.appendChild(label);
-    box.appendChild(select);
-    box.appendChild(save);
+    var saveStatusBtn = el("button", "mini", "Uložit stav");
+    saveStatusBtn.type = "button";
+    saveStatusBtn.addEventListener("click", function () { saveFields(row, { status: status.value }); });
+    art.appendChild(status);
+    art.appendChild(saveStatusBtn);
+    return art;
+  }
+
+  function renderList() {
+    var box = $("admin-cards");
+    if (!box) return;
+    clear(box);
+    var rows = filtered();
+    $("admin-count").textContent = rows.length + (rows.length === 1 ? " záznam" : " záznamů");
+    if (!rows.length) box.appendChild(el("p", "hint", "Žádný záznam neodpovídá filtrům."));
+    rows.forEach(function (row) { box.appendChild(card(row)); });
+    var detail = $("admin-detail");
+    if (detail) { detail.hidden = true; clear(detail); }
+  }
+
+  async function saveFields(row, patch) {
+    var s = await current();
+    if (!s) return;
+    var table = state.tab === "stories" ? "stories" : "help_offers";
+    var res = await authFetch("/rest/v1/" + table + "?id=eq." + row.id, {
+      method: "PATCH",
+      token: s.access_token,
+      headers: { Prefer: "return=minimal" },
+      body: JSON.stringify(patch),
+    });
+    if (!res.ok) { say("Uložení se nepovedlo."); return; }
+    Object.keys(patch).forEach(function (key) { row[key] = patch[key]; });
+    say("Uloženo.");
+    renderList();
+  }
+
+  function confirmCategory(row, cat) {
+    saveFields(row, { ai_category: cat, ai_category_confirmed: true });
+  }
+
+  async function runAi(row) {
+    var s = await current();
+    if (!s) return;
+    say("Spouštím třídění.");
+    var res = await fetch("/api/triage/", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: "Bearer " + s.access_token },
+      body: JSON.stringify({ table: state.tab === "stories" ? "stories" : "help_offers", id: row.id, manual: true }),
+    });
+    var data = {};
+    try { data = await res.json(); } catch (e) {}
+    if (!res.ok || data.ok === false) { say(data.error === "openai-auth" ? "OpenAI odmítlo klíč." : "Třídění se nepovedlo. Záznam zůstává."); return; }
+    if (data.skipped) { say("Třídění je vypnuté, nebo chybí klíč."); return; }
+    row.ai_summary = data.summary;
+    row.ai_category = data.category;
+    row.ai_urgency = data.urgency;
+    row.ai_help_type = data.help_type;
+    row.ai_model = data.model;
+    say("Třídění je hotové.");
+    renderList();
   }
 
   async function playAudio(path, box) {
@@ -177,23 +270,6 @@
     audio.controls = true;
     audio.src = src;
     box.appendChild(audio);
-    audio.play().catch(function () {});
-  }
-
-  async function saveStatus(row, status) {
-    if (STATUSES.indexOf(status) < 0) return;
-    var s = await current();
-    var table = row.input_type ? "stories" : "help_offers";
-    var res = await authFetch("/rest/v1/" + table + "?id=eq." + row.id, {
-      method: "PATCH",
-      token: s.access_token,
-      headers: { Prefer: "return=minimal" },
-      body: JSON.stringify({ status: status }),
-    });
-    if (!res.ok) { say("Stav se nepodařilo uložit."); return; }
-    row.status = status;
-    say("Stav je uložený.");
-    renderList();
   }
 
   function csvCell(value) {
@@ -202,10 +278,10 @@
   }
   function exportCsv() {
     var stories = state.tab === "stories";
-    var rows = filtered(stories ? state.stories : state.help, stories ? "input_type" : "helper_type");
+    var rows = filtered();
     var cols = stories
-      ? ["created_at", "full_name", "email", "anonymous", "wants_to_help", "input_type", "story_text", "audio_path", "transcript", "status"]
-      : ["created_at", "full_name", "email", "phone", "helper_type", "help_kinds", "message", "links", "status"];
+      ? ["created_at", "full_name", "email", "anonymous", "wants_to_help", "consent_publish", "input_type", "story_text", "transcript", "ai_summary", "ai_category", "ai_urgency", "ai_help_type", "status", "admin_note"]
+      : ["created_at", "full_name", "email", "phone", "helper_type", "help_kinds", "message", "ai_summary", "ai_category", "ai_help_type", "ai_matches", "status", "admin_note"];
     var lines = [cols.join(",")];
     rows.forEach(function (row) { lines.push(cols.map(function (key) { return csvCell(row[key]); }).join(",")); });
     var blob = new Blob(["\uFEFF" + lines.join("\r\n")], { type: "text/csv;charset=utf-8" });
@@ -217,26 +293,61 @@
     a.remove();
   }
 
+  function fillCategories() {
+    var select = $("admin-category");
+    if (!select) return;
+    clear(select);
+    var first = document.createElement("option");
+    first.value = "";
+    first.textContent = "Všechny kategorie";
+    select.appendChild(first);
+    (state.tab === "stories" ? CATS : OFFERS).forEach(function (cat) {
+      var opt = document.createElement("option");
+      opt.value = cat;
+      opt.textContent = cat;
+      select.appendChild(opt);
+    });
+  }
+
+  function readFilters() {
+    function val(id) { var n = $(id); return n ? n.value : ""; }
+    state.filters.q = val("admin-q");
+    state.filters.named = val("admin-named");
+    state.filters.publish = val("admin-publish");
+    state.filters.help = val("admin-helpflag");
+    state.filters.voice = val("admin-voice");
+    state.filters.category = val("admin-category");
+    state.filters.urgency = val("admin-urgency");
+    state.filters.status = val("admin-filter-status");
+    renderList();
+  }
+
   async function load() {
     var s = await current();
     var who = await authFetch("/auth/v1/user", { token: s.access_token });
-    if (!who.ok) { saveSession(null); showLogin(); say("Přihlášení vypršelo. Pošli si odkaz znovu."); return; }
+    if (!who.ok) { saveSession(null); showLogin(); say("Přihlášení vypršelo."); return; }
     var user = await who.json();
     var admin = await authFetch("/rest/v1/admins?select=user_id&user_id=eq." + user.id, { token: s.access_token });
     var admins = admin.ok ? await admin.json() : [];
-    if (!admins.length) {
+    var mail = String(user.email || "").toLowerCase();
+    var listed = await authFetch("/rest/v1/admin_emails?select=email&email=eq." + encodeURIComponent(mail), { token: s.access_token });
+    var emails = listed.ok ? await listed.json() : [];
+    if (!admins.length && !emails.length) {
       $("admin-app").hidden = true;
       $("admin-login").hidden = false;
-      say("Tenhle účet není v seznamu administrátorů. Postup je v docs/pridat-admina.sql.");
+      say("K tomuto přehledu nemáte přístup.");
       return;
     }
-    var storyRes = await authFetch("/rest/v1/stories?select=id,created_at,full_name,email,anonymous,wants_to_help,input_type,story_text,audio_path,transcript,status&order=created_at.desc&limit=500", { token: s.access_token });
-    var helpRes = await authFetch("/rest/v1/help_offers?select=id,created_at,full_name,email,phone,helper_type,help_kinds,message,links,status&order=created_at.desc&limit=500", { token: s.access_token });
+    var storyCols = "id,created_at,full_name,email,anonymous,wants_to_help,consent_publish,input_type,story_text,audio_path,transcript,status,ai_summary,ai_category,ai_category_confirmed,ai_urgency,ai_help_type,ai_model,ai_at,admin_note";
+    var helpCols = "id,created_at,full_name,email,phone,helper_type,help_kinds,message,links,status,consent_publish,ai_summary,ai_category,ai_category_confirmed,ai_urgency,ai_help_type,ai_model,ai_at,ai_matches,admin_note";
+    var storyRes = await authFetch("/rest/v1/stories?select=" + storyCols + "&order=created_at.desc&limit=500", { token: s.access_token });
+    var helpRes = await authFetch("/rest/v1/help_offers?select=" + helpCols + "&order=created_at.desc&limit=500", { token: s.access_token });
     state.stories = storyRes.ok ? await storyRes.json() : [];
     state.help = helpRes.ok ? await helpRes.json() : [];
     $("admin-login").hidden = true;
     $("admin-app").hidden = false;
     say("");
+    fillCategories();
     renderList();
   }
 
@@ -244,10 +355,9 @@
     $("admin-login").hidden = false;
     $("admin-app").hidden = true;
   }
-
   async function sendLink() {
     var email = $("admin-email").value.trim();
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { say("Doplň e-mail."); return; }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { say("Doplňte e-mail."); return; }
     var c = cfg();
     if (!c.url || !c.key) { say("Chybí nastavení připojení."); return; }
     var pkce = await challenge();
@@ -258,10 +368,9 @@
       headers: { apikey: c.key, Authorization: "Bearer " + c.key, "Content-Type": "application/json" },
       body: JSON.stringify({ email: email, create_user: true, code_challenge: pkce.challenge, code_challenge_method: "s256" }),
     });
-    if (!res.ok) { say("Odkaz se nepodařilo poslat. Zkontroluj adresu a nastavení Auth."); return; }
+    if (!res.ok) { say("Odkaz se nepodařilo poslat."); return; }
     say("Pokud adresu známe, přijde na ni přihlašovací odkaz.");
   }
-
   async function boot() {
     var params = new URLSearchParams(location.search);
     var code = params.get("code");
@@ -270,7 +379,7 @@
       history.replaceState({}, "", "/admin/");
       if (verifier) {
         try { saveSession(asSession(await tokenFromCode(code, verifier))); }
-        catch (e) { say("Odkaz nešel dokončit. Pošli si nový."); }
+        catch (e) { say("Odkaz nešel dokončit."); }
       }
     }
     var hash = new URLSearchParams(location.hash.replace(/^#/, ""));
@@ -281,32 +390,25 @@
     if (await current()) load().catch(function () { say("Přehled se nepodařilo načíst."); });
   }
 
-  $("admin-send").addEventListener("click", function () { sendLink().catch(function () { say("Odkaz se nepodařilo poslat."); }); });
-  $("admin-out").addEventListener("click", function () { saveSession(null); showLogin(); say("Jsi odhlášená."); });
-  $("tab-stories").addEventListener("click", function () { state.tab = "stories"; fillTypes(); renderList(); });
-  $("tab-help").addEventListener("click", function () { state.tab = "help"; fillTypes(); renderList(); });
-  $("admin-type").addEventListener("change", function () { state.filterType = $("admin-type").value; renderList(); });
-  $("admin-filter-status").addEventListener("change", function () { state.filterStatus = $("admin-filter-status").value; renderList(); });
-  $("admin-csv").addEventListener("click", exportCsv);
-
-  function fillTypes() {
-    var select = $("admin-type");
-    clear(select);
-    var first = document.createElement("option");
-    first.value = "";
-    first.textContent = "Všechny typy";
-    select.appendChild(first);
-    var options = state.tab === "stories"
-      ? [["text", "text"], ["recording", "nahrávka"], ["upload", "soubor"]]
-      : [["lived_experience", "prošla/prošel"], ["professional", "pomáhá"]];
-    options.forEach(function (pair) {
-      var opt = document.createElement("option");
-      opt.value = pair[0];
-      opt.textContent = pair[1];
-      select.appendChild(opt);
+  function bindFilters() {
+    ["admin-q", "admin-named", "admin-publish", "admin-helpflag", "admin-voice", "admin-category", "admin-urgency", "admin-filter-status"].forEach(function (id) {
+      var node = $(id);
+      if (!node) return;
+      node.addEventListener("input", readFilters);
+      node.addEventListener("change", readFilters);
     });
-    state.filterType = "";
+    var open = $("admin-filters-open");
+    var close = $("admin-filters-close");
+    var sheet = $("admin-filters");
+    if (open && sheet) open.addEventListener("click", function () { sheet.classList.add("is-open"); });
+    if (close && sheet) close.addEventListener("click", function () { sheet.classList.remove("is-open"); });
   }
-  fillTypes();
+
+  $("admin-send").addEventListener("click", function () { sendLink().catch(function () { say("Odkaz se nepodařilo poslat."); }); });
+  $("admin-out").addEventListener("click", function () { saveSession(null); showLogin(); say("Jste odhlášeni."); });
+  $("tab-stories").addEventListener("click", function () { state.tab = "stories"; $("tab-stories").setAttribute("aria-selected", "true"); $("tab-help").setAttribute("aria-selected", "false"); fillCategories(); renderList(); });
+  $("tab-help").addEventListener("click", function () { state.tab = "help"; $("tab-help").setAttribute("aria-selected", "true"); $("tab-stories").setAttribute("aria-selected", "false"); fillCategories(); renderList(); });
+  $("admin-csv").addEventListener("click", exportCsv);
+  bindFilters();
   boot();
 })(window);

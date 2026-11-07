@@ -25,7 +25,7 @@ test("noindex v HTML, robots.txt zakazuje vše, stránky nemají kanonický odka
     assert.match(read(p), /<html lang="cs">/, p);
   }
   assert.equal(read("robots.txt"), "User-agent: *\nDisallow: /\n");
-  assert.doesNotMatch(home, /rel="canonical"/);
+  assert.match(home, /rel="canonical" href="https:\/\/nadbytecna\.cz\/"/);
   assert.doesNotMatch(home, /nadbytecna-prelanding\.vercel\.app/);
 });
 
@@ -129,7 +129,9 @@ test("homepage má dvě volby, ne mřížku osmi kategorií, a formuláře nic n
   assert.match(read("zasady/index.html"), /<h1>Ochrana osobních údajů<\/h1>/);
   assert.match(soon, /mailto:veryvera@nadbytecna\.cz/);
   assert.match(soon, /noindex, nofollow, noarchive/);
-  assert.doesNotMatch(soon, /cookies\.js|submit\.js|story-form\.js/);
+  assert.match(soon, /src="\/cookies\.js"/);
+  assert.match(soon, /og:image:width" content="1200"/);
+  assert.doesNotMatch(soon, /submit\.js|story-form\.js/);
   const launchJs = fs.readFileSync(path.join(ROOT, "src/launch-form.js"), "utf8");
   assert.match(launchJs, /return=minimal/);
   assert.match(launchJs, /launch_signups/);

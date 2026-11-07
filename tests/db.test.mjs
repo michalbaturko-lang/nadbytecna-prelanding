@@ -74,6 +74,13 @@ test("retence: IP hash po expiraci pryč, nepotvrzené po 7 dnech smazané, potv
   assert.equal((await db.query("select count(*)::int n from public.preregistrations")).rows[0].n, 2);
 });
 
+test("admin_emails: anon nic nečte a tabulka je prázdná", async () => {
+  const db = await fresh();
+  assert.equal((await db.query("select count(*)::int n from public.admin_emails")).rows[0].n, 0);
+  await db.exec("set role anon");
+  await assert.rejects(() => db.query("select * from public.admin_emails"), /permission denied/);
+});
+
 test("launch_signups: anon vloží jen se souhlasem a řádek nečte", async () => {
   const db = await fresh();
   await db.exec("set role anon");

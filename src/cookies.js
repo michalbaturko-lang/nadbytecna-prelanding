@@ -19,11 +19,23 @@
     };
   }
   function anyId(c) { return Boolean(c.meta || c.ga4 || c.googleAds || c.tiktok); }
-  function choice() {
+  function readChoice() {
     try { return localStorage.getItem(KEY) || ""; } catch (e) { return ""; }
   }
+  function prefs() {
+    var raw = readChoice();
+    if (raw === "granted") return { analytics: true, marketing: true };
+    if (raw === "denied") return { analytics: false, marketing: false };
+    if (raw && raw.charAt(0) === "{") {
+      try {
+        var data = JSON.parse(raw);
+        return { analytics: Boolean(data.analytics), marketing: Boolean(data.marketing) };
+      } catch (e) {}
+    }
+    return null;
+  }
   function remember(value) {
-    try { localStorage.setItem(KEY, value); } catch (e) {}
+    try { localStorage.setItem(KEY, typeof value === "string" ? value : JSON.stringify(value)); } catch (e) {}
   }
 
   function script(src) {
@@ -54,12 +66,13 @@
     });
     var id = c.ga4 || c.googleAds;
     return script("https://www.googletagmanager.com/gtag/js?id=" + encodeURIComponent(id)).then(function () {
-      gtag("consent", "update", {
-        ad_storage: "granted",
-        ad_user_data: "granted",
-        ad_personalization: "granted",
-        analytics_storage: "granted",
-      });
+    var want = prefs() || { analytics: false, marketing: false };
+    gtag("consent", "update", {
+      ad_storage: want.marketing ? "granted" : "denied",
+      ad_user_data: want.marketing ? "granted" : "denied",
+      ad_personalization: want.marketing ? "granted" : "denied",
+      analytics_storage: want.analytics ? "granted" : "denied",
+    });
       gtag("js", new Date());
       if (c.ga4) gtag("config", c.ga4, { anonymize_ip: true });
       if (c.googleAds) gtag("config", c.googleAds);
@@ -105,12 +118,14 @@
 
   function enable() {
     if (loaded) return;
+    var want = prefs();
+    if (!want || (!want.analytics && !want.marketing)) return;
     var c = ids();
     if (!anyId(c)) return;
     loaded = true;
-    if (c.ga4 || c.googleAds) loadGoogle(c);
-    if (c.meta) loadMeta(c.meta);
-    if (c.tiktok) loadTikTok(c.tiktok);
+    if (want.analytics && c.ga4 || want.marketing && c.googleAds) loadGoogle(c);
+    if (want.marketing && c.meta) loadMeta(c.meta);
+    if (want.marketing && c.tiktok) loadTikTok(c.tiktok);
   }
 
   function googleConversion(label) {
@@ -120,7 +135,8 @@
   }
 
   function track(name, label) {
-    if (choice() !== "granted") return;
+    var want = prefs();
+    if (!want || (!want.analytics && !want.marketing)) return;
     var c = ids();
     if (global.gtag) global.gtag("event", name);
     googleConversion(label);
@@ -141,17 +157,12 @@
     box.className = "cookie";
     box.setAttribute("role", "dialog");
     box.setAttribute("aria-labelledby", "cookie-title");
-    var title = document.createElement("p");
-    title.id = "cookie-title";
-    title.className = "cookie-title";
-    title.textContent = "Cookies";
     var text = document.createElement("p");
-    text.appendChild(document.createTextNode("Web po souhlasu používá analytické a marketingové cookies (GA4, Google Ads, Meta Pixel, TikTok Pixel), bez souhlasu ne. "));
+    text.appendChild(document.createTextNode("Cookies jen po souhlasu. "));
     var link = document.createElement("a");
-    link.href = "/ochrana-osobnich-udaju/";
-    link.textContent = "Návrh zásad";
+    link.href = "/zasady/";
+    link.textContent = "Zásady";
     text.appendChild(link);
-    text.appendChild(document.createTextNode("."));
     var row = document.createElement("div");
     row.className = "cookie-row";
     var no = document.createElement("button");
@@ -159,15 +170,47 @@
     no.textContent = "Jen nezbytné";
     var yes = document.createElement("button");
     yes.type = "button";
-    yes.className = "cookie-yes";
-    yes.textContent = "Souhlasím";
-    no.addEventListener("click", function () { remember("denied"); hide(box); });
-    yes.addEventListener("click", function () { remember("granted"); hide(box); enable(); });
+    yes.textContent = "Přijmout vše";
+    var set = document.createElement("button");
+    set.type = "button";
+    set.textContent = "Nastavení";
+    var panel = document.createElement("div");
+    panel.className = "cookie-settings";
+    panel.hidden = true;
+    var analytics = document.createElement("label");
+    analytics.className = "opt";
+    var analyticsBox = document.createElement("input");
+    analyticsBox.type = "checkbox";
+    analytics.appendChild(analyticsBox);
+    analytics.appendChild(document.createTextNode(" Analytické (GA4)"));
+    var marketing = document.createElement("label");
+    marketing.className = "opt";
+    var marketingBox = document.createElement("input");
+    marketingBox.type = "checkbox";
+    marketing.appendChild(marketingBox);
+    marketing.appendChild(document.createTextNode(" Marketing (reklama)"));
+    var save = document.createElement("button");
+    save.type = "button";
+    save.textContent = "Uložit volbu";
+    panel.appendChild(analytics);
+    panel.appendChild(marketing);
+    panel.appendChild(save);
+    function close(value) { remember(value); hide(box); enable(); }
+    no.addEventListener("click", function () { close("denied"); });
+    yes.addEventListener("click", function () { close("granted"); });
+    set.addEventListener("click", function () { panel.hidden = false; box.classList.add("is-open"); });
+    save.addEventListener("click", function () { close({ analytics: analyticsBox.checked, marketing: marketingBox.checked }); });
     row.appendChild(no);
     row.appendChild(yes);
+    row.appendChild(set);
+    var title = document.createElement("p");
+    title.id = "cookie-title";
+    title.className = "cookie-title";
+    title.textContent = "Cookies";
     box.appendChild(title);
     box.appendChild(text);
     box.appendChild(row);
+    box.appendChild(panel);
     document.body.appendChild(box);
   }
 
@@ -184,8 +227,8 @@
     if (a && global.NadbytecnaAds) global.NadbytecnaAds.shop();
   });
 
-  if (choice() === "granted") enable();
-  else if (!choice()) banner();
+  if (prefs()) enable();
+  else banner();
 
   var settings = document.getElementById("cookie-settings");
   if (settings) settings.hidden = false;
