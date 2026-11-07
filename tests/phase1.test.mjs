@@ -15,7 +15,7 @@ execFileSync(process.execPath, ["build.mjs"], {
 });
 
 const read = (p) => fs.readFileSync(path.join(OUT, p), "utf8");
-const pages = ["index.html", "sdilet-pribeh/index.html", "mohu-pomoci/index.html", "potrebuji-pomoc/index.html", "verin-pribeh/index.html", "o-nas/index.html", "proverene-kontakty/index.html", "cookies/index.html", "ochrana-osobnich-udaju/index.html", "pravidla-zverejnovani/index.html", "kontakt/index.html"];
+const pages = ["index.html", "sdilet-pribeh/index.html", "mohu-pomoci/index.html", "potrebuji-pomoc/index.html", "verin-pribeh/index.html", "o-nas/index.html", "cookies/index.html", "ochrana-osobnich-udaju/index.html", "pravidla-zverejnovani/index.html", "kontakt/index.html"];
 const home = read("index.html");
 const visible = (h) => h.replace(/<style>[\s\S]*?<\/style>/g, "").replace(/<script[\s\S]*?<\/script>/g, "");
 
@@ -58,10 +58,7 @@ test("homepage má dvě volby, osm karet a formuláře nic neodesílají", () =>
   assert.match(home, /<a class="choice" href="\/sdilet-pribeh\/"><span class="choice-title">Sdílej svůj příběh<\/span><\/a>/);
   assert.match(home, /<a class="choice" href="\/mohu-pomoci\/"><span class="choice-title">Mohu pomoci<\/span><\/a>/);
   assert.equal(visible(home).match(/class="choice"/g).length, 2);
-  assert.equal(visible(home).match(/class="cat"/g).length, 8);
-  assert.match(home, /Nabídni terapii/);
-  assert.match(home, /Nabídni právní pomoc/);
-  assert.match(home, /href="\/mohu-pomoci\/\?typ=potencial"/);
+  assert.doesNotMatch(home, /class="cat"|Jak se přidat|Prověřené kontakty|proverene-kontakty/);
   assert.match(home, /class="top-cta" href="\/potrebuji-pomoc\/"/);
   assert.match(home, /Okamžitá pomoc/);
   assert.match(home, /href="tel:155"/);
@@ -70,7 +67,8 @@ test("homepage má dvě volby, osm karet a formuláře nic neodesílají", () =>
   assert.match(home, /<footer[\s\S]*href="\/ochrana-osobnich-udaju\/">Ochrana osobních údajů<\/a>/);
   assert.match(home, /href="\/cookies\/"/);
   assert.match(read("sitemap.xml"), /<loc>https:\/\/nadbytecna\.cz\/verin-pribeh\/<\/loc>/);
-  assert.doesNotMatch(read("sitemap.xml"), /\/admin\/|\/coming-soon\//);
+  assert.doesNotMatch(read("sitemap.xml"), /\/admin\/|\/coming-soon\/|proverene-kontakty/);
+  assert.equal(fs.existsSync(path.join(OUT, "proverene-kontakty/index.html")), false);
   assert.match(read("robots.txt"), /Disallow: \//);
   const choices = [...home.matchAll(/<a class="choice"[^>]*>([\s\S]*?)<\/a>/g)].map((m) => m[1]);
   assert.equal(choices.length, 2);
@@ -82,7 +80,6 @@ test("homepage má dvě volby, osm karet a formuláře nic neodesílají", () =>
   assert.match(home, /Žádná žena není nadbytečná\./);
   assert.match(home, /Místo pro ženy, které si prošly něčím podobným, a pro ty, kdo jim chtějí pomoci\./);
   assert.match(home, /Více ochrany našimi zákony pro ženy, manželky, partnerky, matky a podnikatelky\./);
-  assert.match(home, /připravujeme/);
   assert.match(home, /href="https:\/\/veryvera\.cz" rel="noopener noreferrer"/);
   assert.match(home, /Správce osobních údajů: Věra Komárová, fyzická osoba\. Adresa: doplníme\. IČ: doplníme\./);
   assert.doesNotMatch(visible(home), /Zapsaný ústav/);
