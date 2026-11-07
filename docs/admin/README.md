@@ -1,6 +1,6 @@
 # Admin Nadbytečná.cz — podklady k revizi
 
-Stav k 7. 11. 2026: implementace a lokální ověření jsou připravené k revizi. Produkční admin nebyl tímto ověřen ani nasazen. Základ testovací databáze je rekonstrukce podle zadání, nikoli export skutečného schématu Supabase.
+Stav k 7. 11. 2026: implementace a lokální ověření jsou připravené k revizi. Produkční admin nebyl tímto ověřen ani nasazen. Základ testovací databáze nyní vychází ze skutečných metadat přečtených read-only přes přihlášený SQL editor 7. 11.; jde pouze o strukturu, nikoli produkční osobní data. Snapshot je v `tests/fixtures/admin-schema-2026-11-07.json`.
 
 ## Co je připravené
 
@@ -13,7 +13,7 @@ Stav k 7. 11. 2026: implementace a lokální ověření jsou připravené k revi
 
 ## Ověření a ukázky
 
-- [Souhrn výsledků](test-results.json): 94/94 lokálních unit a integračních testů, 29 prohlížečových kontrol, 18 screenshotů.
+- [Souhrn výsledků](test-results.json): 96/96 lokálních unit a integračních testů, 29 prohlížečových kontrol, 18 screenshotů.
 - [Prohlížečové výsledky](browser-results.json): seznam, detail a filtry na 320, 375, 768, 1024, 1440 a 1920 px; veřejné formuláře a globální GDPR dialog. Bez zjištěného přetékání a nálezů axe v testovaných pohledech.
 - [Regrese veřejného webu](public-regression.json): porovnání devíti veřejných HTML se základním commitem, povolená změna 18+; vybrané vizuální soubory a cookie skript shodné.
 - Lighthouse Accessibility v režimu snapshot: [mobilní seznam](lighthouse-mobile-list.json), [mobilní detail](lighthouse-mobile-detail.json), [desktopový seznam](lighthouse-desktop-list.json), [desktopový detail](lighthouse-desktop-detail.json), všechny 100/100. Nejde o produkční měření výkonu.
@@ -23,7 +23,7 @@ Testy nevkládaly data do produkce, neposílaly skutečné e-maily a nevolaly sk
 
 ## Co je nutné před produkcí
 
-1. Získat read-only schéma a porovnat skutečné tabulky, typy, triggery, policies a Storage s připravenou migrací. Připojený Supabase nástroj čtení odmítl. K tomu slouží [read-only preflight](schema-preflight.sql).
+1. Před aplikací ověřit případný drift proti již získanému read-only snapshotu skutečných tabulek, typů, triggerů, policies a Storage. MCP čtení odmítlo; přihlášený SQL editor jej umožnil. K opakování slouží [read-only preflight](schema-preflight.sql).
 2. Ověřit migraci na samostatné Supabase větvi, skutečný magic link, 401/403, privátní Storage a vypršení podpisu. Pro preview je nutná samostatná DB a přesný hostname v CSP.
 3. Doplnit dvě schválené adresy administrátorů a provozní tajemství přímo do důvěryhodného nastavení, ověřit scheduler a plán Vercelu.
 4. Schválit konkrétní migraci a nasazení. Sladit změnu DB s formulářem 18+, aby mezi nimi nevzniklo období nefunkčního odesílání.
@@ -39,7 +39,7 @@ Automatická AI v této variantě čeká na pětiminutový worker, který zpracu
 - [SQL pro čtení skutečného schématu](schema-preflight.sql)
 - [Navržená migrace](../../supabase/migrations/20261108000000_admin_workspace.sql)
 
-Odkaz na skutečný PR doplní vlastník předání až po ověřeném zveřejnění. Samotný lokální commit ani název pracovní větve nejsou otevřeným PR.
+Ověřený [draft PR #11](https://github.com/michalbaturko-lang/nadbytecna-prelanding/pull/11) je otevřený a nesloučený. Vercel preview build byl Ready; to není funkční staging test propojení s databází.
 
 ## Lokální ukázka
 

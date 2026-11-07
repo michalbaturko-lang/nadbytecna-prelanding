@@ -1,10 +1,10 @@
 {
   "date": "2026-11-07",
-  "environment": "offline synthetic PostgreSQL reconstruction",
+  "environment": "local PostgreSQL reconstructed from read-only actual schema metadata; synthetic records and Auth/Storage adapters",
   "unitAndIntegration": {
     "command": "npm test",
-    "total": 94,
-    "passed": 94,
+    "total": 96,
+    "passed": 96,
     "failed": 0
   },
   "browser": {
