@@ -1,6 +1,10 @@
 # Admin Nadbytečná.cz — podklady k revizi
 
-## Produkční stav — 8. 11. 2026
+## Aktuální omezení přihlášení
+
+Přihlašovací e-maily používají testovací službu Supabase s limitem 2/hodinu. Produkční doručování zatím vyžaduje vlastní SMTP; stav a konkrétní náprava jsou v [aktuálním předání](production-status.md). Uživatelský pokus 11:26:59 skončil HTTP 429. UI nyní vysvětluje limit a odmítnuté opakování nepoškodí dřívější platný odkaz. Typografie je sjednocena na bezpatkové Jost podle Dermacol.cz.
+
+## Původní produkční ověření — 8. 11. 2026
 
 Admin je nasazený na https://nadbytecna.cz/admin/. PR #11 byl sloučen; zachovává veřejné změny z main 70e6104. Veřejný web zůstává coming soon.
 
@@ -35,7 +39,7 @@ Připravená delegovaná varianta: admin vytvoří soukromý jednorázový odkaz
 
 ## Ověření a ukázky
 
-- [Souhrn výsledků](test-results.json): 163/163 lokálních unit a integračních testů, 80 prohlížečových kontrol (29 původních + 22 e-mailových + 14 admin pozvánky + 11 veřejná stránka + 4 PKCE), 26 screenshotů.
+- [Souhrn výsledků](test-results.json): 163/163 lokálních unit a integračních testů, 84 prohlížečových kontrol (29 původních + 22 e-mailových + 14 admin pozvánky + 11 veřejná stránka + 8 přihlášení a typografie), 26 screenshotů.
 - [Prohlížečové výsledky](browser-results.json): seznam, detail a filtry na 320, 375, 768, 1024, 1440 a 1920 px; veřejné formuláře a globální GDPR dialog. Bez zjištěného přetékání a nálezů axe v testovaných pohledech.
 - [Regrese veřejného webu](public-regression.json): porovnání 12 veřejných HTML se základním commitem, povolená změna 18+; vybrané vizuální soubory a cookie skript shodné.
 - Lighthouse Accessibility v režimu snapshot: [mobilní seznam](lighthouse-mobile-list.json), [mobilní detail](lighthouse-mobile-detail.json), [desktopový seznam](lighthouse-desktop-list.json), [desktopový detail](lighthouse-desktop-detail.json), všechny 100/100. Nejde o produkční měření výkonu.

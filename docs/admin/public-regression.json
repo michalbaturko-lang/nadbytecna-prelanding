@@ -15,7 +15,7 @@
     "verin-pribeh/index.html",
     "cookies/index.html"
   ],
-  "onlyAllowedHtmlChange": "18+ checkbox in story/help forms",
+  "onlyAllowedHtmlChange": "18+ checkbox in story/help forms; inline typography CSS and font preloads (Jost requested 2026-11-08)",
   "unchangedAssets": [
     "cookies.js",
     "fluid.js",
