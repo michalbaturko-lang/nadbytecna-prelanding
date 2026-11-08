@@ -404,6 +404,7 @@ function buildPhase1(out) {
   fs.copyFileSync(path.join(ROOT, "src/submit.js"), path.join(out, "submit.js"));
   fs.copyFileSync(path.join(ROOT, "src/cookies.js"), path.join(out, "cookies.js"));
   fs.copyFileSync(path.join(ROOT, "src/admin.js"), path.join(out, "admin.js"));
+  fs.copyFileSync(path.join(ROOT, "src/admin-pkce.js"), path.join(out, "admin-pkce.js"));
   fs.copyFileSync(path.join(ROOT, "src/admin.css"), path.join(out, "admin.css"));
   fs.copyFileSync(path.join(ROOT, "src/mail-connect.js"), path.join(out, "mail-connect.js"));
   fs.copyFileSync(path.join(ROOT, "src/mail-connect.css"), path.join(out, "mail-connect.css"));

@@ -7,3 +7,4 @@ preview
 **/graphify-out/
 test-results/
 playwright-report/
+supabase/.temp/

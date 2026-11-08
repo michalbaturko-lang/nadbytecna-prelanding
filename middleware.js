@@ -1,4 +1,5 @@
 import { next, rewrite } from "@vercel/functions";
+import { adminHtml } from "./lib/admin-html.mjs";
 import { hostGate, requestHost, siteLive, withOrigin } from "./lib/host-gate.mjs";
 
 const PASS = "x-nb-origin";
@@ -20,6 +21,22 @@ export default async function middleware(request) {
   if (decision.type === "redirect") return Response.redirect(decision.url, decision.status);
   if (decision.type === "missing") {
     return new Response("Not found", { status: 404, headers: { "content-type": "text/plain; charset=utf-8", "x-robots-tag": "noindex" } });
+  }
+
+  // Serve the empty admin shell dynamically: static hosting otherwise caches its HTML.
+  if (["/admin", "/admin/", "/admin/index.html"].includes(url.pathname)) {
+    const headers = {
+      "content-type": "text/html; charset=utf-8",
+      "cache-control": "no-store",
+      "cdn-cache-control": "no-store",
+      "vercel-cdn-cache-control": "no-store",
+      "x-robots-tag": "noindex, nofollow, noarchive",
+      "referrer-policy": "no-referrer",
+    };
+    if (!["GET", "HEAD"].includes(request.method)) {
+      return new Response("Method not allowed", { status: 405, headers: { ...headers, allow: "GET, HEAD" } });
+    }
+    return new Response(request.method === "HEAD" ? null : adminHtml(), { headers });
   }
 
   const pass = () => (decision.type === "rewrite" ? rewrite(new URL(decision.url, request.url)) : next());
