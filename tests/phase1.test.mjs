@@ -85,7 +85,7 @@ test("homepage má dvě volby, osm karet a formuláře nic neodesílají", () =>
   assert.match(home, /loading="lazy"/);
   assert.match(home, /src="\/img\/parfem-nadbytecna\.jpg"/);
   assert.doesNotMatch(home, /E-shop Věry Komárové/);
-  assert.match(home, /class="vera-cta" href="https:\/\/veryvera\.cz" rel="noopener noreferrer"/);
+  assert.match(home, /class="vera-cta" href="https:\/\/very-vera\.cz" rel="noopener noreferrer"/);
   assert.match(home, /Správce osobních údajů: Věra Komárová, fyzická osoba\. Adresa: doplníme\. IČ: doplníme\./);
   assert.doesNotMatch(visible(home), /Zapsaný ústav/);
   assert.match(read("ochrana-osobnich-udaju/index.html"), /Správce osobních údajů je Věra Komárová, fyzická osoba/);

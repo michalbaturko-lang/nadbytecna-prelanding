@@ -208,7 +208,7 @@
       if (!document.getElementById("cookie-detail")) window.location.href = "/cookies/";
       return;
     }
-    var a = t && t.closest ? t.closest("a[href='https://veryvera.cz'], a[href^='https://veryvera.cz/']") : null;
+    var a = t && t.closest ? t.closest("a[href='https://very-vera.cz'], a[href^='https://very-vera.cz/']") : null;
     if (a && global.NadbytecnaAds) global.NadbytecnaAds.shop();
   });
 
