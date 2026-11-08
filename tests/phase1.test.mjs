@@ -81,6 +81,7 @@ test("homepage má dvě volby, osm karet a formuláře nic neodesílají", () =>
   assert.match(home, /Více ochrany našimi zákony pro ženy, manželky, partnerky, matky a podnikatelky\./);
   assert.match(home, /Podpořte platformu Nadbytečná\.cz předobjednáním parfému!/);
   assert.match(home, /Dodání do Vánoc!/);
+  assert.match(home, /Expedujeme v týdnu od 14\. 12\./);
   assert.match(home, /Předobjednat parfém/);
   assert.match(home, /loading="lazy"/);
   assert.match(home, /src="\/img\/parfem-nadbytecna\.jpg"/);
