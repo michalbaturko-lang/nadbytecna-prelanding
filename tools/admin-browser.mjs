@@ -311,7 +311,7 @@ try {
     "docs/admin/browser-results.json",
     JSON.stringify(
       {
-        date: "2026-11-07",
+        date: new Date().toLocaleDateString("sv-SE", { timeZone: "Europe/Prague" }),
         environment:
           "offline synthetic PostgreSQL fixture; not Supabase production",
         results,

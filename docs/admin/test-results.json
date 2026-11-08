@@ -9,11 +9,11 @@
   },
   "browser": {
     "command": "node tools/admin-browser.mjs",
-    "checks": 84,
-    "passed": 84,
-    "screenshots": 26,
+    "checks": 89,
+    "passed": 89,
+    "screenshots": 28,
     "breakdown": {
-      "original": 29,
+      "original": 34,
       "mailIntegration": 22,
       "adminInvitation": 14,
       "publicConnect": 11,
@@ -41,5 +41,5 @@
   "mailboxConnected": false,
   "realOAuthCallbackRoundtrip": "not verified; requires approved HTTPS host and registered Microsoft app",
   "scope": "Counts and zero external calls below refer to local automated tests; hosted synthetic checks and genuine own-account Auth were separate.",
-  "productionAuthReadiness": "BLOCKED: built-in email provider, 2 emails/hour; custom SMTP and real delivery checks required"
+  "productionAuthReadiness": "DEFERRED by user: custom SMTP remains off; sender must be prihlaseni@nadbytecna.cz in the correct Resend account"
 }

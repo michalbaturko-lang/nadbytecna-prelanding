@@ -49,7 +49,7 @@ try {
         `docs/admin/lighthouse-${name}-${state}.json`,
         JSON.stringify(
           {
-            date: "2026-11-07",
+            date: new Date().toLocaleDateString("sv-SE", { timeZone: "Europe/Prague" }),
             lighthouseVersion: result.lhr.lighthouseVersion,
             environment: "offline synthetic authenticated admin",
             mode: "snapshot",

@@ -16,6 +16,14 @@
     var el = $("admin-msg");
     if (el) el.textContent = text || "";
   }
+  function quantity(count, one, few, many) {
+    return count + " " + (count === 1 ? one : count >= 2 && count <= 4 ? few : many);
+  }
+  function hasFilters(filters) {
+    return Object.keys(filters).some(function (key) {
+      return key !== "sort" && filters[key] !== "" && filters[key] != null;
+    });
+  }
   function clear(el) {
     while (el && el.firstChild) el.removeChild(el.firstChild);
   }
@@ -578,7 +586,9 @@
               (row.classified_email || "administrátor") +
               " · " +
               when(row.classified_at)
-          : "Návrh AI · vyžaduje kontrolu",
+          : row.ai_at || row.ai_summary || row.ai_help_type
+            ? "Návrh AI · vyžaduje kontrolu"
+            : "Zatím bez shrnutí AI",
       ),
     );
     box.append(
@@ -586,7 +596,7 @@
         "p",
         "",
         row.ai_summary ||
-          "Shrnutí zatím není k dispozici. Příběh můžete zpracovat ručně.",
+          "Shrnutí zatím není k dispozici. Zprávu můžete přečíst a zařadit ručně.",
       ),
     );
     box.append(node("p", "", category(row.category)));
@@ -630,11 +640,23 @@
     var box = $("admin-cards");
     clear(box);
     $("admin-count").textContent =
-      S.total + " zpráv" + (S.filters.q ? " · výsledky hledání" : "");
-    if (!S.rows.length)
-      box.append(
-        node("p", "panel", "Žádná zpráva neodpovídá zvoleným filtrům."),
-      );
+      quantity(S.total, "zpráva", "zprávy", "zpráv") + (S.filters.q ? " · výsledky hledání" : "");
+    if (!S.rows.length) {
+      var empty = node("div", "panel");
+      empty.append(node("p", "", S.page > 0
+        ? "Na této stránce už nejsou žádné zprávy."
+        : hasFilters(S.filters)
+          ? "Žádná zpráva neodpovídá zvoleným filtrům."
+          : "Zatím tu není žádný příběh ani nabídka pomoci. Po odeslání formuláře se zpráva objeví zde."));
+      if (S.page > 0)
+        empty.append(button("Zpět na první stránku", function () {
+          S.page = 0;
+          loadList().catch(error);
+        }));
+      else if (hasFilters(S.filters))
+        empty.append(button("Zrušit filtry", function () { applyFilter({}); }));
+      box.append(empty);
+    }
     S.rows.forEach(function (row) {
       var art = node(
         "article",
@@ -1431,7 +1453,9 @@
         "kicker",
         row.classified_at
           ? "Ruční zařazení · " + when(row.classified_at)
-          : "Návrh AI · vyžaduje kontrolu",
+          : row.ai_at || row.ai_summary || row.ai_help_type
+            ? "Návrh AI · vyžaduje kontrolu"
+            : "Zatím bez shrnutí AI",
       ),
     );
     box.append(
@@ -1810,15 +1834,23 @@
   function renderMailList() {
     var cards = $("mail-cards");
     clear(cards);
-    $("mail-count").textContent = M.total + " e-mailových vláken";
-    if (!M.rows.length)
-      cards.append(
-        node(
-          "p",
-          "panel",
-          "Žádné místní e-mailové vlákno neodpovídá filtrům. Připojení schránky a poslední načtení vidíte výše.",
-        ),
-      );
+    $("mail-count").textContent = quantity(M.total, "e-mailové vlákno", "e-mailová vlákna", "e-mailových vláken");
+    if (!M.rows.length) {
+      var empty = node("div", "panel");
+      empty.append(node("p", "", M.page > 0
+        ? "Na této stránce už nejsou žádná e-mailová vlákna."
+        : hasFilters(M.filters)
+          ? "Žádné místní e-mailové vlákno neodpovídá filtrům."
+          : "Zatím tu nejsou žádné místní kopie e-mailů. Stav připojení schránky najdete výše."));
+      if (M.page > 0)
+        empty.append(button("Zpět na první stránku e-mailů", function () {
+          M.page = 0;
+          loadMailList().catch(mailError);
+        }));
+      else if (hasFilters(M.filters))
+        empty.append(button("Zrušit filtry e-mailů", function () { $("mail-reset").click(); }));
+      cards.append(empty);
+    }
     M.rows.forEach(function (row) {
       var article = node(
         "article",
