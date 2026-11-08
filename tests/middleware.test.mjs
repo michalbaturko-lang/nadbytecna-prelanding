@@ -25,8 +25,7 @@ test("veřejná doména dál přesměruje a vercel.app přepíše og adresu", as
     assert.equal(calls.length, 0);
 
     const blocked = await middleware(req("https://nadbytecna.cz/admin/"));
-    assert.equal(blocked.status, 302);
-    assert.equal(blocked.headers.get("location"), "https://nadbytecna.cz/");
+    assert.equal(blocked.headers.get("x-middleware-next"), "1");
 
     const home = await middleware(req("https://nadbytecna-prelanding.vercel.app/"));
     const text = await home.text();

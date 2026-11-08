@@ -1,0 +1,143 @@
+{
+  "environment": "offline synthetic real local PostgreSQL + API + UI",
+  "results": [
+    {
+      "label": "320 email list",
+      "overflow": false,
+      "smallTargets": 0,
+      "axeViolations": 0
+    },
+    {
+      "label": "320 email filters",
+      "overflow": false,
+      "smallTargets": 0,
+      "axeViolations": 0
+    },
+    {
+      "label": "320 email detail",
+      "overflow": false,
+      "smallTargets": 0,
+      "axeViolations": 0
+    },
+    {
+      "label": "375 email list",
+      "overflow": false,
+      "smallTargets": 0,
+      "axeViolations": 0
+    },
+    {
+      "label": "375 email filters",
+      "overflow": false,
+      "smallTargets": 0,
+      "axeViolations": 0
+    },
+    {
+      "label": "375 email detail",
+      "overflow": false,
+      "smallTargets": 0,
+      "axeViolations": 0
+    },
+    {
+      "label": "email thread pagination across 22 messages",
+      "pass": true
+    },
+    {
+      "label": "email manual classification, note, JSON export",
+      "pass": true
+    },
+    {
+      "label": "inactive email category preserved during status-only save",
+      "pass": true
+    },
+    {
+      "label": "768 email list",
+      "overflow": false,
+      "smallTargets": 0,
+      "axeViolations": 0
+    },
+    {
+      "label": "768 email filters",
+      "overflow": false,
+      "smallTargets": 0,
+      "axeViolations": 0
+    },
+    {
+      "label": "768 email detail",
+      "overflow": false,
+      "smallTargets": 0,
+      "axeViolations": 0
+    },
+    {
+      "label": "1024 email list",
+      "overflow": false,
+      "smallTargets": 0,
+      "axeViolations": 0
+    },
+    {
+      "label": "1024 email filters",
+      "overflow": false,
+      "smallTargets": 0,
+      "axeViolations": 0
+    },
+    {
+      "label": "1024 email detail",
+      "overflow": false,
+      "smallTargets": 0,
+      "axeViolations": 0
+    },
+    {
+      "label": "1440 email list",
+      "overflow": false,
+      "smallTargets": 0,
+      "axeViolations": 0
+    },
+    {
+      "label": "1440 email filters",
+      "overflow": false,
+      "smallTargets": 0,
+      "axeViolations": 0
+    },
+    {
+      "label": "1440 email detail",
+      "overflow": false,
+      "smallTargets": 0,
+      "axeViolations": 0
+    },
+    {
+      "label": "1920 email list",
+      "overflow": false,
+      "smallTargets": 0,
+      "axeViolations": 0
+    },
+    {
+      "label": "1920 email filters",
+      "overflow": false,
+      "smallTargets": 0,
+      "axeViolations": 0
+    },
+    {
+      "label": "1920 email detail",
+      "overflow": false,
+      "smallTargets": 0,
+      "axeViolations": 0
+    },
+    {
+      "label": "email local-only erasure",
+      "pass": true
+    }
+  ],
+  "checks": 22,
+  "externalCalls": 0,
+  "realEmailsSent": 0,
+  "realOpenAICalls": 0,
+  "date": "2026-11-07",
+  "command": "MAIL_UI_EXTENDED=true node tools/admin-mail-integration.mjs",
+  "graphCalls": 0,
+  "oauthCalls": 0,
+  "screenshots": [
+    "screenshots/375-mail-list.png",
+    "screenshots/375-mail-detail.png",
+    "screenshots/1440-mail-list.png",
+    "screenshots/1440-mail-detail.png"
+  ]
+}

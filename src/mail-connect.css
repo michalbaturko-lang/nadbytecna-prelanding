@@ -1,0 +1,76 @@
+:root {
+  font-family:
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+  color: #30262c;
+  background: #faf7f8;
+  font-size: 17px;
+  line-height: 1.6;
+  color-scheme: light;
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  padding: 40px 20px;
+}
+main {
+  max-width: 690px;
+  margin: 20px auto;
+  background: #fff;
+  border: 1px solid #e5d3dc;
+  border-radius: 20px;
+  padding: clamp(22px, 5vw, 48px);
+  overflow-wrap: anywhere;
+}
+.brand {
+  font-size: 0.85rem;
+  font-weight: 750;
+  letter-spacing: 0.14em;
+  color: #843b56;
+}
+h1 {
+  font-family: Georgia, serif;
+  line-height: 1.2;
+  font-size: clamp(1.8rem, 5vw, 2.5rem);
+}
+.mailbox {
+  font-weight: 700;
+  color: #843b56;
+}
+.hint {
+  font-size: 0.9rem;
+  color: #63555d;
+}
+ul {
+  padding-left: 22px;
+}
+button {
+  font: inherit;
+  min-height: 48px;
+  border: 0;
+  border-radius: 12px;
+  background: #843b56;
+  color: #fff;
+  padding: 12px 22px;
+  font-weight: 650;
+  cursor: pointer;
+  width: 100%;
+}
+button:disabled {
+  background: #e9e0e5;
+  color: #5a4e55;
+  cursor: default;
+}
+button:focus-visible {
+  outline: 3px solid #30262c;
+  outline-offset: 4px;
+}
+#connect-status {
+  border-top: 1px solid #e5d3dc;
+  padding-top: 20px;
+}

@@ -1,35 +1,78 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { classifyLocal, parseTriage, triageText } from "../lib/triage.mjs";
-
-const stories = [
-  ["Dostala jsem výpověď a šéf mě vyhodil z práce.", "práce", "none"],
-  ["Manžel mi nechce dát děti a řešíme opatrovnictví.", "rodina a děti", "none"],
-  ["Mám úzkost a lékař mi říká, že je to deprese.", "zdraví", "none"],
-  ["Exekuce a dluhy, nezvládám peníze na nájem.", "finance", "none"],
-  ["Manžel mě bije a vyhrožuje, že mě zabije. Nechci žít.", "šikana/obtěžování", "acute"],
-];
-
-test("pět českých příběhů vrátí kategorii a akutní vlajku", () => {
-  for (const [text, category, urgency] of stories) {
-    const out = classifyLocal(text, "story");
-    assert.equal(out.category, category, text);
-    assert.equal(out.urgency, urgency, text);
-    assert.ok(out.summary.length > 20);
-    const parsed = parseTriage(JSON.stringify(out), "story");
-    assert.equal(parsed.category, category);
-    assert.equal(parsed.urgency, urgency);
-  }
+import { parseTriage, triageText, triageEnabled } from "../lib/triage.mjs";
+const valid = {
+  summary:
+    "Osoba hledá pomoc v náročné situaci. Další postup vyžaduje lidské ověření.",
+  category: "potrebuji_pomoc",
+  urgency: "high",
+  help_type: "Ověřit bezpečný kontakt a nabídnout odbornou konzultaci.",
+};
+test("pevný číselník odmítne nevalidní kategorii i naléhavost", () => {
+  assert.equal(parseTriage(valid, "story").category, "potrebuji_pomoc");
+  for (const patch of [
+    { category: "jiné" },
+    { urgency: "watch" },
+    { summary: "" },
+    { help_type: 42 },
+  ])
+    assert.throws(
+      () => parseTriage({ ...valid, ...patch }, "story"),
+      /invalid/,
+    );
 });
-
-test("OpenAI JSON se přečte a chyba volání neshodí volajícího", async () => {
-  const fetcher = async () => ({
-    ok: true,
-    json: async () => ({ choices: [{ message: { content: JSON.stringify({ summary: "Krátké shrnutí příběhu o práci a nejistotě.", category: "práce", urgency: "none", help_type: "práce", matches: [] }) } }] }),
+test("AI vypnutá i pro ručního volajícího, nevolá žádný model", async () => {
+  delete process.env.AI_TRIAGE_ENABLED;
+  assert.equal(triageEnabled(), false);
+  let calls = 0;
+  await assert.rejects(
+    () =>
+      triageText({
+        kind: "story",
+        text: "syntetické",
+        key: "test",
+        fetcher: async () => {
+          calls++;
+        },
+      }),
+    /ai_disabled/,
+  );
+  assert.equal(calls, 0);
+});
+test("structured output, timeout, API chyba a nevalidní JSON", async () => {
+  process.env.AI_TRIAGE_ENABLED = "true";
+  let body;
+  const fetcher = async (u, opt) => {
+    body = JSON.parse(opt.body);
+    assert.ok(opt.signal);
+    return {
+      ok: true,
+      json: async () => ({
+        choices: [{ message: { content: JSON.stringify(valid) } }],
+      }),
+    };
+  };
+  const out = await triageText({
+    kind: "story",
+    text: "syntetické",
+    key: "test",
+    fetcher,
   });
-  const out = await triageText({ kind: "story", text: "Výpověď z práce.", key: "test", fetcher });
-  assert.equal(out.category, "práce");
-  assert.equal(out.model, "gpt-4o-mini");
-  const bad = async () => ({ ok: false, status: 500, json: async () => ({}) });
-  await assert.rejects(() => triageText({ kind: "story", text: "x", key: "test", fetcher: bad }), /openai/);
+  assert.equal(out.category, valid.category);
+  assert.equal(body.response_format.type, "json_schema");
+  assert.equal(body.response_format.json_schema.strict, true);
+  for (const fetcher of [
+    async () => {
+      throw new DOMException("timeout", "TimeoutError");
+    },
+    async () => ({ ok: false }),
+    async () => ({
+      ok: true,
+      json: async () => ({ choices: [{ message: { content: "not JSON" } }] }),
+    }),
+  ])
+    await assert.rejects(() =>
+      triageText({ kind: "story", text: "syntetické", key: "test", fetcher }),
+    );
+  delete process.env.AI_TRIAGE_ENABLED;
 });

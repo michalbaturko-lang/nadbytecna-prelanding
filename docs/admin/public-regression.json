@@ -1,0 +1,24 @@
+{
+  "baseline": "c237d5b6220841e15048c2029ab61391afe67ca2",
+  "date": "2026-11-07",
+  "pagesCompared": [
+    "index.html",
+    "coming-soon/index.html",
+    "zasady/index.html",
+    "sdilet-pribeh/index.html",
+    "mohu-pomoci/index.html",
+    "potrebuji-pomoc/index.html",
+    "ochrana-osobnich-udaju/index.html",
+    "pravidla-zverejnovani/index.html",
+    "kontakt/index.html"
+  ],
+  "onlyAllowedHtmlChange": "18+ checkbox in story/help forms",
+  "unchangedAssets": [
+    "cookies.js",
+    "fluid.js",
+    "og-v2.jpg",
+    "img/nadbytecna-lockup.svg",
+    "launch-form.js"
+  ],
+  "result": "PASS"
+}

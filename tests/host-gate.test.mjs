@@ -33,7 +33,7 @@ test("coming soon pustí jen úvod, zásady a soubory", () => {
   assert.deepEqual(hostGate({ host: "nadbytecna.cz", pathname: "/" }), { type: "rewrite", url: "/coming-soon/" });
   assert.equal(hostGate({ host: "nadbytecna.cz", pathname: "/zasady/" }).type, "next");
   assert.equal(hostGate({ host: "nadbytecna.cz", pathname: "/coming-soon/" }).type, "next");
-  for (const path of ["/pribeh", "/admin/", "/sdilet-pribeh/", "/mohu-pomoci/", "/ochrana-osobnich-udaju/", "/kontakt/"]) {
+  for (const path of ["/pribeh", "/sdilet-pribeh/", "/mohu-pomoci/", "/ochrana-osobnich-udaju/", "/kontakt/"]) {
     assert.deepEqual(hostGate({ host: "nadbytecna.cz", pathname: path }), { type: "redirect", status: 302, url: "https://nadbytecna.cz/" }, path);
     assert.deepEqual(hostGate({ host: "www.nadbytecna.cz", pathname: path }), { type: "redirect", status: 302, url: "https://nadbytecna.cz/" }, path);
   }
@@ -51,3 +51,5 @@ test("Host i x-forwarded-host poznají veřejnou doménu", () => {
   assert.equal(requestHost(headers), "nadbytecna.cz");
   assert.equal(requestHost(new Headers({ host: "www.nadbytecna.cz" })), "www.nadbytecna.cz");
 });
+
+test("admin a jeho chráněná API fungují i při SITE_LIVE=false",()=>{for(const path of ['/admin','/admin/','/api/admin/','/api/triage/','/api/retention/','/api/ai-worker/','/api/admin-mail/','/api/mail-sync/','/api/mail-connect/']) assert.equal(hostGate({host:'nadbytecna.cz',pathname:path,live:false}).type,'next');});

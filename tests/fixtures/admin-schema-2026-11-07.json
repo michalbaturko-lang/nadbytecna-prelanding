@@ -1,0 +1,766 @@
+{
+  "bucket": [
+    {
+      "id": "story-audio",
+      "public": false,
+      "file_size_limit": 52428800,
+      "allowed_mime_types": [
+        "audio/*"
+      ]
+    }
+  ],
+  "columns": [
+    {
+      "udt": "text",
+      "type": "text",
+      "table": "admin_emails",
+      "column": "email",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "udt": "timestamptz",
+      "type": "timestamp with time zone",
+      "table": "admin_emails",
+      "column": "created_at",
+      "default": "now()",
+      "nullable": "NO"
+    },
+    {
+      "udt": "uuid",
+      "type": "uuid",
+      "table": "admins",
+      "column": "user_id",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "udt": "timestamptz",
+      "type": "timestamp with time zone",
+      "table": "admins",
+      "column": "created_at",
+      "default": "now()",
+      "nullable": "YES"
+    },
+    {
+      "udt": "uuid",
+      "type": "uuid",
+      "table": "help_offers",
+      "column": "id",
+      "default": "gen_random_uuid()",
+      "nullable": "NO"
+    },
+    {
+      "udt": "timestamptz",
+      "type": "timestamp with time zone",
+      "table": "help_offers",
+      "column": "created_at",
+      "default": "now()",
+      "nullable": "NO"
+    },
+    {
+      "udt": "text",
+      "type": "text",
+      "table": "help_offers",
+      "column": "full_name",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "udt": "text",
+      "type": "text",
+      "table": "help_offers",
+      "column": "email",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "udt": "text",
+      "type": "text",
+      "table": "help_offers",
+      "column": "phone",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "udt": "text",
+      "type": "text",
+      "table": "help_offers",
+      "column": "helper_type",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "udt": "_text",
+      "type": "ARRAY",
+      "table": "help_offers",
+      "column": "help_kinds",
+      "default": "'{}'::text[]",
+      "nullable": "YES"
+    },
+    {
+      "udt": "text",
+      "type": "text",
+      "table": "help_offers",
+      "column": "message",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "udt": "text",
+      "type": "text",
+      "table": "help_offers",
+      "column": "links",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "udt": "bool",
+      "type": "boolean",
+      "table": "help_offers",
+      "column": "consent",
+      "default": "false",
+      "nullable": "NO"
+    },
+    {
+      "udt": "text",
+      "type": "text",
+      "table": "help_offers",
+      "column": "status",
+      "default": "'new'::text",
+      "nullable": "NO"
+    },
+    {
+      "udt": "timestamptz",
+      "type": "timestamp with time zone",
+      "table": "help_offers",
+      "column": "mail_sent_at",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "udt": "bool",
+      "type": "boolean",
+      "table": "help_offers",
+      "column": "consent_publish",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "udt": "text",
+      "type": "text",
+      "table": "help_offers",
+      "column": "ai_summary",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "udt": "text",
+      "type": "text",
+      "table": "help_offers",
+      "column": "ai_category",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "udt": "bool",
+      "type": "boolean",
+      "table": "help_offers",
+      "column": "ai_category_confirmed",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "udt": "text",
+      "type": "text",
+      "table": "help_offers",
+      "column": "ai_urgency",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "udt": "text",
+      "type": "text",
+      "table": "help_offers",
+      "column": "ai_help_type",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "udt": "text",
+      "type": "text",
+      "table": "help_offers",
+      "column": "ai_model",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "udt": "timestamptz",
+      "type": "timestamp with time zone",
+      "table": "help_offers",
+      "column": "ai_at",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "udt": "text",
+      "type": "text",
+      "table": "help_offers",
+      "column": "ai_matches",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "udt": "text",
+      "type": "text",
+      "table": "help_offers",
+      "column": "admin_note",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "udt": "uuid",
+      "type": "uuid",
+      "table": "launch_signups",
+      "column": "id",
+      "default": "gen_random_uuid()",
+      "nullable": "NO"
+    },
+    {
+      "udt": "text",
+      "type": "text",
+      "table": "launch_signups",
+      "column": "email",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "udt": "timestamptz",
+      "type": "timestamp with time zone",
+      "table": "launch_signups",
+      "column": "created_at",
+      "default": "now()",
+      "nullable": "NO"
+    },
+    {
+      "udt": "bool",
+      "type": "boolean",
+      "table": "launch_signups",
+      "column": "consent",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "udt": "uuid",
+      "type": "uuid",
+      "table": "stories",
+      "column": "id",
+      "default": "gen_random_uuid()",
+      "nullable": "NO"
+    },
+    {
+      "udt": "timestamptz",
+      "type": "timestamp with time zone",
+      "table": "stories",
+      "column": "created_at",
+      "default": "now()",
+      "nullable": "NO"
+    },
+    {
+      "udt": "text",
+      "type": "text",
+      "table": "stories",
+      "column": "full_name",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "udt": "text",
+      "type": "text",
+      "table": "stories",
+      "column": "email",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "udt": "bool",
+      "type": "boolean",
+      "table": "stories",
+      "column": "anonymous",
+      "default": "false",
+      "nullable": "NO"
+    },
+    {
+      "udt": "bool",
+      "type": "boolean",
+      "table": "stories",
+      "column": "wants_to_help",
+      "default": "false",
+      "nullable": "NO"
+    },
+    {
+      "udt": "text",
+      "type": "text",
+      "table": "stories",
+      "column": "input_type",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "udt": "text",
+      "type": "text",
+      "table": "stories",
+      "column": "story_text",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "udt": "text",
+      "type": "text",
+      "table": "stories",
+      "column": "audio_path",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "udt": "text",
+      "type": "text",
+      "table": "stories",
+      "column": "transcript",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "udt": "bool",
+      "type": "boolean",
+      "table": "stories",
+      "column": "consent",
+      "default": "false",
+      "nullable": "NO"
+    },
+    {
+      "udt": "text",
+      "type": "text",
+      "table": "stories",
+      "column": "status",
+      "default": "'new'::text",
+      "nullable": "NO"
+    },
+    {
+      "udt": "timestamptz",
+      "type": "timestamp with time zone",
+      "table": "stories",
+      "column": "mail_sent_at",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "udt": "bool",
+      "type": "boolean",
+      "table": "stories",
+      "column": "consent_transcript",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "udt": "bool",
+      "type": "boolean",
+      "table": "stories",
+      "column": "consent_publish",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "udt": "text",
+      "type": "text",
+      "table": "stories",
+      "column": "ai_summary",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "udt": "text",
+      "type": "text",
+      "table": "stories",
+      "column": "ai_category",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "udt": "bool",
+      "type": "boolean",
+      "table": "stories",
+      "column": "ai_category_confirmed",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "udt": "text",
+      "type": "text",
+      "table": "stories",
+      "column": "ai_urgency",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "udt": "text",
+      "type": "text",
+      "table": "stories",
+      "column": "ai_help_type",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "udt": "text",
+      "type": "text",
+      "table": "stories",
+      "column": "ai_model",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "udt": "timestamptz",
+      "type": "timestamp with time zone",
+      "table": "stories",
+      "column": "ai_at",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "udt": "text",
+      "type": "text",
+      "table": "stories",
+      "column": "admin_note",
+      "default": null,
+      "nullable": "YES"
+    }
+  ],
+  "policies": [
+    {
+      "cmd": "SELECT",
+      "qual": "((bucket_id = 'story-audio'::text) AND is_admin())",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "objects",
+      "permissive": "PERMISSIVE",
+      "policyname": "admin read audio",
+      "schemaname": "storage",
+      "with_check": null
+    },
+    {
+      "cmd": "INSERT",
+      "qual": null,
+      "roles": [
+        "anon"
+      ],
+      "tablename": "objects",
+      "permissive": "PERMISSIVE",
+      "policyname": "anon upload audio",
+      "schemaname": "storage",
+      "with_check": "((bucket_id = 'story-audio'::text) AND (name ~ '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}/[^/]+$'::text))"
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "(user_id = auth.uid())",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "admins",
+      "permissive": "PERMISSIVE",
+      "policyname": "admin self read",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "is_admin()",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "launch_signups",
+      "permissive": "PERMISSIVE",
+      "policyname": "admin read launch signups",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "INSERT",
+      "qual": null,
+      "roles": [
+        "anon"
+      ],
+      "tablename": "launch_signups",
+      "permissive": "PERMISSIVE",
+      "policyname": "anon insert launch signup",
+      "schemaname": "public",
+      "with_check": "(consent = true)"
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "is_admin()",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "admin_emails",
+      "permissive": "PERMISSIVE",
+      "policyname": "admin read emails",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "is_admin()",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "help_offers",
+      "permissive": "PERMISSIVE",
+      "policyname": "admin read help",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "UPDATE",
+      "qual": "is_admin()",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "help_offers",
+      "permissive": "PERMISSIVE",
+      "policyname": "admin update help",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "INSERT",
+      "qual": null,
+      "roles": [
+        "anon"
+      ],
+      "tablename": "help_offers",
+      "permissive": "PERMISSIVE",
+      "policyname": "anon insert help",
+      "schemaname": "public",
+      "with_check": "(consent = true)"
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "is_admin()",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "stories",
+      "permissive": "PERMISSIVE",
+      "policyname": "admin read stories",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "UPDATE",
+      "qual": "is_admin()",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "stories",
+      "permissive": "PERMISSIVE",
+      "policyname": "admin update stories",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "INSERT",
+      "qual": null,
+      "roles": [
+        "anon"
+      ],
+      "tablename": "stories",
+      "permissive": "PERMISSIVE",
+      "policyname": "anon insert stories",
+      "schemaname": "public",
+      "with_check": "(consent = true)"
+    }
+  ],
+  "triggers": [
+    {
+      "created": null,
+      "action_order": 1,
+      "trigger_name": "help_clear_private",
+      "action_timing": "BEFORE",
+      "trigger_schema": "public",
+      "trigger_catalog": "postgres",
+      "action_condition": null,
+      "action_statement": "EXECUTE FUNCTION clear_private_on_insert()",
+      "action_orientation": "ROW",
+      "event_manipulation": "INSERT",
+      "event_object_table": "help_offers",
+      "event_object_schema": "public",
+      "event_object_catalog": "postgres",
+      "action_reference_new_row": null,
+      "action_reference_old_row": null,
+      "action_reference_new_table": null,
+      "action_reference_old_table": null
+    },
+    {
+      "created": null,
+      "action_order": 2,
+      "trigger_name": "help_guard",
+      "action_timing": "BEFORE",
+      "trigger_schema": "public",
+      "trigger_catalog": "postgres",
+      "action_condition": null,
+      "action_statement": "EXECUTE FUNCTION help_guard()",
+      "action_orientation": "ROW",
+      "event_manipulation": "INSERT",
+      "event_object_table": "help_offers",
+      "event_object_schema": "public",
+      "event_object_catalog": "postgres",
+      "action_reference_new_row": null,
+      "action_reference_old_row": null,
+      "action_reference_new_table": null,
+      "action_reference_old_table": null
+    },
+    {
+      "created": null,
+      "action_order": 1,
+      "trigger_name": "help_guard",
+      "action_timing": "BEFORE",
+      "trigger_schema": "public",
+      "trigger_catalog": "postgres",
+      "action_condition": null,
+      "action_statement": "EXECUTE FUNCTION help_guard()",
+      "action_orientation": "ROW",
+      "event_manipulation": "UPDATE",
+      "event_object_table": "help_offers",
+      "event_object_schema": "public",
+      "event_object_catalog": "postgres",
+      "action_reference_new_row": null,
+      "action_reference_old_row": null,
+      "action_reference_new_table": null,
+      "action_reference_old_table": null
+    },
+    {
+      "created": null,
+      "action_order": 1,
+      "trigger_name": "stories_clear_private",
+      "action_timing": "BEFORE",
+      "trigger_schema": "public",
+      "trigger_catalog": "postgres",
+      "action_condition": null,
+      "action_statement": "EXECUTE FUNCTION clear_private_on_insert()",
+      "action_orientation": "ROW",
+      "event_manipulation": "INSERT",
+      "event_object_table": "stories",
+      "event_object_schema": "public",
+      "event_object_catalog": "postgres",
+      "action_reference_new_row": null,
+      "action_reference_old_row": null,
+      "action_reference_new_table": null,
+      "action_reference_old_table": null
+    },
+    {
+      "created": null,
+      "action_order": 2,
+      "trigger_name": "stories_guard",
+      "action_timing": "BEFORE",
+      "trigger_schema": "public",
+      "trigger_catalog": "postgres",
+      "action_condition": null,
+      "action_statement": "EXECUTE FUNCTION stories_guard()",
+      "action_orientation": "ROW",
+      "event_manipulation": "INSERT",
+      "event_object_table": "stories",
+      "event_object_schema": "public",
+      "event_object_catalog": "postgres",
+      "action_reference_new_row": null,
+      "action_reference_old_row": null,
+      "action_reference_new_table": null,
+      "action_reference_old_table": null
+    },
+    {
+      "created": null,
+      "action_order": 1,
+      "trigger_name": "stories_guard",
+      "action_timing": "BEFORE",
+      "trigger_schema": "public",
+      "trigger_catalog": "postgres",
+      "action_condition": null,
+      "action_statement": "EXECUTE FUNCTION stories_guard()",
+      "action_orientation": "ROW",
+      "event_manipulation": "UPDATE",
+      "event_object_table": "stories",
+      "event_object_schema": "public",
+      "event_object_catalog": "postgres",
+      "action_reference_new_row": null,
+      "action_reference_old_row": null,
+      "action_reference_new_table": null,
+      "action_reference_old_table": null
+    }
+  ],
+  "functions": [
+    {
+      "name": "clear_private_on_insert",
+      "definition": "CREATE OR REPLACE FUNCTION public.clear_private_on_insert()\n RETURNS trigger\n LANGUAGE plpgsql\n SET search_path TO 'public'\nAS $function$\nbegin\n if tg_op = 'INSERT' and current_user = 'anon' then\n new.ai_summary := null;\n new.ai_category := null;\n new.ai_category_confirmed := null;\n new.ai_urgency := null;\n new.ai_help_type := null;\n new.ai_model := null;\n new.ai_at := null;\n new.admin_note := null;\n if tg_table_name = 'help_offers' then\n new.ai_matches := null;\n end if;\n end if;\n return new;\nend;\n$function$\n"
+    },
+    {
+      "name": "help_guard",
+      "definition": "CREATE OR REPLACE FUNCTION public.help_guard()\n RETURNS trigger\n LANGUAGE plpgsql\n SET search_path TO 'public'\nAS $function$\nbegin\n if tg_op = 'INSERT' then\n new.mail_sent_at := null;\n new.status := 'new';\n return new;\n end if;\n if tg_op = 'UPDATE' and current_user in ('anon', 'authenticated') then\n if current_user = 'authenticated' and public.is_admin() then\n new.id := old.id;\n new.created_at := old.created_at;\n new.full_name := old.full_name;\n new.email := old.email;\n new.phone := old.phone;\n new.helper_type := old.helper_type;\n new.help_kinds := old.help_kinds;\n new.message := old.message;\n new.links := old.links;\n new.consent := old.consent;\n new.mail_sent_at := old.mail_sent_at;\n return new;\n end if;\n return old;\n end if;\n return new;\nend;\n$function$\n"
+    },
+    {
+      "name": "is_admin",
+      "definition": "CREATE OR REPLACE FUNCTION public.is_admin()\n RETURNS boolean\n LANGUAGE sql\n STABLE SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\n select exists (select 1 from public.admins where user_id = auth.uid())\n or exists (\n select 1 from public.admin_emails\n where email = lower(coalesce(auth.jwt() ->> 'email', ''))\n );\n $function$\n"
+    },
+    {
+      "name": "save_transcript",
+      "definition": "CREATE OR REPLACE FUNCTION public.save_transcript(p_id uuid, p_text text)\n RETURNS boolean\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\ndeclare\n n int;\nbegin\n if p_id is null or p_text is null or char_length(btrim(p_text)) < 1 or char_length(p_text) > 20000 then\n return false;\n end if;\n update public.stories\n set transcript = btrim(p_text)\n where id = p_id\n and transcript is null\n and audio_path is not null\n and consent is true\n and created_at > now() - interval '30 minutes';\n get diagnostics n = row_count;\n return n = 1;\nend;\n$function$\n"
+    },
+    {
+      "name": "stories_guard",
+      "definition": "CREATE OR REPLACE FUNCTION public.stories_guard()\n RETURNS trigger\n LANGUAGE plpgsql\n SET search_path TO 'public'\nAS $function$\nbegin\n if tg_op = 'INSERT' then\n new.transcript := null;\n new.mail_sent_at := null;\n new.status := 'new';\n return new;\n end if;\n if tg_op = 'UPDATE' and current_user in ('anon', 'authenticated') then\n if current_user = 'authenticated' and public.is_admin() then\n new.id := old.id;\n new.created_at := old.created_at;\n new.full_name := old.full_name;\n new.email := old.email;\n new.anonymous := old.anonymous;\n new.wants_to_help := old.wants_to_help;\n new.input_type := old.input_type;\n new.story_text := old.story_text;\n new.audio_path := old.audio_path;\n new.transcript := old.transcript;\n new.consent := old.consent;\n new.mail_sent_at := old.mail_sent_at;\n return new;\n end if;\n return old;\n end if;\n return new;\nend;\n$function$\n"
+    }
+  ],
+  "constraints": [
+    {
+      "name": "stories_input_type_check",
+      "table": "stories",
+      "definition": "CHECK ((input_type = ANY (ARRAY['text'::text, 'recording'::text, 'upload'::text])))"
+    },
+    {
+      "name": "stories_pkey",
+      "table": "stories",
+      "definition": "PRIMARY KEY (id)"
+    },
+    {
+      "name": "stories_status_check",
+      "table": "stories",
+      "definition": "CHECK ((status = ANY (ARRAY['new'::text, 'read'::text, 'contacted'::text, 'archived'::text, 'in_progress'::text, 'resolved'::text, 'published'::text])))"
+    },
+    {
+      "name": "help_offers_helper_type_check",
+      "table": "help_offers",
+      "definition": "CHECK ((helper_type = ANY (ARRAY['lived_experience'::text, 'professional'::text])))"
+    },
+    {
+      "name": "help_offers_pkey",
+      "table": "help_offers",
+      "definition": "PRIMARY KEY (id)"
+    },
+    {
+      "name": "help_offers_status_check",
+      "table": "help_offers",
+      "definition": "CHECK ((status = ANY (ARRAY['new'::text, 'read'::text, 'contacted'::text, 'archived'::text, 'in_progress'::text, 'resolved'::text, 'published'::text])))"
+    },
+    {
+      "name": "admins_pkey",
+      "table": "admins",
+      "definition": "PRIMARY KEY (user_id)"
+    },
+    {
+      "name": "admins_user_id_fkey",
+      "table": "admins",
+      "definition": "FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE"
+    }
+  ],
+  "can_verify_user": false,
+  "admin_email_count": 0
+}

@@ -30,6 +30,7 @@
     var consent = document.getElementById("pomoc-gdpr").checked;
     if (!name || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { say("Doplň jméno a e-mail."); return; }
     if (!type) { say("Vyber, jak chceš pomoci."); return; }
+    if (!document.getElementById("pomoc-age").checked) { say("Potvrď, že ti je 18 let."); return; }
     if (!consent) { say("Bez souhlasu se zpracováním nabídky to poslat nemůžeme."); return; }
     var kinds = [type.value];
     var links = {
@@ -46,16 +47,17 @@
       email: email,
       phone: val("pomoc-telefon") || null,
       helper_type: type.value === "potencial" ? "lived_experience" : "professional",
-      help_kinds: type.value === "professional" ? kinds : [],
+      help_kinds: kinds,
       message: val("pomoc-text") || null,
       links: JSON.stringify(links),
       consent: true,
+      age_confirmed: true,
       consent_publish: null,
     }).then(function () {
       api.done("help_offers", id);
       root.querySelector("fieldset").hidden = true;
       sendBtn.hidden = true;
-      document.getElementById("pomoc-thanks-text").textContent = type.value === "lived_experience"
+      document.getElementById("pomoc-thanks-text").textContent = type.value === "potencial"
         ? "Děkujeme, že chceš pomoct, protože sis tím prošla nebo prošel. Ozveme se na e-mail, který jsi uvedla."
         : "Děkujeme za nabídku pomoci. Ozveme se na e-mail, který jsi uvedla.";
       document.getElementById("pomoc-thanks").hidden = false;

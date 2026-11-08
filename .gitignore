@@ -3,3 +3,7 @@ dist
 preview
 .env*
 .vercel
+
+**/graphify-out/
+test-results/
+playwright-report/
