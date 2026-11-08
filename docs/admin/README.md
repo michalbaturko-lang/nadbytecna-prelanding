@@ -1,5 +1,7 @@
 # Admin Nadbytečná.cz — podklady k revizi
 
+[Plán spuštění 11. 11. a denní ruční postup](launch-2026-11-11.md) rozlišuje nutné kroky od volitelných integrací.
+
 ## Aktuální omezení přihlášení
 
 Přihlašovací e-maily používají testovací službu Supabase s limitem 2/hodinu. Produkční doručování zatím vyžaduje vlastní SMTP; stav a konkrétní náprava jsou v [aktuálním předání](production-status.md). Uživatelský pokus 11:26:59 skončil HTTP 429. UI nyní vysvětluje limit a odmítnuté opakování nepoškodí dřívější platný odkaz. Typografie je sjednocena na bezpatkové Jost podle Dermacol.cz.

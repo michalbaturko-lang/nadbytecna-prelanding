@@ -1,5 +1,11 @@
 # Nasazení a aktuální předání
 
+## Příprava na 11. 11. — 8. 11. 2026
+
+Exporty CSV a osobního ZIP používají postupný přenos místo jedné odpovědi omezené na hostingu 4,5 MB. Lokální API ověřuje ZIP s 6 MiB nekomprimovatelného audia, CSV se 600 syntetickými příběhy přes více stránek, zachování bajtů, soukromé hlavičky a zákaz exportu pro cizí účet. Samostatné testy ověřují pomalého klienta a přerušení. Před přenosem zůstává úplná příprava a audit; ZIP má dosavadní hranici 100 MiB audia. Velký export na skutečném hostu zatím ověřen nebyl. Aktuální lokální běh: 168/168 testů a 34/34 základních prohlížečových kontrol; zbývající e-mailové a přihlašovací prohlížečové výsledky jsou z předchozího dnešního průchodu.
+
+[Plán spuštění a ruční postup](launch-2026-11-11.md) výslovně uvádí zástupné položky v současných veřejných zásadách. Jejich právní obsah se nedoplňoval odhadem. Resend a Microsoft zůstávají odložené, přepínače AI/importu/automatického mazání i SITE_LIVE se neměnily.
+
 
 ## Další kontrola ručního zpracování — 8. 11. 2026
 

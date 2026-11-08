@@ -4,7 +4,7 @@ Stav k 8. 11. 2026. Admin je nasazený; podrobné provozní ověření a histori
 
 ## Souhrn ověření
 
-- 163/163 lokálních unit a integračních testů.
+- 168/168 lokálních unit a integračních testů (včetně velkých exportů a přerušení přenosu).
 - 89 prohlížečových kontrol: 34 základní admin a ruční zpracování, 22 e-mailová integrace, 14 administrátorské pozvánky, 11 veřejné připojení, 8 přihlášení a typografie.
 - Lighthouse Accessibility po sjednocení na Jost: mobilní i desktopový seznam a detail 100/100, režim snapshot. Není to produkční měření výkonu.
 - Lokální testy používají syntetická data a skutečný lokální PostgreSQL/API, s adaptéry externího Auth, Storage a Microsoftu. Neodeslaly e-mail skutečnému příjemci ani příběh modelu. [Výsledky](test-results.json).
@@ -26,7 +26,7 @@ Stav k 8. 11. 2026. Admin je nasazený; podrobné provozní ověření a histori
 | Seznam, detail, poznámky a historie | PASS | Skutečný syntetický detail, ruční kategorie/naléhavost/stav, historie a poznámka ověřené. |
 | Prázdné přehledy a filtry | PASS přes skutečné lokální API/DB | Nulová kolekce, nulové hledání a prázdná starší stránka mají odlišné texty; reset filtrů a návrat na první stránku fungují. České počty 0/1/2/4/5 ověřené. |
 | Párování bez rozesílání | PASS: návrhy a potvrzení/zamítnutí | Žádné zprávy příjemcům se neposílají; vhodnost posuzuje člověk. |
-| CSV a GDPR ZIP | PASS: filtr, BOM/oddělovač, vzorce, JSON a audio | Skutečné syntetické CSV a ZIP s daty a WAV byly staženy a zkontrolovány. |
+| CSV a GDPR ZIP | PASS: filtr, BOM/oddělovač, vzorce, JSON a audio; 6 MiB nekomprimovatelné audio a CSV přes 600 syntetických řádků | Malé skutečné syntetické CSV a ZIP s WAV byly dříve staženy. Nový postupný přenos řeší limit hostingu 4,5 MB; větší export na hostu zatím nebyl ověřen. |
 | GDPR výmaz a opakovatelnost | PASS: snapshot, vazby, selhání Storage a opakování | Úzký produkční úklid syntetických dat přes serverové funkce ověřen; celý hostovaný GDPR UI handler není tímto potvrzený. |
 | Audit bez textu příběhu | PASS: všechny aplikační operace, bez citlivých payloadů | Hosted detail, update, poznámky a exporty prošly; nejde o audit přímého čtení DB mimo aplikaci. |
 | Retence | PASS: staré/čerstvé záznamy, souhlasy, poslední kontakt a audio | Automatické mazání vypnuté; pravidla a reálný provozní běh čekají na rozhodnutí. |
@@ -53,6 +53,8 @@ Nezpracovaný webový záznam i e-mail musí ukazovat „Zatím bez shrnutí AI�
 Nové prázdné přehledy: [mobil](screenshots/375-empty-list.png), [desktop](screenshots/1440-empty-list.png). E-mailové pohledy a připojovací stránka: [mobilní detail](screenshots/375-mail-detail.png), [desktopový detail](screenshots/1440-mail-detail.png), [veřejný odkaz](screenshots/375-mail-connect-public.png). Celkem 28 screenshotů.
 
 ## Co zbývá rozhodnout nebo dokončit
+
+Konkrétní [plán spuštění 11. 11.](launch-2026-11-11.md) obsahuje denní ruční postup i závěrečný hosted průchod. Aktuální veřejné zásady stále mají [DOPLNIT], [ROZHODNOUT] a [OVĚŘIT]; právní obsah nelze označit za připravený podle funkčních testů adminu.
 
 1. Obnovit odložené odesílání přes Resend, doplnit DNS správce a skutečně ověřit doručitelnost. Požadovaný odesílatel je prihlaseni@nadbytecna.cz ve správném účtu michal.baturko@regalmaster.cz. Schválený příplatek 20 USD/měsíc dosud nebyl zapnut.
 2. Údaje a schválení správce Microsoftu, případně složka, datum importu a retenční lhůta e-mailových kopií. Skutečný Graph/OAuth roundtrip neproběhl.
