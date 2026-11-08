@@ -476,3 +476,37 @@ body[data-page="phase1"] .main a.vera-cta:hover{background:#9F0842}
   body[data-page="phase1"] .hero{grid-template-columns:minmax(0,1fr) minmax(0,1fr);text-align:left;align-items:start}
   body[data-page="phase1"] .hero .logo{width:100%}
 }
+
+/* Věřin příběh: video karta na úvodní straně, celoobrazovkový přehrávač, přehrávač na samostatné stránce */
+.vid{position:relative;display:block;width:100%;max-width:22rem;aspect-ratio:4/5;margin:.4rem 0 0;border-radius:.7rem;overflow:hidden;background:var(--ink);box-shadow:0 10px 28px rgba(58,11,34,.18);-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+.vid img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 30%;display:block}
+.vid::after{content:"";position:absolute;left:0;right:0;bottom:0;height:42%;background:linear-gradient(to top,rgba(36,6,20,.78),rgba(36,6,20,0))}
+.vid-play{position:absolute;z-index:1;left:50%;top:50%;width:4.5rem;height:4.5rem;margin:-2.25rem 0 0 -2.25rem;border-radius:50%;background:var(--magenta-deep);display:grid;place-items:center;box-shadow:0 0 0 .5rem rgba(255,255,255,.28)}
+.vid-play svg{width:2rem;height:2rem;fill:#fff;margin-left:.2rem}
+.vid-meta{position:absolute;z-index:1;left:1rem;right:1rem;bottom:.9rem;color:#fff;font-weight:700;font-size:1.1rem;letter-spacing:.01em}
+body[data-page="phase1"] .main a.vid,
+body[data-page="phase1"] .main a.vid:hover{display:block;min-height:0;color:#fff}
+body[data-page="phase1"] .main a.vid:hover .vid-play{background:#9F0842}
+.vid-page{margin:1rem 0 1.25rem}
+.vid-page video{display:block;height:min(80vh,38rem);height:min(80svh,38rem);width:auto;max-width:100%;aspect-ratio:9/16;border-radius:.7rem;background:var(--ink);box-shadow:0 10px 28px rgba(58,11,34,.18)}
+html.vp-lock{overflow:hidden}
+.vp{position:fixed;inset:0;width:100%;height:100vh;height:100dvh;max-width:none;max-height:none;margin:0;padding:0;border:0;background:#000;color:#fff;overflow:hidden;overscroll-behavior:contain}
+.vp::backdrop{background:#000}
+.vp-stage{position:relative;width:100%;height:100%}
+.vp-video{position:absolute;left:0;top:0;width:100%;height:100%;object-fit:contain;background:#000}
+.vp-tap{position:absolute;left:0;top:0;width:100%;height:100%;border:0;background:transparent;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.vp-bigplay{position:absolute;left:50%;top:50%;width:5rem;height:5rem;margin:-2.5rem 0 0 -2.5rem;border-radius:50%;background:rgba(181,9,77,.92);display:grid;place-items:center;pointer-events:none}
+.vp-bigplay svg{width:2.2rem;height:2.2rem;fill:#fff;margin-left:.2rem}
+.vp-btn{position:absolute;z-index:2;top:max(.75rem,env(safe-area-inset-top));width:3rem;height:3rem;padding:0;border:0;border-radius:50%;background:rgba(0,0,0,.55);color:#fff;display:grid;place-items:center;cursor:pointer;touch-action:manipulation}
+.vp-btn svg{width:1.5rem;height:1.5rem;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.vp-close{right:max(.75rem,env(safe-area-inset-right))}
+.vp-sound{left:max(.75rem,env(safe-area-inset-left))}
+.vp-bar{position:absolute;z-index:1;left:0;right:0;bottom:0;height:.3rem;background:rgba(255,255,255,.25)}
+.vp-bar i{display:block;height:100%;width:100%;background:var(--magenta);transform-origin:0 50%;transform:scaleX(0)}
+.vp-msg{position:absolute;z-index:1;left:1rem;right:1rem;bottom:2rem;margin:0;padding:.8rem 1rem;background:rgba(0,0,0,.78);border-radius:.5rem;font-weight:600;text-align:center}
+.vp-end{position:absolute;z-index:1;left:0;top:0;width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.85rem;padding:5rem 1.5rem 2rem;background:rgba(24,5,14,.92);text-align:center}
+.vp-end h2{margin:0 0 .6rem;font:600 clamp(2rem,8vw,3rem)/1.1 var(--sans);color:#fff;text-wrap:balance;max-width:20ch}
+.vp-cta{display:flex;align-items:center;justify-content:center;width:min(100%,22rem);min-height:3.5rem;padding:.6rem 1.2rem;border-radius:.5rem;font-weight:700;font-size:1.15rem;text-decoration:none;color:#fff;background:var(--magenta-deep)}
+.vp-cta.alt{background:transparent;box-shadow:inset 0 0 0 2px #fff}
+.vp-replay{min-height:3rem;padding:0 .5rem;border:0;background:transparent;color:#fff;font:inherit;font-weight:700;font-size:1.05rem;text-decoration:underline;text-underline-offset:.2em;cursor:pointer}
+.vp :focus-visible{outline:3px solid #fff;outline-offset:3px;box-shadow:0 0 0 6px #000}

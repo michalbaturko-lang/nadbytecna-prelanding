@@ -409,6 +409,7 @@ function buildPhase1(out) {
   fs.copyFileSync(path.join(ROOT, "src/mail-connect.js"), path.join(out, "mail-connect.js"));
   fs.copyFileSync(path.join(ROOT, "src/mail-connect.css"), path.join(out, "mail-connect.css"));
   fs.copyFileSync(path.join(ROOT, "src/launch-form.js"), path.join(out, "launch-form.js"));
+  fs.copyFileSync(path.join(ROOT, "src/video.js"), path.join(out, "video.js"));
   const supaUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
   const supaKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || "";
   const ads = {
