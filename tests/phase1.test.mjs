@@ -74,8 +74,12 @@ test("homepage má dvě volby, osm karet a formuláře nic neodesílají", () =>
   assert.equal(choices.length, 2);
   assert.ok(choices.every((c) => !c.includes("Potřebuji pomoc")));
   const pribeh = home.slice(home.indexOf('id="pribeh"'), home.indexOf("</section>"));
-  assert.match(pribeh, /Tady bude osobní výpověď Věry Komárové\. Čekáme na její text\./);
-  assert.equal(pribeh.includes("<img"), false);
+  assert.doesNotMatch(pribeh, /Čekáme na její text/);
+  assert.match(pribeh, /<a class="vid" href="\/verin-pribeh\/" data-video-open /);
+  assert.equal(pribeh.match(/<img /g).length, 1);
+  assert.match(pribeh, /src="\/video\/vera-pribeh-poster\.jpg"[^>]*alt="Věra Komárová v rozhovoru"/);
+  assert.doesNotMatch(pribeh, /<video/);
+  assert.match(home, /<script src="\/video\.js" defer><\/script>/);
   assert.doesNotMatch(visible(home), /Spouštíme|Pracovní náhled|neběží|zatím není/);
   assert.match(home, /Žádná žena není nadbytečná\./);
   assert.match(home, /Místo pro ženy, které si prošly něčím podobným, a pro ty, kdo jim chtějí pomoci\./);
@@ -191,7 +195,11 @@ test("právní stránky mluví o souhlasu a kontakt není krizová linka", () =>
   assert.equal(fs.existsSync(path.join(OUT, "o-nas/index.html")), false);
   assert.match(read("kontakt/index.html"), /Není to krizová linka/);
   assert.match(read("cookies/index.html"), /jen po souhlasu/);
-  assert.match(read("verin-pribeh/index.html"), /Čekáme na její text/);
+  const verin = read("verin-pribeh/index.html");
+  assert.doesNotMatch(verin, /Čekáme na její text/);
+  assert.match(verin, /<video controls playsinline preload="none"[^>]*poster="\/video\/vera-pribeh-poster\.jpg"/);
+  assert.match(verin, /<source src="\/video\/vera-pribeh\.mp4" type="video\/mp4">/);
+  assert.equal(verin.match(/class="choice"/g).length, 2);
   const policy = read("ochrana-osobnich-udaju/index.html");
   assert.match(policy, /<p class="draft">Návrh<\/p>/);
   assert.match(policy, /\[DOPLNIT\]/);
