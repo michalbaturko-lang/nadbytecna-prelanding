@@ -1,0 +1,48 @@
+{
+  "date": "2026-11-08",
+  "authenticated": false,
+  "results": [
+    {
+      "path": "/admin/",
+      "method": "GET",
+      "status": 200,
+      "cache": "no-store",
+      "robots": "noindex, nofollow, noarchive"
+    },
+    {
+      "path": "/admin/",
+      "method": "HEAD",
+      "status": 200,
+      "cache": "no-store",
+      "robots": "noindex, nofollow, noarchive"
+    },
+    {
+      "path": "/api/mail-connect",
+      "method": "GET",
+      "status": 200,
+      "cache": "no-store",
+      "robots": "noindex, nofollow, noarchive"
+    },
+    {
+      "path": "/",
+      "method": "GET",
+      "status": 200,
+      "cache": "public, max-age=0, must-revalidate",
+      "robots": "noindex, nofollow, noarchive"
+    },
+    {
+      "path": "/api/admin/",
+      "method": "POST",
+      "status": 401,
+      "cache": "no-store",
+      "robots": "noindex, nofollow, noarchive"
+    },
+    {
+      "path": "/api/admin-mail/",
+      "method": "POST",
+      "status": 401,
+      "cache": "no-store",
+      "robots": "noindex, nofollow, noarchive"
+    }
+  ]
+}

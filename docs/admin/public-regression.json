@@ -1,6 +1,6 @@
 {
-  "baseline": "c237d5b6220841e15048c2029ab61391afe67ca2",
-  "date": "2026-11-07",
+  "baseline": "70e610487ef3b1a961008b091ec8f96be5cee7c1",
+  "date": "2026-11-08",
   "pagesCompared": [
     "index.html",
     "coming-soon/index.html",
@@ -10,7 +10,10 @@
     "potrebuji-pomoc/index.html",
     "ochrana-osobnich-udaju/index.html",
     "pravidla-zverejnovani/index.html",
-    "kontakt/index.html"
+    "kontakt/index.html",
+    "o-nasi-platforme/index.html",
+    "verin-pribeh/index.html",
+    "cookies/index.html"
   ],
   "onlyAllowedHtmlChange": "18+ checkbox in story/help forms",
   "unchangedAssets": [

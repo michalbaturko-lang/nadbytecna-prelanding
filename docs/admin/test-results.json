@@ -1,22 +1,23 @@
 {
-  "date": "2026-11-07",
+  "date": "2026-11-08",
   "environment": "local PostgreSQL reconstructed from read-only actual schema metadata; synthetic records and Auth/Storage adapters",
   "unitAndIntegration": {
     "command": "npm test",
-    "total": 160,
-    "passed": 160,
+    "total": 163,
+    "passed": 163,
     "failed": 0
   },
   "browser": {
     "command": "node tools/admin-browser.mjs",
-    "checks": 76,
-    "passed": 76,
+    "checks": 80,
+    "passed": 80,
     "screenshots": 26,
     "breakdown": {
       "original": 29,
       "mailIntegration": 22,
       "adminInvitation": 14,
-      "publicConnect": 11
+      "publicConnect": 11,
+      "crossTabLogin": 4
     },
     "mailCommand": "MAIL_UI_EXTENDED=true node tools/admin-mail-integration.mjs",
     "connectCommands": [
@@ -34,9 +35,10 @@
   "productionDatabaseWrites": 0,
   "realEmailsSent": 0,
   "realOpenAICalls": 0,
-  "productionDeployment": "not performed",
+  "productionDeployment": "performed; see production-status.md for separate real-host checks",
   "realMicrosoftGraphCalls": 0,
   "realMicrosoftOAuthCalls": 0,
   "mailboxConnected": false,
-  "realOAuthCallbackRoundtrip": "not verified; requires approved HTTPS host and registered Microsoft app"
+  "realOAuthCallbackRoundtrip": "not verified; requires approved HTTPS host and registered Microsoft app",
+  "scope": "Counts and zero external calls below refer to local automated tests; hosted synthetic checks and genuine own-account Auth were separate."
 }

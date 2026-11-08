@@ -1,0 +1,11 @@
+{
+  "environment": "offline browser + actual local API; simulated Supabase OTP/token endpoints",
+  "checks": 4,
+  "results": [
+    "OTP request uses a real browser-generated S256 challenge",
+    "new-tab callback exchanges matching PKCE proof and loads local authenticated API",
+    "pending proof removed; access and refresh tokens stay out of persistent storage",
+    "callback without proof does not exchange a code or sign in"
+  ],
+  "realAuthEmails": 0
+}
