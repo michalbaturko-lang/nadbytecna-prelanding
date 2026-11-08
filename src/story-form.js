@@ -250,6 +250,7 @@
         consent: true,
       age_confirmed: true,
         consent_transcript: audio ? true : null,
+        consent_version: audio ? "2026-11-08-audio-v2" : null,
         consent_publish: document.getElementById("sdilet-zverejneni").checked,
       });
     }).then(function () {
