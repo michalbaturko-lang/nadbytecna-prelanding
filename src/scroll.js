@@ -28,11 +28,14 @@
     ticking = false;
     var vh = window.innerHeight || root.clientHeight;
 
-    var s = 0;
-    for (var i = 0; i < chapters.length; i++) {
-      if (chapters[i].getBoundingClientRect().top <= vh * 0.5) s = Number(chapters[i].getAttribute("data-chapter")) || 0;
+    var s = scene < 0 ? 0 : scene;
+    if (chapters.length) {
+      s = 0;
+      for (var i = 0; i < chapters.length; i++) {
+        if (chapters[i].getBoundingClientRect().top <= vh * 0.5) s = Number(chapters[i].getAttribute("data-chapter")) || 0;
+      }
     }
-    if (s !== scene) {
+    if (chapters.length && s !== scene) {
       scene = s;
       body.setAttribute("data-scene", String(s));
       for (var d = 0; d < dots.length; d++) {
