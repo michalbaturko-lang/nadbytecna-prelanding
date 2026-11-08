@@ -1,6 +1,17 @@
 # Nasazení a aktuální předání
 
-## Produkční stav — 8. 11. 2026
+## Oprava po uživatelském testu — 8. 11. 2026
+
+**Admin je nasazený, ale přihlašovací e-mail není provozně připravený bez vlastního SMTP.** V provozním logu je 8. 11. v 11:26:59 Europe/Prague požadavek POST /auth/v1/otp se stavem 429. Dashboard potvrzuje vestavěné testovací odesílání Supabase; má limit 2 e-maily/hodinu a omezené příjemce. Dřívější úspěšný test jednoho přihlášení proto nepotvrzoval spolehlivou produkční doručitelnost pro oba uživatele.
+
+- Přihlašovací formulář rozlišuje omezení odesílání a chybu konfigurace. Neúspěšné opakování zachová dřívější nevypršelý PKCE verifier; nově odmítnutá žádost svůj nepoužitý verifier odstraní. Platnost se opakováním neprodlužuje.
+- Na výslovné přání uživatele je bezpatkové písmo Jost z Dermacol.cz sjednoceno v adminu, veřejném webu a připojovací stránce. Soubory z @fontsource-variable/jost 5.3.0 (OFL-1.1) jsou hostovány lokálně, včetně češtiny a licence. Nepřebíráme soubory z cizího webu.
+- Nutný další krok: účet odesílací služby a ověření odesílací domény, následně nastavení SMTP v Supabase. Uživatel má dva účty Resend. Otevřený účet michal.baturko@unitedvisions.cz / unitedvisions byl uživatelem odmítnut jako nesprávný. V něm vznikla pouze neověřená příprava auth.nadbytecna.cz (domain id 9adcdd8d-6eb5-41f6-a28b-279f8594ec1e, stav not started). DNS, SMTP ani žádný nový API klíč nebyly nastaveny. V tomto účtu nepokračovat; nejprve ověřit přesný správný účet. Jeho DNS záznamy znovu získat přímo z cílového účtu a pak ověřit doručování. Připravená varianta Resend: smtp.resend.com, port 465, uživatel resend; API klíč patří pouze do pole hesla SMTP, nikdy do veřejného webu nebo dokumentace. Doporučený samostatný odesílatel prihlaseni@auth.nadbytecna.cz po ověření této subdomény. Příchozí schránka Microsoftu se nemění.
+- Po připojení je nutné skutečně ověřit doručení a přihlášení obou schválených účtů. Nejde o hotovou opravu doručování, dokud není služba nastavena a tento test proveden.
+
+Zdroje: https://www.dermacol.cz/common/build/assets/index-Bm0o-WNL.css, https://supabase.com/docs/guides/auth/rate-limits, https://supabase.com/docs/guides/auth/auth-smtp, https://resend.com/docs/send-with-supabase-smtp.
+
+## Původní produkční ověření — 8. 11. 2026
 
 Admin je nasazený na https://nadbytecna.cz/admin/. PR #11 byl sloučen; zachovává veřejné změny z main 70e6104. Veřejný web zůstává coming soon.
 

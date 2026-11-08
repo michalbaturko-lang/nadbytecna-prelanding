@@ -76,8 +76,7 @@ const css = fs.readFileSync(path.join(ROOT, "src/site.css"), "utf8").replace(/\/
 
 const HEART = '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>';
 const PRELOAD = [
-  "hanken-grotesk-latin-wght-normal.woff2", "hanken-grotesk-latin-ext-wght-normal.woff2",
-  "hanken-grotesk-latin-wght-italic.woff2", "hanken-grotesk-latin-ext-wght-italic.woff2",
+  "jost-latin-wght-normal.woff2", "jost-latin-ext-wght-normal.woff2",
 ].map((f) => `<link rel="preload" href="/fonts/${f}" as="font" type="font/woff2" crossorigin>`).join("\n");
 
 // Web se indexuje až po otevření sběru (COLLECTION_OPEN=true při buildu a vyplněný správce); do té doby noindex + Disallow.
@@ -365,12 +364,16 @@ function stage(out) {
   fs.rmSync(out, { recursive: true, force: true });
   fs.cpSync(path.join(ROOT, "public"), out, { recursive: true });
   fs.mkdirSync(path.join(out, "fonts"), { recursive: true });
-  const dir = path.join(ROOT, "node_modules", "@fontsource-variable/hanken-grotesk", "files");
-  for (const f of fs.readdirSync(dir)) {
-    if (/^hanken-grotesk-(latin|latin-ext)-wght-(normal|italic)\.woff2$/.test(f)) {
-      fs.copyFileSync(path.join(dir, f), path.join(out, "fonts", f));
+  const fontDirs = ["@fontsource-variable/jost"];
+  for (const d of fontDirs) {
+    const dir = path.join(ROOT, "node_modules", d, "files");
+    for (const f of fs.readdirSync(dir)) {
+      if (/^jost-(latin|latin-ext)-wght-(normal|italic)\.woff2$/.test(f)) {
+        fs.copyFileSync(path.join(dir, f), path.join(out, "fonts", f));
+      }
     }
   }
+  fs.copyFileSync(path.join(ROOT, "node_modules/@fontsource-variable/jost/LICENSE"), path.join(out, "fonts/OFL-Jost.txt"));
   fs.copyFileSync(path.join(ROOT, "src/app.js"), path.join(out, "app.js"));
   fs.writeFileSync(path.join(out, "fluid.js"), fs.readFileSync(path.join(ROOT, "src/fluid.js"), "utf8").replace("/*LETTERS*/null", () => fs.readFileSync(path.join(ROOT, "src/letters.json"), "utf8")));
 }
