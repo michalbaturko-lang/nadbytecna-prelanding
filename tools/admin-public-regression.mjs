@@ -40,13 +40,15 @@ try {
     "cookies/index.html",
   ];
   for (const p of pages) {
-    const before = fs.readFileSync(path.join(temp, "dist", p), "utf8");
+    let before = fs.readFileSync(path.join(temp, "dist", p), "utf8");
     let after = fs.readFileSync(path.join(root, "dist", p), "utf8");
     after = after.replace(
       /<div class="consent"><input id="(?:sdilet|pomoc|potrebuji)-age" type="checkbox"(?: disabled)?><label for="(?:sdilet|pomoc|potrebuji)-age">Je mi 18 let<\/label><\/div>\n/g,
       "",
     );
-    assert.equal(after, before, p + " changed beyond age consent");
+    // Typography is an explicit user-requested change. Compare all other markup exactly.
+    const withoutTypography = (html) => html.replace(/<style>[\s\S]*?<\/style>/g, "<style>TYPOGRAPHY</style>").replace(/<link rel="preload" href="\/fonts\/[^"]+"[^>]*>\n?/g, "");
+    assert.equal(withoutTypography(after), withoutTypography(before), p + " changed beyond age consent and typography");
   }
   const assets = [
     "cookies.js",
@@ -68,7 +70,7 @@ try {
         baseline,
         date: "2026-11-08",
         pagesCompared: pages,
-        onlyAllowedHtmlChange: "18+ checkbox in story/help forms",
+        onlyAllowedHtmlChange: "18+ checkbox in story/help forms; inline typography CSS and font preloads (Jost requested 2026-11-08)",
         unchangedAssets: assets,
         result: "PASS",
       },
