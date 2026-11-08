@@ -4,7 +4,7 @@ Stav k 8. 11. 2026. Admin je nasazený; podrobné provozní ověření a histori
 
 ## Souhrn ověření
 
-- 168/168 lokálních unit a integračních testů (včetně velkých exportů a přerušení přenosu).
+- 169/169 lokálních unit a integračních testů (včetně velkých exportů a přerušení přenosu).
 - 89 prohlížečových kontrol: 34 základní admin a ruční zpracování, 22 e-mailová integrace, 14 administrátorské pozvánky, 11 veřejné připojení, 8 přihlášení a typografie.
 - Lighthouse Accessibility po sjednocení na Jost: mobilní i desktopový seznam a detail 100/100, režim snapshot. Není to produkční měření výkonu.
 - Lokální testy používají syntetická data a skutečný lokální PostgreSQL/API, s adaptéry externího Auth, Storage a Microsoftu. Neodeslaly e-mail skutečnému příjemci ani příběh modelu. [Výsledky](test-results.json).
@@ -34,6 +34,12 @@ Stav k 8. 11. 2026. Admin je nasazený; podrobné provozní ověření a histori
 | Klávesnice a fokus | PASS: skip link, detail, Escape a mobilní filtr | Bez tvrzení úplné manuální přístupnosti všech kombinací. |
 | Microsoft 365 | PASS s mocky: read-only Graph, deduplikace, OAuth/PKCE, šifrování a odpojení | Skutečná schránka není připojená. Zvolená varianta je delegovaný jednorázový odkaz, bez PowerShellu a certifikátu. [Postup](microsoft365-odkaz.md). |
 | Úklid testovacích dat | PASS: lokální DB v paměti; nové hosted syntetické záznamy/audio uklizené | Read-only inventář našel 14 nepřiřazených objektů (1 106 998 B), bez čtení jejich obsahu. Nejsou tím prokázané jako testovací; nebyly smazány. [Evidence](storage-inventory.json). |
+
+## Nové ověření audia a souhlasu — 8. 11.
+
+Texty formuláře, potvrzení a e-mailových šablon již neslibují vypnutý přepis. Nový audio klient posílá verzi 2026-11-08-audio-v2; server ukládá přesné znění souhlasu. Starší klient bez značky si zachovává původní v1. Historické snapshoty se nepřepisují. Lokální browser nyní kontroluje i skutečně uložený typ nahrávky, vazbu audio_path na příběh, verzi a text souhlasu pro soubor i mikrofon.
+
+Na skutečném produkčním nasazení byly přes formulář vložené dva označené testovací příběhy se souborem a mikrofonem. Soukromé soubory byly zpětně načtené a dekódované; WAV se shodoval bajt po bajtu s originálem a v adminu se přehrál. Celý průchod včetně dalšího přehrání a úklidu se dokumentuje odděleně; tento odstavec není tvrzení o ověření všech prohlížečů či iPhonu.
 
 ## Nové průchody pro ruční práci
 
