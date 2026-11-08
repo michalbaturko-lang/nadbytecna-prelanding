@@ -59,7 +59,7 @@ test("homepage má dvě volby, osm karet a formuláře nic neodesílají", () =>
   assert.doesNotMatch(home, />O nás</);
   assert.equal(visible(home).match(/class="choice"/g).length, 2);
   assert.doesNotMatch(home, /class="cat"|Jak se přidat|Prověřené kontakty|proverene-kontakty/);
-  assert.match(home, /class="top-cta" href="\/potrebuji-pomoc\/"/);
+  assert.match(home, /class="top-cta" href="\/sdilet-pribeh\/">Chci sdílet svůj příběh</);
   assert.doesNotMatch(visible(home), /Hlavní cíl -|Cíl, jak ho napsala Věra/);
   assert.match(home, /<footer[\s\S]*href="\/ochrana-osobnich-udaju\/">Ochrana osobních údajů<\/a>/);
   assert.match(home, /href="\/cookies\/"/);
@@ -89,7 +89,7 @@ test("homepage má dvě volby, osm karet a formuláře nic neodesílají", () =>
   assert.match(home, /src="\/img\/parfem-nadbytecna\.jpg"/);
   assert.doesNotMatch(home, /E-shop Věry Komárové/);
   assert.match(home, /class="vera-cta" href="https:\/\/veryvera22\.cz" rel="noopener noreferrer"/);
-  assert.match(home, /href="https:\/\/veryvera22\.cz" rel="noopener noreferrer">E-shop<\/a>/);
+  assert.match(home, /href="#parfem">Předprodej parfému<\/a>/);
   assert.match(home, /class="claim-lead">Nejsi</);
   assert.match(home, /class="claim-lead">Krása není</);
   assert.match(home, /class="claim-lead">Žádná žena není</);
