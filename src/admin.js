@@ -2267,7 +2267,10 @@
       return;
     }
     var p = await challenge();
-    sessionStorage.setItem("nadbytecna-admin-verifier", p.verifier);
+    if (!global.NadbytecnaAdminPkce || !global.NadbytecnaAdminPkce.save(p.verifier)) {
+      say("Pro přihlášení povolte úložiště tohoto webu v prohlížeči.");
+      return;
+    }
     var r = await authFetch(
       "/auth/v1/otp?redirect_to=" +
         encodeURIComponent(location.origin + "/admin/"),
@@ -2283,7 +2286,7 @@
     );
     say(
       r.ok
-        ? "Pokud máte přístup, přijde vám přihlašovací odkaz."
+        ? "Pokud máte přístup, přijde vám přihlašovací odkaz. Otevřete poslední odkaz v tomto prohlížeči do 15 minut."
         : "Odkaz se nepodařilo poslat. Zkuste to později.",
     );
   }
@@ -2291,12 +2294,14 @@
     var p = new URLSearchParams(location.search),
       code = p.get("code");
     if (code) {
-      var v = sessionStorage.getItem("nadbytecna-admin-verifier");
+      var v = global.NadbytecnaAdminPkce && global.NadbytecnaAdminPkce.read();
       history.replaceState({}, "", "/admin/");
-      sessionStorage.removeItem("nadbytecna-admin-verifier");
-      if (v) saveSession(asSession(await tokenFromCode(code, v)));
+      if (v) {
+        saveSession(asSession(await tokenFromCode(code, v)));
+        global.NadbytecnaAdminPkce.clear(v);
+      }
       else
-        say("Otevřete odkaz ve stejném prohlížeči, kde jste o něj požádali.");
+        say("Přihlašovací odkaz vypršel nebo je otevřený v jiném prohlížeči. Požádejte zde o nový odkaz.");
     }
     if (await current()) await load();
   }
