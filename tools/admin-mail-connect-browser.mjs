@@ -117,7 +117,7 @@ const server = http.createServer(async (req, res) => {
   }
   const target = path.join(
     root,
-    { "/admin.js": "src/admin.js", "/admin.css": "src/admin.css" }[
+    { "/admin.js": "src/admin.js", "/admin-pkce.js": "src/admin-pkce.js", "/admin.css": "src/admin.css" }[
       url.pathname
     ] || "dist" + url.pathname,
   );

@@ -161,7 +161,7 @@ const server = http.createServer(async (req, res) => {
     res.statusCode = 400;
     return res.end('{"error":"action"}');
   }
-  const files = { "/admin.js": "src/admin.js", "/admin.css": "src/admin.css" };
+  const files = { "/admin.js": "src/admin.js", "/admin-pkce.js": "src/admin-pkce.js", "/admin.css": "src/admin.css" };
   const relative = files[u.pathname] || "dist" + u.pathname;
   const target = path.join(root, relative);
   if (!fs.existsSync(target) || fs.statSync(target).isDirectory()) {

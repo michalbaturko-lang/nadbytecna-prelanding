@@ -241,7 +241,7 @@ try {
   await p.goto(s.url + "/mohu-pomoci/");
   await p.locator("#pomoc-jmeno").fill("Syntetický pomocník");
   await p.locator("#pomoc-email").fill("help-e2e@example.invalid");
-  await p.locator("input[name=jak]").first().check();
+  await p.locator("input[name=druh]").first().check();
   await p.locator("#pomoc-gdpr").check();
   await p.locator("#pomoc-age").check();
   await p.waitForTimeout(3100);
