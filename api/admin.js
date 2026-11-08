@@ -21,6 +21,7 @@ import { STATUSES, URGENCIES, UUID, toCsv } from "../lib/admin-model.mjs";
 import { triageEnabled, triageText } from "../lib/triage.mjs";
 import { zipSync, strToU8 } from "fflate";
 import { mailRpc, mailHashSecret } from "../lib/mail-service.mjs";
+import { streamDownload } from "../lib/admin-download.mjs";
 
 export default async function handler(req, res) {
   res.setHeader("X-Robots-Tag", "noindex, nofollow, noarchive");
@@ -65,7 +66,7 @@ export default async function handler(req, res) {
         "Content-Disposition",
         'attachment; filename="nadbytecna.csv"',
       );
-      return res.end(toCsv(rows, b.includeText === true));
+      return await streamDownload(res, toCsv(rows, b.includeText === true));
     }
     if (["person_export", "person_erase"].includes(b.action)) {
       // GDPR requests can start from a selected record or an exact email supplied by an admin.
@@ -112,7 +113,7 @@ export default async function handler(req, res) {
           "Content-Disposition",
           'attachment; filename="osobni-udaje.zip"',
         );
-        return res.end(Buffer.from(zip));
+        return await streamDownload(res, zip);
       }
       if (b.confirm !== "SMAZAT") throw fail(400, "confirmation");
       const args = {
@@ -312,6 +313,11 @@ export default async function handler(req, res) {
     throw fail(400, "action");
   } catch (e) {
     // Deliberately never log requests, database errors or sensitive payloads.
+    // A failed download must terminate, never append JSON to a partial ZIP/CSV.
+    if (res.headersSent || res.destroyed) {
+      res.destroy();
+      return;
+    }
     return json(res, e.status || 503, { error: e.code || "unavailable" });
   }
 }

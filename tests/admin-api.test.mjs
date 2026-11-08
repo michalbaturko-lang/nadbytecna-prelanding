@@ -7,6 +7,7 @@ import {
 } from "./helpers/admin-server.mjs";
 import { STORY, installOptionalPreregistrations } from "./helpers/admin-db.mjs";
 import { unzipSync, strFromU8 } from "fflate";
+import { randomBytes } from "node:crypto";
 let s;
 test.before(async () => {
   s = await startAdminServer();
@@ -156,6 +157,49 @@ test("AI timeout, API error and invalid category preserve submission and show a 
   s.setAIResponse(null);
   process.env.AI_TRIAGE_ENABLED = "false";
   delete process.env.OPENAI_API_KEY;
+});
+
+test("large GDPR ZIP is chunked, private, complete and audited; outsider receives no export", async () => {
+  const path = STORY + "/ukazka.wav";
+  const original = s.storage.get(path);
+  const large = randomBytes(6 * 1024 * 1024);
+  s.storage.set(path, large);
+  try {
+    const denied = await call({ action: "person_export", entity: "stories", id: STORY }, otherToken);
+    assert.equal(denied.status, 403);
+    const r = await call({ action: "person_export", entity: "stories", id: STORY });
+    assert.equal(r.status, 200);
+    assert.equal(r.headers.get("cache-control"), "no-store");
+    assert.equal(r.headers.get("transfer-encoding"), "chunked");
+    assert.equal(r.headers.get("content-length"), null);
+    const bytes = new Uint8Array(await r.arrayBuffer());
+    assert.ok(bytes.length > 4.5 * 1024 * 1024);
+    const files = unzipSync(bytes);
+    assert.deepEqual(Buffer.from(files["audio/" + path]), large);
+    assert.equal(JSON.parse(strFromU8(files["data.json"])).records[0].id, STORY);
+  } finally {
+    s.storage.set(path, original);
+  }
+});
+
+test("large multi-page CSV streams every filtered row with text only when requested", async () => {
+  await s.db.exec(`INSERT INTO stories(email,consent,age_confirmed,story_text,input_type)
+    SELECT 'large-export@example.invalid',true,true,repeat('Syntetický příběh. ',500),'text'
+    FROM generate_series(1,600)`);
+  try {
+    const r = await call({ action: "csv", filters: { q: "Syntetický" }, includeText: true });
+    assert.equal(r.status, 200);
+    assert.equal(r.headers.get("transfer-encoding"), "chunked");
+    assert.equal(r.headers.get("cache-control"), "no-store");
+    const bytes = Buffer.from(await r.arrayBuffer());
+    assert.ok(bytes.length > 4.5 * 1024 * 1024);
+    assert.deepEqual([...bytes.subarray(0,3)], [239,187,191]);
+    assert.equal(bytes.toString("utf8").split('"large-export@example.invalid"').length - 1, 600);
+    const redacted = await (await call({ action: "csv", filters: { q: "Syntetický" } })).text();
+    assert.ok(!redacted.includes("Syntetický příběh."));
+  } finally {
+    await s.db.exec("DELETE FROM stories WHERE email='large-export@example.invalid'");
+  }
 });
 
 test("person erasure removes stored audio and record; audit retains hash only", async () => {
