@@ -56,8 +56,62 @@
         idx = k;
         for (var j = 0; j < lines.length; j++) lines[j].setAttribute("data-d", String(Math.min(3, Math.abs(j - k))));
         if (count) count.textContent = pad(k + 1) + " / " + pad(lines.length);
+        follow();
       }
     }
+  }
+
+  // aktivní heslo drží uprostřed scény; seznam se posouvá spolu s tím, jak se mění velikosti řádků
+  var list = man ? man.querySelector(".claim-list") : null, followUntil = 0, following = false;
+  function place() {
+    if (!list || idx < 0) return;
+    var ln = lines[idx];
+    var ty = list.offsetHeight / 2 - (ln.offsetTop + ln.offsetHeight / 2);
+    list.style.transform = "translate3d(0," + Math.round(ty) + "px,0)";
+  }
+  function follow() {
+    if (!live || !list) return;
+    followUntil = Date.now() + 900;
+    if (following) return;
+    following = true;
+    (function tick() {
+      place();
+      if (Date.now() < followUntil) window.requestAnimationFrame(tick); else following = false;
+    })();
+  }
+
+  // tlačítka a odkazy na kapitoly se rozjedou plynulým posunem místo skoku
+  var anim = 0;
+  function stopAnim() { anim = 0; }
+  function glide(y) {
+    var from = window.pageYOffset || root.scrollTop, dist = y - from;
+    if (Math.abs(dist) < 4) return;
+    var dur = Math.min(2800, Math.max(900, 600 + Math.abs(dist) * 0.42));
+    var t0 = null, id = ++anim;
+    function ease(t) { return t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2; }
+    function step(ts) {
+      if (anim !== id) return;
+      if (t0 === null) t0 = ts;
+      var t = Math.min(1, (ts - t0) / dur);
+      window.scrollTo(0, from + dist * ease(t));
+      if (t < 1) window.requestAnimationFrame(step); else anim = 0;
+    }
+    window.requestAnimationFrame(step);
+  }
+  if (!reduced) {
+    ["wheel", "touchstart", "keydown", "mousedown"].forEach(function (ev) { window.addEventListener(ev, stopAnim, { passive: true }); });
+    doc.addEventListener("click", function (e) {
+      var a = e.target.closest ? e.target.closest('a[href^="#"]') : null;
+      if (!a || e.defaultPrevented || e.button || e.metaKey || e.ctrlKey || e.shiftKey) return;
+      var id = a.getAttribute("href").slice(1);
+      var el = id ? doc.getElementById(id) : null;
+      if (!el) return;
+      e.preventDefault();
+      var margin = parseFloat(window.getComputedStyle(el).scrollMarginTop) || 0;
+      var y = el.getBoundingClientRect().top + (window.pageYOffset || root.scrollTop) - margin;
+      glide(Math.max(0, y));
+      if (window.history && history.replaceState) history.replaceState(null, "", "#" + id);
+    });
   }
 
   function request() {
@@ -65,7 +119,7 @@
   }
 
   window.addEventListener("scroll", request, { passive: true });
-  window.addEventListener("resize", request);
+  window.addEventListener("resize", function () { request(); follow(); });
   update();
 
   if (live) {

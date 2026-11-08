@@ -60,9 +60,6 @@ test("homepage má dvě volby, osm karet a formuláře nic neodesílají", () =>
   assert.equal(visible(home).match(/class="choice"/g).length, 2);
   assert.doesNotMatch(home, /class="cat"|Jak se přidat|Prověřené kontakty|proverene-kontakty/);
   assert.match(home, /class="top-cta" href="\/potrebuji-pomoc\/"/);
-  assert.match(home, /Okamžitá pomoc/);
-  assert.match(home, /href="tel:155"/);
-  assert.match(home, /href="tel:158"/);
   assert.doesNotMatch(visible(home), /Hlavní cíl -|Cíl, jak ho napsala Věra/);
   assert.match(home, /<footer[\s\S]*href="\/ochrana-osobnich-udaju\/">Ochrana osobních údajů<\/a>/);
   assert.match(home, /href="\/cookies\/"/);

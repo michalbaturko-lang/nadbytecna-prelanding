@@ -90,7 +90,7 @@ body[data-page="scroll"] .top-cta{border-radius:999px;padding:.45rem 1.4rem;font
 .sc-manifest{position:relative}
 .sc-stage{position:relative;min-height:100vh;min-height:100svh;display:flex;align-items:center;padding:6rem clamp(1.25rem,10vw,10rem) 5rem}
 .sc-stage .claims{width:100%}
-body[data-page="scroll"] .claim-list{display:flex;flex-direction:column;justify-content:center;gap:clamp(.5rem,1.6vh,1rem)}
+body[data-page="scroll"] .claim-list{will-change:transform;display:flex;flex-direction:column;justify-content:center;gap:clamp(.5rem,1.6vh,1rem)}
 body[data-page="scroll"] .sc-line{--fs:clamp(1.3rem,3.2vw,2.8rem);--k:2.3;display:flex;flex-wrap:nowrap;align-items:center;gap:.5em;font-size:var(--fs);line-height:1.2;white-space:nowrap;animation:none;opacity:1}
 body[data-page="scroll"] .claim-lead{font-family:var(--sans);font-size:1em;font-weight:200;line-height:1.2;letter-spacing:.1em;text-transform:uppercase;color:var(--ink)}
 body[data-page="scroll"] .claim-word{height:calc(var(--k) * 1em);width:auto;max-width:none;flex:none}
@@ -104,7 +104,7 @@ body[data-page="scroll"] .claim-rule{position:absolute;left:clamp(1.25rem,10vw,1
 
 /* živý režim: vysoká sekce, sticky scéna, aktivní řádek */
 html.sc-live .sc-manifest{height:370vh;height:calc(100svh + 270svh)}
-html.sc-live .sc-stage{position:sticky;top:0;height:100vh;height:100svh;min-height:0;padding-block:5rem 4rem}
+html.sc-live .sc-stage{overflow:hidden;position:sticky;top:0;height:100vh;height:100svh;min-height:0;padding-block:5rem 4rem}
 html.sc-live body[data-page="scroll"] .sc-line{opacity:.12;transition:font-size .7s cubic-bezier(.2,.7,.2,1),opacity .6s ease}
 html.sc-live body[data-page="scroll"] .sc-line[data-d="0"]{--fs:clamp(1.55rem,3.9vw,3.5rem);opacity:1}
 html.sc-live body[data-page="scroll"] .sc-line[data-d="1"]{--fs:clamp(1rem,1.9vw,1.75rem);opacity:.3}
@@ -128,15 +128,15 @@ html.sc-live .sc-count::before,html.sc-live .sc-count::after{content:"";display:
 .sc-chapter--end{min-height:0;padding-block:6rem 4rem}
 
 /* Věřin příběh */
-body[data-page="scroll"] #pribeh{display:grid;grid-template-columns:minmax(0,1fr) min(23.75rem,38vw);align-items:center;gap:clamp(2rem,8vw,8rem);width:100%;max-width:75rem;margin:0 auto;padding:0}
+body[data-page="scroll"] #pribeh{display:grid;grid-template-columns:minmax(0,1fr) min(27rem,44vw,calc(86svh * .5625));align-items:center;gap:clamp(2rem,8vw,8rem);width:100%;max-width:75rem;margin:0 auto;padding:0}
 body[data-page="scroll"] #pribeh h2{font-weight:200;font-size:clamp(2rem,5.6vw,4.5rem);line-height:1.18;letter-spacing:.12em;text-transform:uppercase;margin:0;overflow-wrap:anywhere}
 body[data-page="scroll"] a.vid,
-body[data-page="scroll"] a.vid:hover{display:block;width:min(100%,23.75rem);max-width:none;min-height:0;margin:0;color:#fff;box-shadow:0 40px 80px -30px rgba(181,9,77,.55)}
+body[data-page="scroll"] a.vid:hover{display:block;width:min(100%,27rem,calc(86svh * .5625));max-width:none;min-height:0;margin:0;color:#fff;box-shadow:0 40px 80px -30px rgba(181,9,77,.55)}
 body[data-page="scroll"] a.vid:hover .vid-play{background:#9F0842}
 @media (max-width:47.99rem){
   body[data-page="scroll"] #pribeh{grid-template-columns:minmax(0,1fr);gap:1.6rem}
   body[data-page="scroll"] a.vid,
-  body[data-page="scroll"] a.vid:hover{width:min(68vw,15.75rem);margin:0 auto}
+  body[data-page="scroll"] a.vid:hover{width:min(78vw,19rem);margin:0 auto}
 }
 
 /* tři cesty: dvě volby a cíl, číslované řádky */
@@ -173,21 +173,8 @@ body[data-page="scroll"] a.sc-btn{display:inline-flex;align-items:center;justify
 body[data-page="scroll"] a.vera-cta:hover,
 body[data-page="scroll"] a.sc-btn:hover{background:#9F0842;color:#fff}
 
-body[data-page="scroll"] .sc-help{width:100%;max-width:75rem;margin:clamp(3rem,8vw,6rem) auto 0;text-align:center}
-body[data-page="scroll"] .sc-help h2{display:flex;align-items:center;justify-content:center;gap:.9rem;margin:0 0 clamp(1.5rem,4vw,2.5rem);font-size:.8rem;font-weight:500;letter-spacing:.4em;text-transform:uppercase;color:var(--magenta-deep)}
-body[data-page="scroll"] .sc-help h2::before,
-body[data-page="scroll"] .sc-help h2::after{content:"";width:1.8rem;height:1px;background:currentColor}
-.sc-sos{display:flex;flex-wrap:wrap;justify-content:center;align-items:stretch;gap:2rem clamp(2rem,7vw,6rem);margin:0 0 clamp(2rem,5vw,3rem)}
-.sc-sos p{margin:0}
-body[data-page="scroll"] .sc-sos a{display:flex;flex-direction:column;align-items:center;gap:.4rem;min-height:44px;color:var(--ink);text-decoration:none}
-.sc-sos b{display:block;font-size:clamp(4.5rem,14vw,10.5rem);font-weight:200;line-height:1;letter-spacing:.06em;padding-left:.06em;color:var(--magenta-deep)}
-.sc-sos span{max-width:18ch;font-size:.9rem;line-height:1.6;letter-spacing:.1em;text-transform:uppercase}
-.sc-sos p + p{padding-left:clamp(2rem,7vw,6rem);border-left:1px solid var(--gold)}
-@media (max-width:47.99rem){
-  .sc-sos{flex-wrap:nowrap;gap:1rem}
-  .sc-sos p + p{padding-left:1rem}
-  .sc-sos span{font-size:.72rem;letter-spacing:.08em}
-}
+body[data-page="scroll"] @media (max-width:47.99rem){
+      }
 
 /* ---------- patička ---------- */
 body[data-page="scroll"] .foot{max-width:none;margin:0;padding:2.4rem clamp(1.25rem,10vw,10rem) 6rem;text-align:left;border-top:1px solid rgba(181,9,77,.3)}
@@ -205,14 +192,21 @@ html.sc-live .sc-rise.is-in{opacity:1;transform:none}
   body[data-page="scroll"] .site-mark{transition:none}
 }
 
-/* mobil: spodní lišta s odkazem na část s parfémem; tlačítko „Okamžitá pomoc“ je nad ní (a nad cookie lištou) */
+/* mobil: spodní lišta s odkazem na část s parfémem; cookie lišta je malá a těsně nad ní */
 .sc-bar{display:none}
 @media (max-width:47.99rem){
   .sc-bar{position:fixed;z-index:5;left:0;right:0;bottom:0;display:flex;align-items:center;justify-content:center;gap:.8rem;min-height:3.5rem;padding:.4rem 1rem calc(.4rem + env(safe-area-inset-bottom));background:rgba(255,248,250,.94);border-top:1px solid var(--gold);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);color:var(--ink);text-decoration:none;font-size:.78rem;font-weight:500;letter-spacing:.24em;text-transform:uppercase;transition:transform .35s ease}
   .sc-bar i{display:grid;place-items:center;width:1.9rem;height:1.9rem;border:1px solid var(--magenta-deep);border-radius:50%;color:var(--magenta-deep);font-style:normal;font-size:.95rem;letter-spacing:0}
-  body[data-page="scroll"] .sos{bottom:4.6rem}
   body.sc-shop-in .sc-bar{transform:translateY(110%)}
-  body[data-page="scroll"].sc-shop-in .sos{bottom:1rem}
 }
 
 #parfem{scroll-margin-top:5rem}
+
+/* cookies: malá lišta, na mobilu kousek nad spodní lištou */
+@media (max-width:50rem){
+  body[data-page="scroll"] .cookie{left:.6rem;right:.6rem;bottom:calc(3.5rem + env(safe-area-inset-bottom) + .6rem);gap:.4rem;padding:.25rem .45rem;border-radius:.6rem;box-shadow:0 4px 14px rgba(58,11,34,.16);transition:bottom .4s ease}
+  body[data-page="scroll"] .cookie p{font-size:.7rem;line-height:1.2}
+  body[data-page="scroll"] .cookie button{min-height:30px;padding:.1rem .4rem;font-size:.7rem}
+  body[data-page="scroll"] .cookie-more{font-size:.68rem}
+  body.sc-shop-in .cookie{bottom:calc(.6rem + env(safe-area-inset-bottom))}
+}
