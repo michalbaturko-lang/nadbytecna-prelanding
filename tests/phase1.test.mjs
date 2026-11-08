@@ -112,6 +112,10 @@ test("homepage má dvě volby, osm karet a formuláře nic neodesílají", () =>
   assert.match(story, /Už jsem si tím prošla a chci i pomáhat/);
   assert.match(story, /Hlasové zprávy přepisujeme na text/);
   assert.match(story, /accept="audio\/\*,\.m4a/);
+  assert.match(story, /Spustit nahrávání/);
+  assert.match(story, /Zastavit nahrávání/);
+  assert.match(story, /Přetáhněte soubor sem nebo vyberte v počítači/);
+  assert.match(story, /id="file-clear">Odebrat/);
   assert.match(story, /<script src="\/story-form\.js" defer><\/script>/);
   const storyJs = fs.readFileSync(path.join(ROOT, "src/story-form.js"), "utf8");
   assert.match(storyJs, /MediaRecorder/);

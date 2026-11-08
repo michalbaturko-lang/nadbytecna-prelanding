@@ -172,6 +172,20 @@ body[data-page="phase1"] .main a.choice:first-child:hover{border-top-color:var(-
 .rec-row{display:flex;flex-wrap:wrap;gap:.5rem;margin:.4rem 0}
 body[data-page="phase1"] audio{display:block;width:min(100%,28rem);margin:.6rem 0}
 body[data-page="phase1"] input[type="file"]{display:block;width:100%;max-width:100%;min-height:48px;font:inherit;font-size:16px}
+body[data-page="phase1"] input.drop-input{position:absolute;width:1px;height:1px;min-height:0;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);border:0}
+.rec-row button.rec-btn{display:inline-flex;align-items:center;gap:.7rem;width:min(100%,28rem);min-height:52px;padding:.7rem 1.15rem;border:0;border-radius:999px;background:#fff;color:var(--ink);font:inherit;font-weight:700;font-size:1.05rem;box-shadow:0 0 0 1.5px #c41212;cursor:pointer;touch-action:manipulation}
+.rec-dot{width:14px;height:14px;border-radius:50%;background:#e10600;flex:none}
+.rec-btn.is-live{background:#fff5f5}
+.rec-time{margin-left:auto;font-variant-numeric:tabular-nums;color:#c41212}
+.rec-btn.is-live .rec-dot{animation:rec-pulse 1s ease-in-out infinite}
+@keyframes rec-pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.35;transform:scale(.85)}}
+.drop{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.45rem;width:100%;min-height:8.5rem;padding:1.25rem;border:2px dashed #8A4A62;border-radius:.7rem;background:var(--paper);color:var(--ink);font:inherit;font-size:1rem;line-height:1.4;text-align:center;cursor:pointer;touch-action:manipulation}
+.drop.is-over{border-color:var(--magenta);background:#fff;box-shadow:0 0 0 3px rgba(219,11,95,.15)}
+.drop-icon{width:2.25rem;height:2.25rem;color:var(--magenta-deep)}
+[hidden]{display:none !important}
+.file-picked{display:flex;flex-wrap:wrap;align-items:center;gap:.6rem;margin:.7rem 0;padding:.7rem .85rem;background:var(--paper);border-radius:.55rem}
+.file-picked span{font-weight:700;overflow-wrap:anywhere}
+#file-clear{min-height:44px;padding:.4rem .8rem;border:1.5px solid #8A4A62;border-radius:.45rem;background:var(--paper);font:inherit;font-weight:700;cursor:pointer}
 body[data-page="phase1"] audio{max-width:100%}
 body[data-page="phase1"] .main a.choice{
   width:100%;box-sizing:border-box;min-height:6.5rem;padding:1.25rem 1.3rem;gap:.35rem;
