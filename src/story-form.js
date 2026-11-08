@@ -111,7 +111,7 @@
         document.getElementById("mic-stop").hidden = true;
         document.getElementById("mic-start").hidden = true;
         stopClock();
-        say("mic-status", "Nahrávka je připravená k odeslání. Automatický přepis nyní neprobíhá.");
+        say("mic-status", "Nahrávka je připravená k odeslání.");
       };
       try { rec.start(250); } catch (e) { rec.start(); }
       document.getElementById("mic-start").hidden = true;
@@ -166,7 +166,7 @@
     document.getElementById("file-picked").hidden = false;
     fileDrop.hidden = true;
     var kb = Math.max(1, Math.round(file.size / 1024));
-    say("file-status", file.name + " · " + kb + " kB. Soubor je připravený k odeslání. Automatický přepis nyní neprobíhá.");
+    say("file-status", file.name + " · " + kb + " kB. Soubor je připravený k odeslání.");
   }
   fileInput.addEventListener("change", function (e) {
     takeFile(e.target.files && e.target.files[0]);
@@ -257,7 +257,7 @@
       api.done("stories", id, blob ? { audio: blob, filename: fname } : null);
       var msg = input === "text"
         ? "Dostali jsme tvůj příběh. Ozveme se na e-mail, který jsi uvedla."
-        : "Dostali jsme tvou hlasovou zprávu. Zprávu si můžeme poslechnout. Automatický přepis nyní neprobíhá.";
+        : "Dostali jsme tvou hlasovou zprávu. Poslechneme si ji a v případě potřeby přepíšeme, abychom ji mohli zařadit.";
       if (share.value === "anonymous") msg += " Jméno k příběhu nepřidáme.";
       if (help) msg += " Ozveme se i k tomu, že chceš pomáhat.";
       showThanks(msg);

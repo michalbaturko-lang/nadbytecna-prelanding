@@ -128,7 +128,7 @@ test("homepage má dvě volby, osm karet a formuláře nic neodesílají", () =>
   assert.match(story, /Chci sdílet anonymně/);
   assert.match(story, /Chci sdílet se jménem/);
   assert.match(story, /Už jsem si tím prošla a chci i pomáhat/);
-  assert.match(story, /Automatický přepis nyní neprobíhá/);
+  assert.match(story, /si poslechneme a v případě potřeby přepíšeme/);
   assert.match(story, /Souhlasím s případným budoucím přepisem/);
   assert.doesNotMatch(story, /Hlasové zprávy přepisujeme na text|Přepíšeme ji na text/);
   assert.match(story, /accept="audio\/\*,\.m4a/);
