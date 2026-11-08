@@ -3,8 +3,8 @@
 (function () {
   "use strict";
   if (typeof HTMLDialogElement !== "function") return;
-  var SRC = "/video/vera-pribeh-v11.mp4";
-  var POSTER = "/video/vera-pribeh-poster-v11.jpg";
+  var SRC = "/video/vera-pribeh-v15.mp4";
+  var POSTER = "/video/vera-pribeh-poster-v15.jpg";
   var PLAY = '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M8 5.5v13l11-6.5z"/></svg>';
   var X = '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6 6l12 12M18 6L6 18"/></svg>';
   var ON = '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 9.5v5h3.5L12 18.5v-13L7.5 9.5z"/><path d="M15.5 9a4.2 4.2 0 0 1 0 6M18 6.5a7.7 7.7 0 0 1 0 11"/></svg>';
