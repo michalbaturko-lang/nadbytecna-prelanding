@@ -28,7 +28,7 @@ const also = "A ještě: chceš pomáhat a podílet se na platformě. Ozveme se 
 const anon = "Píšeš anonymně, jméno k příběhu nepřidáme.";
 const named = "U příběhu uvedeme tvé jméno.";
 const textGot = "Dostali jsme příběh, který jsi napsala.";
-const voiceGot = "Dostali jsme tvou hlasovou zprávu a přepíšeme ji na text.";
+const voiceGot = "Dostali jsme tvou hlasovou zprávu. Zprávu si můžeme poslechnout. Automatický přepis nyní neprobíhá.";
 const touch = "Ozveme se na tenhle e-mail, kdybychom potřebovali něco upřesnit.";
 
 function share({ anonymous, voice, help }) {
