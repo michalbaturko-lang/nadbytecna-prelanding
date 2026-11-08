@@ -29,10 +29,12 @@
     var s = btoa(String.fromCharCode.apply(null, bytes));
     return s.replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
   }
-  async function challenge() {
-    var bytes = new Uint8Array(32);
-    crypto.getRandomValues(bytes);
-    var verifier = b64url(bytes);
+  async function challenge(verifier) {
+    if (!verifier) {
+      var bytes = new Uint8Array(32);
+      crypto.getRandomValues(bytes);
+      verifier = b64url(bytes);
+    }
     var digest = await crypto.subtle.digest(
       "SHA-256",
       new TextEncoder().encode(verifier),
@@ -2266,8 +2268,10 @@
       say("Přihlášení není nakonfigurované.");
       return;
     }
-    var p = await challenge();
-    if (!global.NadbytecnaAdminPkce || !global.NadbytecnaAdminPkce.save(p.verifier)) {
+    var pending = global.NadbytecnaAdminPkce && global.NadbytecnaAdminPkce.read();
+    // Reuse an unexpired proof: an unsuccessful resend must not break an earlier email.
+    var p = await challenge(pending);
+    if (!global.NadbytecnaAdminPkce || (!pending && !global.NadbytecnaAdminPkce.save(p.verifier))) {
       say("Pro přihlášení povolte úložiště tohoto webu v prohlížeči.");
       return;
     }
@@ -2284,11 +2288,19 @@
         }),
       },
     );
-    say(
-      r.ok
-        ? "Pokud máte přístup, přijde vám přihlašovací odkaz. Otevřete poslední odkaz v tomto prohlížeči do 15 minut."
-        : "Odkaz se nepodařilo poslat. Zkuste to později.",
-    );
+    if (r.ok) {
+      say("Pokud máte přístup, přijde vám přihlašovací odkaz. Otevřete poslední odkaz v tomto prohlížeči do 15 minut od první žádosti.");
+      return;
+    }
+    var failure = await r.json().catch(function () { return {}; });
+    if (!pending) global.NadbytecnaAdminPkce.clear(p.verifier);
+    if (r.status === 429 || failure.code === "over_email_send_rate_limit" || failure.code === "over_request_rate_limit") {
+      say("Odesílání přihlašovacích e-mailů je dočasně omezené. Vyčkejte a zkuste to později. Pokud vám už odkaz přišel, můžete ho použít do 15 minut od první žádosti.");
+    } else if (failure.code === "email_address_not_authorized" || r.status >= 500) {
+      say("Odesílání přihlašovacích e-mailů ještě není připravené. Kontaktujte správce webu.");
+    } else {
+      say("Odkaz se nepodařilo poslat. Zkuste to později.");
+    }
   }
   async function boot() {
     var p = new URLSearchParams(location.search),
