@@ -76,8 +76,8 @@ const css = fs.readFileSync(path.join(ROOT, "src/site.css"), "utf8").replace(/\/
 
 const HEART = '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>';
 const PRELOAD = [
-  "playfair-display-latin-600-normal.woff2", "playfair-display-latin-ext-600-normal.woff2",
   "hanken-grotesk-latin-wght-normal.woff2", "hanken-grotesk-latin-ext-wght-normal.woff2",
+  "hanken-grotesk-latin-wght-italic.woff2", "hanken-grotesk-latin-ext-wght-italic.woff2",
 ].map((f) => `<link rel="preload" href="/fonts/${f}" as="font" type="font/woff2" crossorigin>`).join("\n");
 
 // Web se indexuje až po otevření sběru (COLLECTION_OPEN=true při buildu a vyplněný správce); do té doby noindex + Disallow.
@@ -365,13 +365,10 @@ function stage(out) {
   fs.rmSync(out, { recursive: true, force: true });
   fs.cpSync(path.join(ROOT, "public"), out, { recursive: true });
   fs.mkdirSync(path.join(out, "fonts"), { recursive: true });
-  const fontDirs = ["@fontsource/playfair-display", "@fontsource-variable/hanken-grotesk"];
-  for (const d of fontDirs) {
-    const dir = path.join(ROOT, "node_modules", d, "files");
-    for (const f of fs.readdirSync(dir)) {
-      if (/^playfair-display-(latin|latin-ext)-(600-normal|500-italic)\.woff2$/.test(f) || /^hanken-grotesk-(latin|latin-ext)-wght-normal\.woff2$/.test(f)) {
-        fs.copyFileSync(path.join(dir, f), path.join(out, "fonts", f));
-      }
+  const dir = path.join(ROOT, "node_modules", "@fontsource-variable/hanken-grotesk", "files");
+  for (const f of fs.readdirSync(dir)) {
+    if (/^hanken-grotesk-(latin|latin-ext)-wght-(normal|italic)\.woff2$/.test(f)) {
+      fs.copyFileSync(path.join(dir, f), path.join(out, "fonts", f));
     }
   }
   fs.copyFileSync(path.join(ROOT, "src/app.js"), path.join(out, "app.js"));
