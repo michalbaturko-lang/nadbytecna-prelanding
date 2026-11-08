@@ -9,15 +9,15 @@
   },
   "browser": {
     "command": "node tools/admin-browser.mjs",
-    "checks": 80,
-    "passed": 80,
+    "checks": 84,
+    "passed": 84,
     "screenshots": 26,
     "breakdown": {
       "original": 29,
       "mailIntegration": 22,
       "adminInvitation": 14,
       "publicConnect": 11,
-      "crossTabLogin": 4
+      "crossTabLogin": 8
     },
     "mailCommand": "MAIL_UI_EXTENDED=true node tools/admin-mail-integration.mjs",
     "connectCommands": [
@@ -40,5 +40,6 @@
   "realMicrosoftOAuthCalls": 0,
   "mailboxConnected": false,
   "realOAuthCallbackRoundtrip": "not verified; requires approved HTTPS host and registered Microsoft app",
-  "scope": "Counts and zero external calls below refer to local automated tests; hosted synthetic checks and genuine own-account Auth were separate."
+  "scope": "Counts and zero external calls below refer to local automated tests; hosted synthetic checks and genuine own-account Auth were separate.",
+  "productionAuthReadiness": "BLOCKED: built-in email provider, 2 emails/hour; custom SMTP and real delivery checks required"
 }
