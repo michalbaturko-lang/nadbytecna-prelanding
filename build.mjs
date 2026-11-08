@@ -133,7 +133,7 @@ const footer = (lang, switcher = null) => {
   return `<footer class="foot"><img class="dom" src="/img/nadbytecna-script.svg" width="2480" height="528" alt="Nadbytečná.cz"><a class="mail" href="mailto:veryvera@nadbytecna.cz">veryvera@nadbytecna.cz</a><br><a href="${PATHS[lang].policy}">${t.policyLink}</a>${C.complete ? `<br>${esc(C.name)}, IČO ${esc(C.ico)}` : ""}${sw}</footer>`;
 };
 const analytics = '<script defer src="/_vercel/insights/script.js"></script>';
-const LOGO_ATTRS = 'width="2480" height="1219" data-split="0.5385" data-base="0.8403" data-na0="0.6444" data-na1="0.8065" data-hat="0.6589" data-haty="0.7048" alt="VERY VERA – Nadbytečná.cz"';
+const LOGO_ATTRS = 'width="2480" height="528" data-split="0" data-base="0.8403" alt="Nadbytečná.cz"';
 
 function home(lang, variant) {
   const t = TXT[lang], P = PATHS[lang], cl = CLAIMS[lang][variant];
@@ -145,7 +145,7 @@ function home(lang, variant) {
 <div class="page">
 <main class="main">
 <div class="brand">
-<img class="logo" src="/img/nadbytecna-lockup.svg" ${LOGO_ATTRS} fetchpriority="high" decoding="async">
+<img class="logo" src="/img/nadbytecna-script.svg" ${LOGO_ATTRS} fetchpriority="high" decoding="async">
 <div class="rule" aria-hidden="true">${HEART}</div>
 </div>
 <div class="content">
@@ -185,7 +185,7 @@ function simplePage(lang, { page, c }) {
 <div class="page">
 <main class="main main-one">
 <div class="card">
-<a href="${P.home}"><img class="logo" src="/img/nadbytecna-lockup.svg" ${LOGO_ATTRS}></a>
+<a href="${P.home}"><img class="logo" src="/img/nadbytecna-script.svg" ${LOGO_ATTRS}></a>
 <div id="state" hidden>
 <div id="live" tabindex="-1" aria-live="polite"><h1 id="h">${esc(c.h1)}</h1><p id="p">${esc(c.p)}</p></div>
 ${c.button ? `<button class="cta" id="action" type="button">${esc(c.button)}</button>` : ""}
@@ -323,7 +323,7 @@ function thanksPage(lang, { slug, c, extra = "", vote = false }) {
 <div class="page">
 <main class="main">
 <div class="brand">
-<a href="${P.home}" aria-label="${t.brand}"><img class="logo" src="/img/nadbytecna-lockup.svg" ${LOGO_ATTRS} fetchpriority="high" decoding="async"></a>
+<a href="${P.home}" aria-label="${t.brand}"><img class="logo" src="/img/nadbytecna-script.svg" ${LOGO_ATTRS} fetchpriority="high" decoding="async"></a>
 <div class="rule" aria-hidden="true">${HEART}</div>
 </div>
 <div class="content" role="status">
