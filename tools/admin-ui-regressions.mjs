@@ -243,4 +243,59 @@ export async function runUiRegressions({
     });
     await context.close();
   }
+  // Real local API/DB, no AI or mail transport: distinguish data that has never been processed.
+  {
+    const context = await authenticatedContext(browser), p = await context.newPage();
+    if (sourceOverride) await p.route("**/admin.js", route => route.fulfill({contentType:"text/javascript",body:sourceOverride}));
+    await p.goto(server.url + "/admin/?ai=no");
+    await p.locator(".story-card").first().waitFor();
+    assert.equal(await p.locator(".story-card .kicker").filter({hasText:"Návrh AI"}).count(), 0);
+    assert.ok(await p.getByText("Zatím bez shrnutí AI", {exact:true}).count() > 0);
+    results.push({label:"unprocessed web records never claim to contain an AI proposal",pass:true});
+    await p.getByRole("button", {name:"E-maily",exact:true}).click();
+    await p.locator("#mail-cards .mail-card").first().waitFor();
+    assert.equal(await p.locator("#mail-count").innerText(), "1 e-mailové vlákno");
+    assert.equal(await p.locator("#mail-cards .kicker").innerText(), "Zatím bez shrnutí AI");
+    results.push({label:"unprocessed mail has an honest AI label and singular Czech count",pass:true});
+    // This PostgreSQL instance is the throwaway in-memory fixture created by startAdminServer.
+    assert.match(server.url, /^http:\/\/127\.0\.0\.1:/);
+    await server.db.exec("DELETE FROM public.stories; DELETE FROM public.help_offers;");
+    for (const total of [0,1,2,4,5]) {
+      await server.db.exec("DELETE FROM public.stories;");
+      for (let i=0;i<total;i++) await server.db.query(
+        "INSERT INTO public.stories(full_name,email,input_type,story_text,consent,age_confirmed,status) VALUES($1,$2,'text','Syntetická kontrola prázdného přehledu.',true,true,'new')",
+        ["Kontrola přehledu " + i, "empty" + i + "@example.invalid"]);
+      await p.goto(server.url + "/admin/?sort=urgency");
+      if(total) await p.locator(".story-card").first().waitFor();
+      else await p.getByText(/Zatím tu není žádný příběh ani nabídka pomoci/).waitFor();
+      assert.equal(await p.locator("#admin-count").innerText(),total + " " + (total===1?"zpráva":total>=2&&total<=4?"zprávy":"zpráv"));
+      if(total===0) {
+        for(const width of [375,1440]) {
+          await p.setViewportSize({width,height:1400});
+          await p.evaluate(()=>document.fonts.ready);
+          assert.ok(await p.evaluate(()=>document.documentElement.scrollWidth<=document.documentElement.clientWidth));
+          await p.screenshot({path:`docs/admin/screenshots/${width}-empty-list.png`,fullPage:false});
+        }
+      }
+    }
+    results.push({label:"empty collection differs from filters; 0, 1, 2, 4 and 5 records use Czech plural forms",pass:true});
+    await p.getByRole("button",{name:"Filtry",exact:true}).click();
+    await p.locator("#filter-q").fill("Nenalezitelnýpojem");
+    await p.getByText("Žádná zpráva neodpovídá zvoleným filtrům.",{exact:true}).waitFor();
+    await p.locator("#admin-cards").getByRole("button",{name:"Zrušit filtry",exact:true}).click();
+    await p.locator(".story-card").first().waitFor();
+    assert.equal(await p.locator(".story-card").count(),5);
+    assert.equal(await p.locator("#filter-q").inputValue(),"");
+    results.push({label:"zero search results offer a working direct reset and restore all records",pass:true});
+    await p.goto(server.url + "/admin/?page=1&sort=urgency");
+    await p.getByText("Na této stránce už nejsou žádné zprávy.",{exact:true}).waitFor();
+    await p.getByRole("button",{name:"Zpět na první stránku",exact:true}).click();
+    await p.locator(".story-card").first().waitFor();
+    assert.equal(await p.locator("#page-info").innerText(),"Strana 1");
+    assert.equal(new URL(p.url()).searchParams.get("sort"),"urgency");
+    assert.equal(await p.locator(".story-card").count(),5);
+    results.push({label:"stale paginated links recover to the first page without losing sort",pass:true});
+    await context.close();
+  }
+
 }
