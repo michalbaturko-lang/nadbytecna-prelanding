@@ -24,7 +24,7 @@
 
   var MX = 0.12, MYB = 1.0;                                       // okraj vlevo/vpravo; prostor pro pád dolů (násobek výšky rukopisu)
   var wrap = document.createElement("span");
-  var soon = document.body.getAttribute("data-page") === "soon";
+  var pg = document.body.getAttribute("data-page"), soon = pg === "soon" || pg === "scroll";   // obal musí být stejně široký jako logo, jinak canvas sedí od levého okraje
   wrap.style.cssText = "position:relative;display:block;line-height:0;max-width:100%;margin-inline:auto;touch-action:pan-y;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none";
   wrap.style.width = soon ? "fit-content" : "100%";
   img.parentNode.insertBefore(wrap, img);
