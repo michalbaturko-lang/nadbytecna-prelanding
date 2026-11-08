@@ -160,7 +160,6 @@ body[data-page="scroll"] #cil p{grid-area:s;margin:.6rem 0 0;max-width:62ch;font
   body[data-page="scroll"] a.choice::after{width:3rem;height:3rem}
   body[data-page="scroll"] a.choice::before,
   body[data-page="scroll"] #cil::before{padding-top:0}
-  body[data-page="scroll"] #cil{grid-template-areas:"n n" "t t" "s s"}
 }
 
 /* e-shop (původní blok s parfémem) a okamžitá pomoc */
