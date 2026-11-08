@@ -283,7 +283,11 @@
   var rt = 0;
   window.addEventListener("resize", function () { clearTimeout(rt); rt = setTimeout(function () { if (!seq) layout(); }, 150); });
   function start() {
-    var p = document.fonts && document.fonts.load ? document.fonts.load("40px Damion", "s nič nezlomí áščřžůě") : Promise.resolve();
+    // Damion se musí nejdřív zaregistrovat (v CSS nikde není @font-face), jinak se věta v canvasu vykreslí patkovým písmem.
+    var reg = window.FontFace && document.fonts && document.fonts.add
+      ? new FontFace("Damion", "url(/fonts/damion-cs-400-normal.woff2) format('woff2')", { weight: "400", style: "normal" }).load().then(function (f) { document.fonts.add(f); }, function () {})
+      : Promise.resolve();
+    var p = reg.then(function () { return document.fonts && document.fonts.load ? document.fonts.load("40px Damion", "s nič nezlomí áščřžůě") : null; });
     p.then(function () { layout(); if (pendingKick) kickMobile(); }, function () { layout(); if (pendingKick) kickMobile(); });
   }
   if (img.complete && img.naturalWidth) start(); else img.addEventListener("load", start);

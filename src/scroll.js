@@ -54,34 +54,49 @@
       var r = man.getBoundingClientRect();
       var span = r.height - vh;
       var p = span > 0 ? Math.min(1, Math.max(0, -r.top / span)) : 0;
-      var k = Math.min(lines.length - 1, Math.floor(p * lines.length));
+      var n = lines.length, tt = p * n;
+      var k = Math.min(n - 1, Math.max(0, Math.floor(tt)));
+      // jemná hystereze: na hranici dvou hesel se nepřepíná sem a tam
+      if (idx >= 0 && k !== idx && Math.abs(tt - (idx + .5)) < .5 + .1) k = idx;
       if (k !== idx) {
         idx = k;
         for (var j = 0; j < lines.length; j++) lines[j].setAttribute("data-d", String(Math.min(3, Math.abs(j - k))));
-        if (count) count.textContent = pad(k + 1) + " / " + pad(lines.length);
+        if (count) count.textContent = pad(k + 1) + " / " + pad(n);
         follow();
       }
     }
   }
 
-  // aktivní heslo drží uprostřed scény; seznam se posouvá spolu s tím, jak se mění velikosti řádků
-  var list = man ? man.querySelector(".claim-list") : null, followUntil = 0, following = false;
-  function place() {
-    if (!list || idx < 0) return;
-    var ln = lines[idx];
-    var ty = list.offsetHeight / 2 - (ln.offsetTop + ln.offsetHeight / 2);
-    list.style.transform = "translate3d(0," + Math.round(ty) + "px,0)";
+  // heslo: aktivní řádek je uprostřed scény, ostatní se posouvají a zmenšují (jen transform a opacity)
+  var S_DESK = [1, .5, .385, .33], S_MOB = [1, .6, .54, .48], OP = [1, .3, .2, .12];
+  var mobMq = window.matchMedia ? window.matchMedia("(max-width:47.99rem)") : null;
+  var lineH = 0;
+  function measure() {
+    if (!lines.length) return;
+    var l = lines[0];
+    lineH = l.offsetHeight;
   }
-  function follow() {
-    if (!live || !list) return;
-    followUntil = Date.now() + 900;
-    if (following) return;
-    following = true;
-    (function tick() {
-      place();
-      if (Date.now() < followUntil) window.requestAnimationFrame(tick); else following = false;
-    })();
+  function layoutLines() {
+    if (!live || !lines.length || idx < 0) return;
+    if (!lineH) measure();
+    var vh = window.innerHeight || root.clientHeight;
+    var S = mobMq && mobMq.matches ? S_MOB : S_DESK;
+    var gap = Math.max(10, vh * (mobMq && mobMq.matches ? .028 : .035));
+    for (var j = 0; j < lines.length; j++) {
+      var d = j - idx, a = Math.abs(d), y = 0;
+      if (a > 0) {
+        y = lineH / 2 + gap;
+        for (var i = 1; i < a; i++) y += lineH * S[Math.min(i, 3)] + gap;
+        y += lineH * S[Math.min(a, 3)] / 2;
+        if (d < 0) y = -y;
+      }
+      var ln = lines[j];
+      ln.style.setProperty("--y", Math.round(y) + "px");
+      ln.style.setProperty("--s", String(S[Math.min(a, 3)]));
+      ln.style.setProperty("--o", String(OP[Math.min(a, 3)]));
+    }
   }
+  function follow() { layoutLines(); }
 
   // tlačítka a odkazy na kapitoly se rozjedou plynulým posunem místo skoku
   var anim = 0;
@@ -122,7 +137,7 @@
   }
 
   window.addEventListener("scroll", request, { passive: true });
-  window.addEventListener("resize", function () { request(); follow(); });
+  window.addEventListener("resize", function () { lineH = 0; request(); follow(); });
   update();
 
   if (live) {
