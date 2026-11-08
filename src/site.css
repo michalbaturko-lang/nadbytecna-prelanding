@@ -287,13 +287,12 @@ body[data-page="phase1"] .page{overflow-wrap:break-word}
   body[data-page="phase1"] .main,
   body[data-page="phase1"] .foot{width:100%;max-width:72rem;margin-inline:auto}
   body[data-page="phase1"] .hero{
-    display:flex;flex-direction:column;align-items:center;text-align:center;
-    padding:1.5rem 0 0;margin:0;gap:1rem;
+    display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:start;text-align:left;
+    padding:1.5rem 0 0;margin:0;column-gap:clamp(2rem,4vw,4rem);row-gap:1.5rem;
   }
-  body[data-page="phase1"] .hero .brand{overflow:visible;width:min(100%,64rem);max-width:100%;margin-inline:auto;align-items:center}
-  body[data-page="phase1"] .hero .logo{width:min(100%,64rem);max-width:100%;height:auto;margin-inline:auto;aspect-ratio:2480/528}
-  body[data-page="phase1"] .hero .rule{width:min(24rem,62%);max-width:none;margin:1.15rem auto 0}
-  body[data-page="phase1"] .content{max-width:40rem;width:100%;margin-inline:auto;text-align:center;align-self:center}
+  body[data-page="phase1"] .hero .brand{overflow:visible;width:100%;max-width:none;margin:0;align-items:flex-start}
+  body[data-page="phase1"] .hero .logo{width:100%;max-width:none;height:auto;margin:0;aspect-ratio:2480/528}
+  body[data-page="phase1"] .hero .content{max-width:none;width:100%;margin:0;text-align:left;align-self:start}
   body[data-page="phase1"] .fork .block,
   body[data-page="phase1"] .choices{padding-top:0;margin-top:0}
   body[data-page="phase1"] .choices{justify-content:flex-start}
@@ -394,9 +393,16 @@ body[data-page="soon"] a.mail:hover{text-decoration:underline}
 }
 
 .site-head{display:flex;flex-wrap:wrap;align-items:center;gap:.5rem .75rem;padding:.85rem 0 .2rem}
-body[data-page="phase1"] .hero{display:flex;flex-direction:column;align-items:center;text-align:center;gap:.85rem}
-body[data-page="phase1"] .hero .brand{overflow:visible;width:min(100%,64rem);max-width:100%;margin-inline:auto;align-items:center}
-body[data-page="phase1"] .hero .logo{width:min(100%,64rem);max-width:100%;height:auto;margin-inline:auto;aspect-ratio:2480/528}
+body[data-page="phase1"] .hero{display:grid;grid-template-columns:1fr;align-items:start;text-align:left;gap:1.75rem}
+body[data-page="phase1"] .hero-copy{min-width:0;text-align:left}
+body[data-page="phase1"] .hero .brand{overflow:visible;width:100%;max-width:none;margin:0;align-items:flex-start}
+body[data-page="phase1"] .hero .logo{width:100%;max-width:none;height:auto;margin:0;aspect-ratio:2480/528}
+body[data-page="phase1"] .hero .content{max-width:none;width:100%;margin:.85rem 0 0;text-align:left}
+body[data-page="phase1"] .hero h1,
+body[data-page="phase1"] .claim,
+body[data-page="phase1"] .claim-lead{font-family:var(--sans);font-weight:600;font-style:normal;font-size:clamp(1.7rem,2.6vw,2.45rem);line-height:1.12;letter-spacing:-.012em;color:var(--ink)}
+body[data-page="phase1"] .hero h1{margin:0 0 .45rem}
+body[data-page="phase1"] .hero .lead{margin:0}
 .site-mark{display:block;line-height:0;order:1;overflow:visible}
 .wordmark{display:block;width:min(54vw,15rem);height:auto;aspect-ratio:2480/528;overflow:visible}
 .top-cta{order:3;margin-left:auto;display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:.45rem 1rem;border-radius:.5rem;background:var(--magenta-deep);color:#fff;font-weight:700;text-decoration:none}
@@ -413,17 +419,13 @@ body[data-page="phase1"] .hero .logo{width:min(100%,64rem);max-width:100%;height
   .site-nav{order:4;display:none;flex-basis:100%;flex-direction:column;padding:.2rem 0 .4rem}
   .nav-toggle:checked~.site-nav{display:flex}
 }
-.split{display:grid;gap:1.25rem;padding-top:2.2rem}
-.story-side .block{padding-top:0}
-.story-side .choices{margin-top:1.35rem;gap:.85rem}
-.claims{padding-top:1.6rem}
-.claim-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:clamp(.7rem,1.6vw,1.05rem)}
-.claim{display:flex;flex-wrap:wrap;align-items:center;gap:.3rem .65rem}
-.claim-lead{font-family:var(--sans);font-weight:500;font-size:clamp(1.35rem,2.15vw,1.85rem);line-height:1.1;letter-spacing:-.02em;color:var(--magenta-deep)}
-.claim:nth-child(even) .claim-lead{color:#6E5316}
-.claim-word{display:block;height:clamp(2.15rem,4.4vw,2.85rem);width:auto;max-width:100%}
-.claim-rule{width:min(14rem,78%);margin:1.2rem 0 0}
-.claim-rule svg{width:.72rem;height:.72rem}
+.split{display:grid;gap:1.25rem;padding-top:2.4rem}
+.split > .block{padding-top:0}
+.claims{min-width:0}
+.claim-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:clamp(.85rem,1.8vw,1.2rem)}
+.claim{display:flex;flex-wrap:wrap;align-items:center;gap:.25rem .55rem}
+.claim-word{display:block;height:1.2em;width:auto;max-width:100%}
+.claim-rule{width:min(14rem,78%);margin:1.25rem 0 0;justify-content:flex-start}
 @media (prefers-reduced-motion:no-preference){
   .claim{opacity:0;animation:claim-in .75s ease forwards}
   .claim:nth-child(2){animation-delay:.15s}
@@ -434,9 +436,9 @@ body[data-page="phase1"] .hero .logo{width:min(100%,64rem);max-width:100%;height
 }
 @keyframes claim-in{from{opacity:0;transform:translateY(.45rem)}to{opacity:1;transform:none}}
 @media (min-width:48rem){
+  body[data-page="phase1"] .hero{grid-template-columns:minmax(0,1fr) minmax(0,1fr);column-gap:clamp(1.5rem,3vw,3.5rem);row-gap:0}
   .split{grid-template-columns:minmax(0,1fr) minmax(40%,1fr);align-items:start;column-gap:clamp(1.5rem,3vw,3rem)}
-  .choices{width:100%;display:flex;flex-direction:column;justify-content:center;gap:.85rem}
-  .claims{padding-top:0}
+  .choices{width:100%;display:flex;flex-direction:column;justify-content:flex-start;gap:.85rem}
 }
 .cat-grid{display:grid;gap:.75rem}
 .cat{display:flex;align-items:center;min-height:44px;padding:1rem 1.05rem;background:var(--paper);border-radius:.7rem;color:var(--ink);text-decoration:none;font-family:var(--sans);font-weight:600;font-size:1.2rem;line-height:1.25}
@@ -471,6 +473,6 @@ body[data-page="phase1"] .main a.vera-cta:hover{background:#9F0842}
   body[data-page="phase1"] .main > .split,
   body[data-page="phase1"] .main > .block,
   body[data-page="phase1"] .main > .vera-strip{grid-column:1 / -1}
-  body[data-page="phase1"] .hero{display:flex;flex-direction:column;align-items:center;text-align:center}
-  body[data-page="phase1"] .hero .logo{width:min(100%,64rem)}
+  body[data-page="phase1"] .hero{grid-template-columns:minmax(0,1fr) minmax(0,1fr);text-align:left;align-items:start}
+  body[data-page="phase1"] .hero .logo{width:100%}
 }
