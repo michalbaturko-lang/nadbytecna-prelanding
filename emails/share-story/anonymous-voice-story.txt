@@ -1,6 +1,6 @@
 Ahoj,
 
-Dostali jsme tvou hlasovou zprávu a přepíšeme ji na text.
+Dostali jsme tvou hlasovou zprávu. Zprávu si můžeme poslechnout. Automatický přepis nyní neprobíhá.
 Píšeš anonymně, jméno k příběhu nepřidáme.
 Ozveme se na tenhle e-mail, kdybychom potřebovali něco upřesnit.
 

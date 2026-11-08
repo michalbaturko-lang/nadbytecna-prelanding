@@ -111,7 +111,7 @@
         document.getElementById("mic-stop").hidden = true;
         document.getElementById("mic-start").hidden = true;
         stopClock();
-        say("mic-status", "Nahrávka je připravená. Hlasové zprávy přepisujeme na text.");
+        say("mic-status", "Nahrávka je připravená k odeslání. Automatický přepis nyní neprobíhá.");
       };
       try { rec.start(250); } catch (e) { rec.start(); }
       document.getElementById("mic-start").hidden = true;
@@ -166,7 +166,7 @@
     document.getElementById("file-picked").hidden = false;
     fileDrop.hidden = true;
     var kb = Math.max(1, Math.round(file.size / 1024));
-    say("file-status", file.name + " · " + kb + " kB. Hlasové zprávy přepisujeme na text.");
+    say("file-status", file.name + " · " + kb + " kB. Soubor je připravený k odeslání. Automatický přepis nyní neprobíhá.");
   }
   fileInput.addEventListener("change", function (e) {
     takeFile(e.target.files && e.target.files[0]);
@@ -228,7 +228,7 @@
     if (!document.getElementById("sdilet-age").checked) { storySay("Potvrď, že ti je 18 let."); return; }
     if (!consent) { storySay("Bez souhlasu se zpracováním příběhu to poslat nemůžeme."); return; }
     var audio = input === "recording" || input === "file";
-    if (audio && !document.getElementById("sdilet-prepis").checked) { storySay("U hlasu je potřeba souhlas s přepisem."); return; }
+    if (audio && !document.getElementById("sdilet-prepis").checked) { storySay("U hlasu potvrď souhlas s případným budoucím přepisem. Přepis nyní neprobíhá."); return; }
     if (input === "text" && !text) { storySay("Napiš příběh, nebo přepni na hlas."); return; }
     if (input === "recording" && !micBlob) { storySay("Nejdřív nahraj hlasovou zprávu."); return; }
     if (input === "file" && !fileBlob) { storySay("Nejdřív vyber audio soubor."); return; }
@@ -256,7 +256,7 @@
       api.done("stories", id, blob ? { audio: blob, filename: fname } : null);
       var msg = input === "text"
         ? "Dostali jsme tvůj příběh. Ozveme se na e-mail, který jsi uvedla."
-        : "Dostali jsme tvou hlasovou zprávu. Přepíšeme ji na text a ozveme se na e-mail.";
+        : "Dostali jsme tvou hlasovou zprávu. Zprávu si můžeme poslechnout. Automatický přepis nyní neprobíhá.";
       if (share.value === "anonymous") msg += " Jméno k příběhu nepřidáme.";
       if (help) msg += " Ozveme se i k tomu, že chceš pomáhat.";
       showThanks(msg);

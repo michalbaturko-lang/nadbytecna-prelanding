@@ -131,7 +131,9 @@ test("homepage má dvě volby, osm karet a formuláře nic neodesílají", () =>
   assert.match(story, /Chci sdílet anonymně/);
   assert.match(story, /Chci sdílet se jménem/);
   assert.match(story, /Už jsem si tím prošla a chci i pomáhat/);
-  assert.match(story, /Hlasové zprávy přepisujeme na text/);
+  assert.match(story, /Automatický přepis nyní neprobíhá/);
+  assert.match(story, /Souhlasím s případným budoucím přepisem/);
+  assert.doesNotMatch(story, /Hlasové zprávy přepisujeme na text|Přepíšeme ji na text/);
   assert.match(story, /accept="audio\/\*,\.m4a/);
   assert.match(story, /Spustit nahrávání/);
   assert.match(story, /Zastavit nahrávání/);
@@ -140,6 +142,7 @@ test("homepage má dvě volby, osm karet a formuláře nic neodesílají", () =>
   assert.match(story, /<script src="\/story-form\.js" defer><\/script>/);
   const storyJs = fs.readFileSync(path.join(ROOT, "src/story-form.js"), "utf8");
   assert.match(storyJs, /MediaRecorder/);
+  assert.doesNotMatch(storyJs, /Hlasové zprávy přepisujeme na text|Přepíšeme ji na text/);
   assert.match(storyJs, /audio\/mp4/);
   assert.match(storyJs, /50 \* 1024 \* 1024/);
   assert.match(storyJs, /story-audio/);
@@ -209,9 +212,10 @@ test("právní stránky mluví o souhlasu a kontakt není krizová linka", () =>
   assert.match(policy, /zvláštní kategorie/);
   assert.match(policy, /Vercel Inc\./);
   assert.match(policy, /Supabase \(EU, Frankfurt\)/);
-  assert.match(policy, /OpenAI \(přepis hlasu, USA/);
+  assert.match(policy, /OpenAI \(případný budoucí přepis hlasu, nyní vypnutý/);
   assert.match(policy, /Resend \(e-maily\)/);
-  assert.match(policy, /30 dní po přepisu/);
+  assert.match(policy, /30 dní po případném přepisu/);
+  assert.match(policy, /přepis a automatické mazání nyní neprobíhají/);
   assert.match(policy, /12 měsíců/);
   assert.match(policy, /24 měsíců/);
   assert.match(policy, /od 18 let/);
