@@ -3,8 +3,8 @@
   "environment": "local PostgreSQL reconstructed from read-only actual schema metadata; synthetic records and Auth/Storage adapters",
   "unitAndIntegration": {
     "command": "npm test",
-    "total": 168,
-    "passed": 168,
+    "total": 169,
+    "passed": 169,
     "failed": 0
   },
   "browser": {
@@ -51,5 +51,13 @@
     "slowClientBackpressure": "pass",
     "disconnection": "pass",
     "realDataRead": false
+  },
+  "audioConsentVersion": {
+    "version": "2026-11-08-audio-v2",
+    "newConsentMatchesDisplayedLabel": true,
+    "legacyClientsKeepV1": true,
+    "historicalSnapshotsUnchanged": true,
+    "unknownVersionCannotInjectText": true,
+    "updateImmutable": true
   }
 }

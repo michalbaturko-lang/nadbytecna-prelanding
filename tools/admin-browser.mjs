@@ -236,6 +236,14 @@ try {
     await p.waitForTimeout(3100);
     await p.locator("#sdilet-send").click();
     await p.locator("#sdilet-thanks").waitFor();
+    if (mode !== "text") {
+      const saved = (await s.db.query("select id,input_type,audio_path,consent_version,consent_texts from stories where email=$1", [mode + "@example.invalid"])).rows[0];
+      assert.equal(saved.input_type, mode === "file" ? "upload" : "recording");
+      assert.ok(saved.audio_path.startsWith(saved.id + "/"));
+      assert.equal(saved.consent_version, "2026-11-08-audio-v2");
+      assert.equal(saved.consent_texts.transcript, "Souhlasím s případným budoucím přepisem hlasové zprávy na text. Přepis nyní neprobíhá. U audia povinné.");
+      assert.ok((await p.locator("#sdilet-thanks-text").textContent()).includes("Automatický přepis nyní neprobíhá"));
+    }
     results.push({ label: "public story " + mode, pass: true });
   }
   await p.goto(s.url + "/mohu-pomoci/");

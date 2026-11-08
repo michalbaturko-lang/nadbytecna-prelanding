@@ -37,6 +37,7 @@ export async function installOptionalPreregistrations(db) {
 }
 export async function applyAdminWorkspace(db) {
   await db.exec(fs.readFileSync(workspaceMigration, "utf8"));
+  await db.exec(fs.readFileSync(new URL("20261108180637_audio_consent_version.sql", migrations), "utf8"));
 }
 export async function freshAdminDb({
   optionalPreregistrations = false,

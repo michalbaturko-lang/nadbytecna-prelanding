@@ -1,5 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import fs from "node:fs";
 import {
   freshAdminDb,
   applyAdminWorkspace,
@@ -67,6 +68,28 @@ test("admin migration: categories, RLS, anon metadata guard and age", async () =
   assert.ok(r.age_confirmed_at);
   assert.equal(r.consent_version, "2026-11-07-v1");
 });
+test("audio consent v2 stores the displayed wording; old clients and historical snapshots retain v1", async () => {
+  const previous = (await db.query("select consent_version,consent_texts from stories where id=$1", [STORY])).rows[0];
+  for (const version of [null, "2026-11-08-audio-v2", "forged-version"]) {
+    const email = "consent-" + (version || "legacy") + "@example.invalid";
+    try {
+      await db.exec("set role anon");
+      await db.query(`INSERT INTO stories(email,consent,age_confirmed,input_type,consent_transcript,consent_version,consent_texts)
+        VALUES($1,true,true,'recording',true,$2,'{"transcript":"forged text"}')`, [email, version]);
+    } finally {
+      await db.exec("reset role");
+    }
+    const saved = (await db.query("select consent_version,consent_texts from stories where email=$1", [email])).rows[0];
+    const v2 = version === "2026-11-08-audio-v2";
+    assert.equal(saved.consent_version, v2 ? version : "2026-11-07-v1");
+    const displayed = fs.readFileSync(new URL("../lib/phase1-html.js", import.meta.url), "utf8").match(/<label for="sdilet-prepis">([^<]+)<\/label>/)[1];
+    assert.equal(saved.consent_texts.transcript, v2 ? displayed : "Souhlasím s přepisem hlasové zprávy na text. U audia povinné.");
+  }
+  assert.deepEqual((await db.query("select consent_version,consent_texts from stories where id=$1", [STORY])).rows[0], previous);
+  await assert.rejects(db.query("update stories set consent_version='changed' where email='consent-2026-11-08-audio-v2@example.invalid'"), /consent_immutable/);
+  await db.query("delete from stories where email=ANY($1::text[])", [["consent-legacy@example.invalid", "consent-2026-11-08-audio-v2@example.invalid", "consent-forged-version@example.invalid"]]);
+});
+
 test("allowlist enrollment and session idle expiry; RLS outsiders see no rows", async () => {
   await db.exec("set role service_role");
   assert.equal(
