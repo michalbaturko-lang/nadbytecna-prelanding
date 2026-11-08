@@ -3,6 +3,8 @@
 
 ## Další kontrola ručního zpracování — 8. 11. 2026
 
+Read-only inventář bucketu story-audio: 14 objektů, žádný přiřazený k příběhu, celkem 1 106 998 B. Obsah nebyl čten a nic nebylo smazáno. Nepřiřazený objekt není automaticky testovací ani určený ke smazání; evidence je ve storage-inventory.json.
+
 - Záznam bez výsledku AI už nenese štítek návrhu AI; zpráva i e-mail uvádějí „Zatím bez shrnutí AI“. Ruční klasifikace zůstává dostupná s vypnutou AI.
 - Prázdná kolekce, nulové hledání a prázdná stránka staršího stránkovaného odkazu mají odlišné texty. V seznamu lze přímo zrušit filtry nebo se vrátit na první stránku se zachováním řazení.
 - Počty zpráv a vláken používají české tvary. Přes skutečný lokální PostgreSQL/API ověřeno 0, 1, 2, 4 a 5 zpráv a jedno e-mailové vlákno.

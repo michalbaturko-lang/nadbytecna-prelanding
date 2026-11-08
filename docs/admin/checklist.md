@@ -33,7 +33,7 @@ Stav k 8. 11. 2026. Admin je nasazený; podrobné provozní ověření a histori
 | Šířky 320–1920 px a dotykové cíle | PASS: bez overflow, cíle nejméně 44 px a žádné nálezy axe v kontrolovaných pohledech | Syntetické screenshoty; ruční audit čtečkou obrazovky neproběhl. |
 | Klávesnice a fokus | PASS: skip link, detail, Escape a mobilní filtr | Bez tvrzení úplné manuální přístupnosti všech kombinací. |
 | Microsoft 365 | PASS s mocky: read-only Graph, deduplikace, OAuth/PKCE, šifrování a odpojení | Skutečná schránka není připojená. Zvolená varianta je delegovaný jednorázový odkaz, bez PowerShellu a certifikátu. [Postup](microsoft365-odkaz.md). |
-| Úklid testovacích dat | PASS: lokální DB v paměti; nové hosted syntetické záznamy/audio uklizené | Starší soubory v produkčním bucketu nebyly označeny za testovací ani smazány; vyžadují seznam a zvláštní souhlas. |
+| Úklid testovacích dat | PASS: lokální DB v paměti; nové hosted syntetické záznamy/audio uklizené | Read-only inventář našel 14 nepřiřazených objektů (1 106 998 B), bez čtení jejich obsahu. Nejsou tím prokázané jako testovací; nebyly smazány. [Evidence](storage-inventory.json). |
 
 ## Nové průchody pro ruční práci
 
