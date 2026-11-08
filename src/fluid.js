@@ -1,6 +1,6 @@
 // Logo reaguje na přiblížení myši / dotek prstu. Bez knihoven, bez třetích stran.
-// VERY VERA nad nápisem se nikdy nehýbe: efekt běží jen na rukopisném „Nadbytečná.cz“.
-// Písmena jsou skutečné vektorové tvary (řezy vedené podle spojů mezi písmeny, ne svislé čáry).
+// Efekt běží na rukopisném „Nadbytečná.cz“. Písmena jsou skutečné vektorové tvary
+// (řezy vedené podle spojů mezi písmeny, ne svislé čáry).
 //  1. první přejetí (na mobilu první dotyk nebo scroll): odpadne velké „N“
 //  2. asi po 1 s samo naváže dnešní pokračování: dvě písmena, pak zbytek „Nadbytečná“,
 //     „ná“ se zlatě posune. Věta „s nic nezlomí!“ zůstává na svém místě a nepadá.
@@ -13,10 +13,12 @@
   var DATA = /*LETTERS*/null;
   if (!DATA) return;
 
-  var SPLIT = parseFloat(img.getAttribute("data-split"));        // kde v logu začíná rukopis (podíl výšky)
+  var SPLIT = parseFloat(img.getAttribute("data-split"));        // kde v obrázku začíná rukopis (0 = celý obrázek je nápis)
   var PHRASE = document.documentElement.lang === "sk" ? "s nič nezlomí!" : "s nic nezlomí!";
   var PINK = [0xD7, 0x1D, 0x62], GOLD = [0xA9, 0x80, 0x2F];
-  var SY = 688;                                                   // posun rukopisu v lockupu (jednotky 2480 široké kresby)
+  var SCRIPT = /nadbytecna-script\.svg/.test(img.getAttribute("src") || "");
+  var DRAW_SY = SCRIPT ? 0 : 688;                                 // lockup má rukopis níž; samotný nápis už začíná nahoře
+  var DRAW_OX = 0;                                                // souřadnice písmen sedí na levý okraj zobrazeného nápisu
   var CHAIN = true;                                               // po 2. přiblížení hned padá i zbytek
   var ORDER = ["N", "a", "d", "b", "y", "t", "e", "c", "na", "cz"];
 
@@ -66,7 +68,7 @@
     if (active) draw(performance.now());
   }
   function setScript(c) {                                         // souřadnice kresby (2480 široká) -> pixely plátna
-    c.setTransform(dpr * k0, 0, 0, dpr * k0, dpr * MX * lw, dpr * (SY * k0 - SPLIT * lh));
+    c.setTransform(dpr * k0, 0, 0, dpr * k0, dpr * (MX * lw - DRAW_OX * k0), dpr * (DRAW_SY * k0 - SPLIT * lh));
   }
   function show(on) {
     active = on;
@@ -204,7 +206,7 @@
     while (nw + gap + tw > 2480 * 0.92 && fsz > 40) { fsz -= 4; tx.font = fsz + "px Damion"; tw = tx.measureText(PHRASE).width; }
     var total = nw + gap + tw, left = (2480 - total) / 2;
     // data-base je podíl výšky loga, kde leží linka rukopisu. Damion má jednu rodinu (latin i latin-ext), takže „s“ nesedne výš než zbytek věty.
-    var base = 1219 * parseFloat(img.getAttribute("data-base") || "0.8403") - SY;
+    var base = 1219 * parseFloat(img.getAttribute("data-base") || "0.8403") - 688;
     var Tslide = dmax + (WOB + 1.0) * 1000 + 250, Tunroll = Tslide + 900, Dunroll = 3400, Tfade = Tunroll + Dunroll + 3200, Tback = Tfade + 100;
     seq = { t0: now, dx: left - n.x0, tx: left + nw + gap, tw: tw, fsz: fsz, base: base, Tslide: Tslide, Tunroll: Tunroll, Dunroll: Dunroll, Tfade: Tfade, Tback: Tback, k: 0,
       end: Tback + 1100 + 300 };
@@ -247,7 +249,7 @@
 
   // ---- přiblížení / dotek ----
   var inside = false;
-  function hit(e) {                                               // jen rukopisná část, ne VERY VERA
+  function hit(e) {                                               // rukopisná část nápisu
     var r = img.getBoundingClientRect(), top = r.top + r.height * SPLIT, padx = r.width * 0.04;
     return e.clientX > r.left - padx && e.clientX < r.right + padx && e.clientY > top - r.height * 0.02 && e.clientY < r.bottom + r.height * 0.06;
   }

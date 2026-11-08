@@ -29,13 +29,14 @@ test("noindex v HTML, robots.txt zakazuje vše, stránky nemají kanonický odka
   assert.doesNotMatch(home, /nadbytecna-prelanding\.vercel\.app/);
 });
 
-test("hero má stejný lockup a stejné fluid.js, app.js se nenačítá", () => {
+test("hero má psací nápis a stejné fluid.js, app.js se nenačítá", () => {
   assert.match(home, /<img class="wordmark" src="\/img\/nadbytecna-script\.svg"/);
   const logo = home.match(/<img class="logo"[^>]*>/)[0];
-  assert.match(logo, /src="\/img\/nadbytecna-lockup\.svg"/);
-  assert.match(logo, /data-split="0\.5385"/);
+  assert.match(logo, /src="\/img\/nadbytecna-script\.svg"/);
+  assert.match(logo, /data-split="0"/);
   assert.match(logo, /data-base="0\.8403"/);
-  assert.match(logo, /alt="VERY VERA – Nadbytečná\.cz"/);
+  assert.match(logo, /alt="Nadbytečná\.cz"/);
+  assert.doesNotMatch(home, /nadbytecna-lockup|VERY VERA|very-vera\.cz/);
   assert.equal(home.match(/data-split="/g).length, 1);
   assert.match(home, /<script src="\/fluid\.js" defer><\/script>/);
   assert.doesNotMatch(home, /app\.js/);
@@ -86,7 +87,19 @@ test("homepage má dvě volby, osm karet a formuláře nic neodesílají", () =>
   assert.match(home, /loading="lazy"/);
   assert.match(home, /src="\/img\/parfem-nadbytecna\.jpg"/);
   assert.doesNotMatch(home, /E-shop Věry Komárové/);
-  assert.match(home, /class="vera-cta" href="https:\/\/very-vera\.cz" rel="noopener noreferrer"/);
+  assert.match(home, /class="vera-cta" href="https:\/\/veryvera22\.cz" rel="noopener noreferrer"/);
+  assert.match(home, /href="https:\/\/veryvera22\.cz" rel="noopener noreferrer">E-shop<\/a>/);
+  assert.match(home, /class="claim-lead">Nejsi</);
+  assert.match(home, /class="claim-lead">Krása není</);
+  assert.match(home, /class="claim-lead">Žádná žena není</);
+  assert.match(home, /class="claim-lead">Žádná práce není</);
+  assert.match(home, /class="claim-lead">Žádná láska není</);
+  assert.match(home, /class="claim-lead">Never</);
+  assert.equal(home.match(/class="claim-word" src="\/img\/nadbytecna-word\.svg"/g).length, 6);
+  assert.match(home, /class="rule claim-rule"/);
+  const stripAt = home.indexOf('class="vera-strip"');
+  const goalAt = home.indexOf('id="cil"');
+  assert.ok(goalAt > 0 && stripAt > goalAt);
   assert.match(home, /Správce osobních údajů: Věra Komárová, fyzická osoba\. Adresa: doplníme\. IČ: doplníme\./);
   assert.doesNotMatch(visible(home), /Zapsaný ústav/);
   assert.match(read("ochrana-osobnich-udaju/index.html"), /Správce osobních údajů je Věra Komárová, fyzická osoba/);
@@ -133,7 +146,7 @@ test("homepage má dvě volby, osm karet a formuláře nic neodesílají", () =>
   assert.doesNotMatch(read("potrebuji-pomoc/index.html"), /Instagram|Facebook|e-shop|Odkaz na web/);
   assert.doesNotMatch(visible(home), /50 %|Dermacol|Kateřina|Maruška|Miklíková|Golden Line|Malé nám|Dlouhá 34|Lázeňská|Supabase|Resend/i);
   const soon = read("coming-soon/index.html");
-  assert.match(soon, /<img class="logo"[^>]*data-split="0\.5385"/);
+  assert.match(soon, /<img class="logo"[^>]*src="\/img\/nadbytecna-script\.svg"[^>]*data-split="0"/);
   assert.match(soon, /src="\/fluid\.js"/);
   assert.match(soon, /Spouštíme 11\. 11\. 2026/);
   assert.match(soon, /Zanechte nám e-mail a o spuštění se dozvíte jako první\./);
@@ -141,7 +154,8 @@ test("homepage má dvě volby, osm karet a formuláře nic neodesílají", () =>
   assert.match(soon, /Chci být u toho/);
   assert.match(soon, /Děkujeme\. 11\. 11\. se vám ozveme jako prvním\./);
   assert.match(soon, /Souhlasím se zasláním zprávy o spuštění platformy/);
-  assert.match(soon, /alt="VERY VERA – Nadbytečná\.cz"/);
+  assert.match(soon, /alt="Nadbytečná\.cz"/);
+  assert.doesNotMatch(soon, /VERY VERA|nadbytecna-lockup|very-vera\.cz/);
   assert.match(soon, /id="brzy-gdpr" type="checkbox"/);
   assert.doesNotMatch(soon, /id="brzy-gdpr"[^>]*checked/);
   assert.match(soon, /href="\/zasady\/"/);
