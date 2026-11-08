@@ -1,5 +1,5 @@
 {
-  "date": "2026-11-07",
+  "date": "2026-11-08",
   "environment": "offline synthetic PostgreSQL fixture; not Supabase production",
   "results": [
     {
@@ -154,6 +154,26 @@
     },
     {
       "label": "long audio survives signing TTL and closes safely; idle logout removes private dialogs",
+      "pass": true
+    },
+    {
+      "label": "unprocessed web records never claim to contain an AI proposal",
+      "pass": true
+    },
+    {
+      "label": "unprocessed mail has an honest AI label and singular Czech count",
+      "pass": true
+    },
+    {
+      "label": "empty collection differs from filters; 0, 1, 2, 4 and 5 records use Czech plural forms",
+      "pass": true
+    },
+    {
+      "label": "zero search results offer a working direct reset and restore all records",
+      "pass": true
+    },
+    {
+      "label": "stale paginated links recover to the first page without losing sort",
       "pass": true
     }
   ],

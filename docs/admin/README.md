@@ -18,6 +18,10 @@ Admin je nasazený na https://nadbytecna.cz/admin/. PR #11 byl sloučen; zachov�
 
 Zbývá provozní rozhodnutí o retenci, krizovém postupu, publikování a případném zapnutí AI. Testy nejsou právním schválením těchto rozhodnutí.
 
+## Ruční práce bez AI
+
+Nezpracované zprávy se již netváří jako návrh AI. Prázdný seznam se odlišuje od nulových výsledků hledání; filtry lze přímo zrušit a starší stránkovaný odkaz vrátit na první stránku. Počty mají správné české tvary. Nové prázdné přehledy: [mobil](screenshots/375-empty-list.png) a [desktop](screenshots/1440-empty-list.png). Aktuální [checklist](checklist.md) rozlišuje lokální testy, skutečně ověřené nasazení a otevřené provozní kroky.
+
 ## Co je připravené
 
 - Český mobilní a desktopový přehled příběhů a nabídek: počty, filtry, hledání bez diakritiky, řazení a stránky po 25.
@@ -29,7 +33,7 @@ Zbývá provozní rozhodnutí o retenci, krizovém postupu, publikování a př�
 
 ## E-maily Microsoft 365
 
-Připravená samostatná záložka pro veryvera@nadbytecna.cz: vlákna a stránkované zprávy, hledání a filtry, ruční zařazení, poznámky, JSON export a výmaz místní kopie. Serverový import používá pouze Graph GET, certifikát aplikace, kontrolované pokračovací odkazy, transakční kurzor, deduplikaci, backoff a ochranu před opětovným importem vymazaných kopií. AI pouze ručně po odděleném schválení a zapnutí; žádné odesílání e-mailů.
+Připravená samostatná záložka pro veryvera@nadbytecna.cz: vlákna a stránkované zprávy, hledání a filtry, ruční zařazení, poznámky, JSON export a výmaz místní kopie. Zvolený serverový import používá delegované připojení jednorázovým odkazem, pouze Graph GET, kontrolované pokračovací odkazy, transakční kurzor, deduplikaci, backoff a ochranu před opětovným importem vymazaných kopií. AI pouze ručně po odděleném schválení a zapnutí; žádné odesílání e-mailů.
 
 Schránka není připojena. Po předání přístupu zbývá doplnit konfiguraci aplikace a ověřit skutečný Microsoft. [Přesný postup a omezení](microsoft365.md), [22 integračních kontrol](mail-integration-results.json), [desktop ukázka](screenshots/1440-mail-detail.png), [mobil](screenshots/375-mail-detail.png).
 
@@ -39,7 +43,7 @@ Připravená delegovaná varianta: admin vytvoří soukromý jednorázový odkaz
 
 ## Ověření a ukázky
 
-- [Souhrn výsledků](test-results.json): 163/163 lokálních unit a integračních testů, 84 prohlížečových kontrol (29 původních + 22 e-mailových + 14 admin pozvánky + 11 veřejná stránka + 8 přihlášení a typografie), 26 screenshotů.
+- [Souhrn výsledků](test-results.json): 163/163 lokálních unit a integračních testů, 89 prohlížečových kontrol (34 základní admin + 22 e-mailových + 14 admin pozvánky + 11 veřejná stránka + 8 přihlášení a typografie), 28 screenshotů.
 - [Prohlížečové výsledky](browser-results.json): seznam, detail a filtry na 320, 375, 768, 1024, 1440 a 1920 px; veřejné formuláře a globální GDPR dialog. Bez zjištěného přetékání a nálezů axe v testovaných pohledech.
 - [Regrese veřejného webu](public-regression.json): porovnání 12 veřejných HTML se základním commitem, povolená změna 18+; vybrané vizuální soubory a cookie skript shodné.
 - Lighthouse Accessibility v režimu snapshot: [mobilní seznam](lighthouse-mobile-list.json), [mobilní detail](lighthouse-mobile-detail.json), [desktopový seznam](lighthouse-desktop-list.json), [desktopový detail](lighthouse-desktop-detail.json), všechny 100/100. Nejde o produkční měření výkonu.

@@ -1,6 +1,19 @@
 # Nasazení a aktuální předání
 
+
+## Další kontrola ručního zpracování — 8. 11. 2026
+
+- Záznam bez výsledku AI už nenese štítek návrhu AI; zpráva i e-mail uvádějí „Zatím bez shrnutí AI“. Ruční klasifikace zůstává dostupná s vypnutou AI.
+- Prázdná kolekce, nulové hledání a prázdná stránka staršího stránkovaného odkazu mají odlišné texty. V seznamu lze přímo zrušit filtry nebo se vrátit na první stránku se zachováním řazení.
+- Počty zpráv a vláken používají české tvary. Přes skutečný lokální PostgreSQL/API ověřeno 0, 1, 2, 4 a 5 zpráv a jedno e-mailové vlákno.
+- Aktuálně prošlo 163/163 testů a 89 browser kontrol (34 admin, 22 e-mail, 14 pozvánky, 11 veřejné připojení, 8 přihlášení/typografie). Čtyři nové Lighthouse Accessibility snapshoty po Jost: mobil/desktop, seznam/detail, všechny 100/100. Připraveno 28 syntetických screenshotů včetně nových prázdných přehledů.
+- Akceptační checklist je přepsaný na aktuální důkazy; přednasazovací tvrzení už nejsou prezentována jako dnešní stav. Testy této kontroly neposílaly skutečné e-maily, nevolaly AI/Microsoft a neměnily produkční osobní data.
+
 ## Oprava po uživatelském testu — 8. 11. 2026
+
+**Resend je na výslovný pokyn uživatele nyní odložený.** Příplatek 20 USD měsíčně byl schválen, ale uživatel před jeho zapnutím požádal Resend přeskočit. Add-on nebyl zapnut, nová doména nadbytecna.cz ani API klíč nevznikly, DNS a SMTP zůstávají beze změny. Bez nového pokynu se k tomuto kroku nevracet.
+
+Správný účet Resend je michal.baturko@regalmaster.cz / regalmaster Pro (ověřeno přihlášením a přepínačem identity). Uživatel odmítl odesílatele přes send.regalmaster.cz a požaduje přímo nadbytecna.cz; cílem je Nadbytečná <prihlaseni@nadbytecna.cz>. Nepoužitý formulář klíče a rozepsané SMTP pro send.regalmaster.cz byly zrušeny. Účet má všech 10 domén obsazených. Add domain otevírá nabídku Add more domains / Domains add-on / $20 per month / 100 more domains. Samostatný Create team je také označen Paid feature. Příplatek 20 USD/měsíc byl následně schválen, ale před kliknutím odložen spolu s celým Resendem. K dokončení později chybí obnovení tohoto kroku a přístup/správce DNS FlexCloud/ClouDNS. MX Microsoftu a SPF include:spf.protection.outlook.com -all nebyly změněny; send, rsend a resend._domainkey při kontrole neměly záznamy. Doména nadbytecna.cz dosud nebyla přidána, nejsou vytvořené její ostré DKIM údaje ani nový API klíč. SMTP zůstává vypnuté.
 
 **Admin je nasazený, ale přihlašovací e-mail není provozně připravený bez vlastního SMTP.** V provozním logu je 8. 11. v 11:26:59 Europe/Prague požadavek POST /auth/v1/otp se stavem 429. Dashboard potvrzuje vestavěné testovací odesílání Supabase; má limit 2 e-maily/hodinu a omezené příjemce. Dřívější úspěšný test jednoho přihlášení proto nepotvrzoval spolehlivou produkční doručitelnost pro oba uživatele.
 
