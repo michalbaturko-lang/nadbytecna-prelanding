@@ -2,6 +2,11 @@
   "use strict";
   var root = document.getElementById("help-form");
   if (!root) return;
+  var preset = new URLSearchParams(location.search).get("typ");
+  if (preset) {
+    var radios = root.querySelectorAll('input[name="druh"]');
+    for (var i = 0; i < radios.length; i++) if (radios[i].value === preset) radios[i].checked = true;
+  }
   var started = Date.now();
   var sendBtn = document.getElementById("pomoc-send");
   function say(text) { document.getElementById("pomoc-msg").textContent = text; }
@@ -21,13 +26,13 @@
     }
     var name = val("pomoc-jmeno");
     var email = val("pomoc-email");
-    var type = document.querySelector('#help-form input[name="jak"]:checked');
+    var type = document.querySelector('#help-form input[name="druh"]:checked');
     var consent = document.getElementById("pomoc-gdpr").checked;
     if (!name || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { say("Doplň jméno a e-mail."); return; }
-    if (!type) { say("Vyber, jestli sis tím prošla, nebo pomáháš takovým lidem."); return; }
+    if (!type) { say("Vyber, jak chceš pomoci."); return; }
     if (!document.getElementById("pomoc-age").checked) { say("Potvrď, že ti je 18 let."); return; }
     if (!consent) { say("Bez souhlasu se zpracováním nabídky to poslat nemůžeme."); return; }
-    var kinds = Array.prototype.map.call(document.querySelectorAll('#help-form input[name="kind"]:checked'), function (el) { return el.value; });
+    var kinds = [type.value];
     var links = {
       instagram: val("pomoc-ig"),
       facebook: val("pomoc-fb"),
@@ -41,8 +46,8 @@
       full_name: name,
       email: email,
       phone: val("pomoc-telefon") || null,
-      helper_type: type.value,
-      help_kinds: type.value === "professional" ? kinds : [],
+      helper_type: type.value === "potencial" ? "lived_experience" : "professional",
+      help_kinds: kinds,
       message: val("pomoc-text") || null,
       links: JSON.stringify(links),
       consent: true,
@@ -52,7 +57,7 @@
       api.done("help_offers", id);
       root.querySelector("fieldset").hidden = true;
       sendBtn.hidden = true;
-      document.getElementById("pomoc-thanks-text").textContent = type.value === "lived_experience"
+      document.getElementById("pomoc-thanks-text").textContent = type.value === "potencial"
         ? "Děkujeme, že chceš pomoct, protože sis tím prošla nebo prošel. Ozveme se na e-mail, který jsi uvedla."
         : "Děkujeme za nabídku pomoci. Ozveme se na e-mail, který jsi uvedla.";
       document.getElementById("pomoc-thanks").hidden = false;

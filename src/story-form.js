@@ -8,7 +8,7 @@
   if (!root) return;
   var AUDIO_MAX = 50 * 1024 * 1024;
   var micBlob = null, micUrl = "", micMime = "", fileBlob = null, fileUrl = "", fileMime = "", fileName = "";
-  var stream = null, rec = null;
+  var stream = null, rec = null, tick = 0;
 
   function pickMime() {
     if (!window.MediaRecorder || !MediaRecorder.isTypeSupported) return "";
@@ -54,7 +54,26 @@
     el.hidden = false;
   }
 
+  function showTime(ms) {
+    var s = Math.floor(ms / 1000);
+    var m = Math.floor(s / 60);
+    var r = s % 60;
+    var el = document.getElementById("mic-time");
+    if (el) el.textContent = m + ":" + (r < 10 ? "0" : "") + r;
+  }
+  function startClock() {
+    var t0 = Date.now();
+    showTime(0);
+    if (tick) clearInterval(tick);
+    tick = setInterval(function () { showTime(Date.now() - t0); }, 250);
+  }
+  function stopClock() {
+    if (tick) clearInterval(tick);
+    tick = 0;
+    showTime(0);
+  }
   function clearMic() {
+    stopClock();
     stopTracks();
     if (rec && rec.state === "recording") rec.stop();
     rec = null;
@@ -91,11 +110,14 @@
         document.getElementById("mic-actions").hidden = false;
         document.getElementById("mic-stop").hidden = true;
         document.getElementById("mic-start").hidden = true;
+        stopClock();
         say("mic-status", "Nahrávka je připravená. Hlasové zprávy přepisujeme na text.");
       };
       try { rec.start(250); } catch (e) { rec.start(); }
       document.getElementById("mic-start").hidden = true;
       document.getElementById("mic-stop").hidden = false;
+      say("mic-status", "");
+      startClock();
     }).catch(function () {
       say("mic-status", "Mikrofon se nepodařilo zapnout. Můžeš nahrát audio soubor.");
     });
@@ -114,17 +136,25 @@
     beginRecording();
   });
 
-  document.getElementById("audio-file").addEventListener("change", function (e) {
-    var file = e.target.files && e.target.files[0];
+  var fileInput = document.getElementById("audio-file");
+  var fileDrop = document.getElementById("file-drop");
+  function clearFile() {
+    var player = document.getElementById("file-player");
+    fileInput.value = "";
+    if (player._url) URL.revokeObjectURL(player._url);
+    player._url = "";
+    player.removeAttribute("src");
+    player.hidden = true;
+    fileBlob = null; fileName = ""; fileMime = "";
+    document.getElementById("file-picked").hidden = true;
+    document.getElementById("file-name").textContent = "";
+    fileDrop.hidden = false;
+  }
+  function takeFile(file) {
     var player = document.getElementById("file-player");
     if (!file) return;
     if (file.size > AUDIO_MAX) {
-      e.target.value = "";
-      if (player._url) URL.revokeObjectURL(player._url);
-      player._url = "";
-      player.removeAttribute("src");
-      player.hidden = true;
-      fileBlob = null; fileName = ""; fileMime = "";
+      clearFile();
       say("file-status", "Soubor je větší než 50 MB. Vyber menší.");
       return;
     }
@@ -132,8 +162,30 @@
     fileName = file.name;
     fileMime = file.type || "audio/mp4";
     playable(player, file);
+    document.getElementById("file-name").textContent = file.name;
+    document.getElementById("file-picked").hidden = false;
+    fileDrop.hidden = true;
     var kb = Math.max(1, Math.round(file.size / 1024));
     say("file-status", file.name + " · " + kb + " kB. Hlasové zprávy přepisujeme na text.");
+  }
+  fileInput.addEventListener("change", function (e) {
+    takeFile(e.target.files && e.target.files[0]);
+  });
+  fileDrop.addEventListener("click", function () { fileInput.click(); });
+  fileDrop.addEventListener("dragover", function (e) {
+    e.preventDefault();
+    fileDrop.classList.add("is-over");
+  });
+  fileDrop.addEventListener("dragleave", function () { fileDrop.classList.remove("is-over"); });
+  fileDrop.addEventListener("drop", function (e) {
+    e.preventDefault();
+    fileDrop.classList.remove("is-over");
+    var file = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+    takeFile(file);
+  });
+  document.getElementById("file-clear").addEventListener("click", function () {
+    clearFile();
+    say("file-status", "");
   });
 
   var tabs = Array.prototype.slice.call(document.querySelectorAll("#story-modes [role=tab]"));
