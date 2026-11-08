@@ -24,8 +24,19 @@ test("veřejná doména dál přesměruje a vercel.app přepíše og adresu", as
     assert.equal(asset.headers.get("x-middleware-next"), "1");
     assert.equal(calls.length, 0);
 
-    const blocked = await middleware(req("https://nadbytecna.cz/admin/"));
-    assert.equal(blocked.headers.get("x-middleware-next"), "1");
+    const admin = await middleware(req("https://nadbytecna.cz/admin/"));
+    assert.equal(admin.status, 200);
+    assert.equal(admin.headers.get("cache-control"), "no-store");
+    assert.equal(admin.headers.get("cdn-cache-control"), "no-store");
+    assert.match(admin.headers.get("x-robots-tag"), /noindex/);
+    assert.match(await admin.text(), /id="login-form"/);
+    assert.equal(calls.length, 0);
+    const head = await middleware(new Request("https://nadbytecna.cz/admin/", { method: "HEAD", headers: { host: "nadbytecna.cz" } }));
+    assert.equal(await head.text(), "");
+    assert.equal(head.headers.get("cache-control"), "no-store");
+    const post = await middleware(new Request("https://nadbytecna.cz/admin/", { method: "POST", headers: { host: "nadbytecna.cz" } }));
+    assert.equal(post.status, 405);
+    assert.equal(post.headers.get("cache-control"), "no-store");
 
     const home = await middleware(req("https://nadbytecna-prelanding.vercel.app/"));
     const text = await home.text();
