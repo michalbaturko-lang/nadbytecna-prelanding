@@ -281,11 +281,6 @@ export async function startAdminServer({
               col + " @@ plainto_tsquery('simple'," + arg(v.slice(14)) + ")"
             );
           let value = val;
-          if (value.startsWith('"'))
-            value = value
-              .slice(1, -1)
-              .replaceAll('\\"', '"')
-              .replaceAll("\\\\", "\\");
           const ops = { eq: "=", gte: ">=", lte: "<=", gt: ">", lt: "<" };
           if (!ops[op]) throw new Error("operator " + op);
           return col + ops[op] + arg(value);

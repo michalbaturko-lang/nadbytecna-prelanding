@@ -12,7 +12,8 @@
     "test:admin:mail": "PHASE1=1 node build.mjs && node tools/admin-mail-browser.mjs && MAIL_UI_EXTENDED=true node tools/admin-mail-integration.mjs",
     "check:m365": "node tools/m365-check.mjs",
     "test:mail:connect": "node --test tests/m365-oauth-client.test.mjs tests/m365-oauth-db.test.mjs tests/mail-connect-api.test.mjs",
-    "test:mail:connect:browser": "node tools/admin-mail-connect-browser.mjs && node tools/mail-connect-public-browser.mjs"
+    "test:mail:connect:browser": "node tools/admin-mail-connect-browser.mjs && node tools/mail-connect-public-browser.mjs",
+    "test:admin:login": "PHASE1=1 node build.mjs && node tools/admin-login-browser.mjs"
   },
   "dependencies": {
     "@azure/msal-node": "7.2.1",

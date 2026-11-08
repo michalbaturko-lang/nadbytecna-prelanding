@@ -1,6 +1,18 @@
 # Admin Nadbytečná.cz — podklady k revizi
 
-Stav k 7. 11. 2026: implementace a lokální ověření jsou připravené k revizi. Produkční admin nebyl tímto ověřen ani nasazen. Základ testovací databáze nyní vychází ze skutečných metadat přečtených read-only přes přihlášený SQL editor 7. 11.; jde pouze o strukturu, nikoli produkční osobní data. Snapshot je v `tests/fixtures/admin-schema-2026-11-07.json`.
+## Produkční stav — 8. 11. 2026
+
+Admin je nasazený na https://nadbytecna.cz/admin/. PR #11 byl sloučen; zachovává veřejné změny z main 70e6104. Veřejný web zůstává coming soon.
+
+- Na ověřeném projektu gjzsifxldxaogcuqzivb byly po kontrole shody 53 sloupců aplikovány migrace admin_workspace, admin_mail a mail_oauth v jedné transakci. Historie migrací je zapsaná.
+- Povolené účty: veryvera@nadbytecna.cz a mbo@michalbaturko.com. Skutečné přihlášení mbo přes doručený e-mail v nové kartě je ověřeno; Věřino vlastní přihlášení zatím ne.
+- Nastaveny serverové klíče a samostatná náhodná tajemství; hodnoty se do dokumentace ani Git neukládají. Auth Site URL a přesný redirect směřují na produkční admin.
+- Opraveno no-store pro HTML adminu, přenos PKCE mezi kartami a skalární PostgREST filtry pro UUID. Přihlašovací tokeny zůstávají v sessionStorage; pouze krátkodobý PKCE verifier může být v localStorage (15 minut).
+- Skutečná produkční kontrola: anonymní vložení dvou syntetických záznamů a tichého WAV, zákaz anonymního čtení tabulek, privátní bucket, skutečný přehled/detail, ruční klasifikace, stav/historie, poznámka, CSV a ZIP s daty a audiem. Podepsaná nahrávka měla platnost 120 s: před vypršením HTTP 200, po vypršení HTTP 400 InvalidJWT. Oba syntetické záznamy a audio byly odstraněny úzkým kontrolovaným úklidem přes serverové funkce; není to potvrzení celého hostovaného GDPR UI workflow. Žádné skutečné příběhy nebyly posílány AI.
+- AI, přepis, Microsoft connect/import a automatické mazání zůstávají vypnuté. Schránka není připojena; čeká se na registraci aplikace a přístup od správce podle microsoft365-odkaz.md. PowerShell ani certifikát nejsou pro zvolenou delegovanou variantu potřeba.
+- Lokálně prošlo 163/163 testů a 80 prohlížečových kontrol (29 základ, 22 e-mail, 14 pozvánka, 11 veřejné připojení, 4 PKCE). Transport Microsoftu je v těchto testech simulovaný. Regrese porovnala 12 veřejných stránek a 5 souborů s main 70e6104.
+
+Zbývá provozní rozhodnutí o retenci, krizovém postupu, publikování a případném zapnutí AI. Testy nejsou právním schválením těchto rozhodnutí.
 
 ## Co je připravené
 
@@ -15,29 +27,25 @@ Stav k 7. 11. 2026: implementace a lokální ověření jsou připravené k revi
 
 Připravená samostatná záložka pro veryvera@nadbytecna.cz: vlákna a stránkované zprávy, hledání a filtry, ruční zařazení, poznámky, JSON export a výmaz místní kopie. Serverový import používá pouze Graph GET, certifikát aplikace, kontrolované pokračovací odkazy, transakční kurzor, deduplikaci, backoff a ochranu před opětovným importem vymazaných kopií. AI pouze ručně po odděleném schválení a zapnutí; žádné odesílání e-mailů.
 
-Schránka není připojena. Po předání přístupu zbývá schválit/aplikovat připravené migrace na oddělené testovací DB, doplnit konfiguraci a ověřit skutečný Microsoft. [Přesný postup a omezení](microsoft365.md), [22 integračních kontrol](mail-integration-results.json), [desktop ukázka](screenshots/1440-mail-detail.png), [mobil](screenshots/375-mail-detail.png).
+Schránka není připojena. Po předání přístupu zbývá doplnit konfiguraci aplikace a ověřit skutečný Microsoft. [Přesný postup a omezení](microsoft365.md), [22 integračních kontrol](mail-integration-results.json), [desktop ukázka](screenshots/1440-mail-detail.png), [mobil](screenshots/375-mail-detail.png).
 
 ## Připojení schránky odkazem
 
-Připravená delegovaná varianta: admin vytvoří soukromý jednorázový odkaz, příjemce se přihlásí přímo u Microsoftu bez účtu v adminu. Pozvánka platí 30 minut; správný tenant a schránka se ověřují před uložením šifrované cache. Přístup do adminu tím nevzniká. [Krátké nastavení správce a provozní postup](microsoft365-odkaz.md). Registrace aplikace, serverové tajemství a schválené HTTPS/DB nasazení zatím chybí, takže nebyla vydána ostrá funkční pozvánka.
+Připravená delegovaná varianta: admin vytvoří soukromý jednorázový odkaz, příjemce se přihlásí přímo u Microsoftu bez účtu v adminu. Pozvánka platí 30 minut; správný tenant a schránka se ověřují před uložením šifrované cache. Přístup do adminu tím nevzniká. [Krátké nastavení správce a provozní postup](microsoft365-odkaz.md). Registrace aplikace a její serverové tajemství zatím chybí, takže nebyla vydána ostrá funkční pozvánka.
 
 ## Ověření a ukázky
 
-- [Souhrn výsledků](test-results.json): 160/160 lokálních unit a integračních testů, 76 prohlížečových kontrol (29 původních + 22 e-mailových + 14 admin pozvánky + 11 veřejná stránka), 26 screenshotů.
+- [Souhrn výsledků](test-results.json): 163/163 lokálních unit a integračních testů, 80 prohlížečových kontrol (29 původních + 22 e-mailových + 14 admin pozvánky + 11 veřejná stránka + 4 PKCE), 26 screenshotů.
 - [Prohlížečové výsledky](browser-results.json): seznam, detail a filtry na 320, 375, 768, 1024, 1440 a 1920 px; veřejné formuláře a globální GDPR dialog. Bez zjištěného přetékání a nálezů axe v testovaných pohledech.
-- [Regrese veřejného webu](public-regression.json): porovnání devíti veřejných HTML se základním commitem, povolená změna 18+; vybrané vizuální soubory a cookie skript shodné.
+- [Regrese veřejného webu](public-regression.json): porovnání 12 veřejných HTML se základním commitem, povolená změna 18+; vybrané vizuální soubory a cookie skript shodné.
 - Lighthouse Accessibility v režimu snapshot: [mobilní seznam](lighthouse-mobile-list.json), [mobilní detail](lighthouse-mobile-detail.json), [desktopový seznam](lighthouse-desktop-list.json), [desktopový detail](lighthouse-desktop-detail.json), všechny 100/100. Nejde o produkční měření výkonu.
 - Ukázky se syntetickými daty: [mobil — seznam](screenshots/375-list.png), [mobil — detail](screenshots/375-detail.png), [desktop — seznam a detail](screenshots/1440-detail.png). [Úplná tabulka screenshotů](checklist.md#screenshoty-všechno-syntetické).
 
-Testy nevkládaly data do produkce, neposílaly skutečné e-maily a nevolaly skutečný model OpenAI. Auth a Storage transport jsou v lokálních průchodech nahrazené testovacími implementacemi.
+Lokální testy nevkládaly data do produkce, neposílaly skutečné e-maily a nevolaly skutečný model OpenAI. Oddělená produkční kontrola je popsána výše. Auth a Storage transport jsou v lokálních průchodech nahrazené testovacími implementacemi.
 
-## Co je nutné před produkcí
+## Zbývající provozní kroky
 
-1. Před aplikací ověřit případný drift proti již získanému read-only snapshotu skutečných tabulek, typů, triggerů, policies a Storage. MCP čtení odmítlo; přihlášený SQL editor jej umožnil. K opakování slouží [read-only preflight](schema-preflight.sql).
-2. Ověřit migraci na samostatné Supabase větvi, skutečný magic link, 401/403, privátní Storage a vypršení podpisu. Pro preview je nutná samostatná DB a přesný hostname v CSP.
-3. Doplnit dvě schválené adresy administrátorů a provozní tajemství přímo do důvěryhodného nastavení, ověřit scheduler a plán Vercelu.
-4. Schválit konkrétní migraci a nasazení. Sladit změnu DB s formulářem 18+, aby mezi nimi nevzniklo období nefunkčního odesílání.
-5. Rozhodnout retenční základ, způsob veřejného publikování a krizový postup. Zapnutí AI a přepisu vyžaduje souhlas advokátky. Staré soubory v produkčním bucketu vyžadují samostatný souhlas s konkrétním seznamem.
+Viz [aktuální předání](production-status.md), zejména Microsoft, Věřino první přihlášení a rozhodnutí o AI/retenci.
 
 Automatická AI v této variantě čeká na pětiminutový worker, který zpracuje jeden záznam za běh; nejde o okamžitou triáž po odeslání. Hledaný citlivý text se neukládá do URL a fulltext nepoužívá český stemmer. Tyto odchylky jsou výslovně určené k revizi.
 
@@ -50,7 +58,7 @@ Automatická AI v této variantě čeká na pětiminutový worker, který zpracu
 - [SQL pro čtení skutečného schématu](schema-preflight.sql)
 - [Navržená migrace](../../supabase/migrations/20261108000000_admin_workspace.sql)
 
-Ověřený [draft PR #11](https://github.com/michalbaturko-lang/nadbytecna-prelanding/pull/11) je otevřený a nesloučený. Vercel preview build byl Ready; to není funkční staging test propojení s databází.
+[PR #11](https://github.com/michalbaturko-lang/nadbytecna-prelanding/pull/11) je sloučený a admin nasazený. Aktuální produkční ověření je oddělené od lokálních výsledků výše.
 
 ## Lokální ukázka
 

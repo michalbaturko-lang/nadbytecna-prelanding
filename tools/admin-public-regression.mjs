@@ -6,7 +6,7 @@ import { execFileSync } from "node:child_process";
 import crypto from "node:crypto";
 const root = path.resolve(new URL("../", import.meta.url).pathname),
   temp = fs.mkdtempSync(path.join(os.tmpdir(), "nadbytecna-public-baseline-"));
-const baseline = "c237d5b6220841e15048c2029ab61391afe67ca2";
+const baseline = "70e610487ef3b1a961008b091ec8f96be5cee7c1";
 const hash = (p) =>
   crypto.createHash("sha256").update(fs.readFileSync(p)).digest("hex");
 try {
@@ -35,6 +35,9 @@ try {
     "ochrana-osobnich-udaju/index.html",
     "pravidla-zverejnovani/index.html",
     "kontakt/index.html",
+    "o-nasi-platforme/index.html",
+    "verin-pribeh/index.html",
+    "cookies/index.html",
   ];
   for (const p of pages) {
     const before = fs.readFileSync(path.join(temp, "dist", p), "utf8");
@@ -63,7 +66,7 @@ try {
     JSON.stringify(
       {
         baseline,
-        date: "2026-11-07",
+        date: "2026-11-08",
         pagesCompared: pages,
         onlyAllowedHtmlChange: "18+ checkbox in story/help forms",
         unchangedAssets: assets,
