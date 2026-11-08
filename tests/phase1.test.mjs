@@ -97,6 +97,9 @@ test("homepage má dvě volby, osm karet a formuláře nic neodesílají", () =>
   assert.match(home, /class="claim-lead">Never</);
   assert.equal(home.match(/class="claim-word" src="\/img\/nadbytecna-word\.svg"/g).length, 6);
   assert.match(home, /class="rule claim-rule"/);
+  assert.ok(home.indexOf('class="claims"') < home.indexOf('id="pribeh"'));
+  assert.ok(home.indexOf('id="pribeh"') < home.indexOf('class="choices"'));
+  assert.ok(home.indexOf('class="choices"') < home.indexOf('id="cil"'));
   const stripAt = home.indexOf('class="vera-strip"');
   const goalAt = home.indexOf('id="cil"');
   assert.ok(goalAt > 0 && stripAt > goalAt);
