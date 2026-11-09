@@ -46,7 +46,7 @@ test("šablony pro Resend jsou v repu a nic neposílají", () => {
   assert.doesNotMatch(named.text, /\{\{jmeno\}\}/);
   const voice = resendPayload("share-anonymous-voice-story", { to: "a@b.cz" });
   assert.match(voice.text, /hlasovou zprávu/);
-  assert.match(voice.text, /Automatický přepis nyní neprobíhá/);
+  assert.match(voice.text, /Poslechneme si ji a v případě potřeby přepíšeme/);
   assert.doesNotMatch(voice.text + voice.html, /přepíšeme ji na text/i);
   assert.match(voice.text, /anonymně/);
   assert.doesNotMatch(voice.text, /Anna|jmeno/);
