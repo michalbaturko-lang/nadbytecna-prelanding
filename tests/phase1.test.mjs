@@ -44,7 +44,7 @@ test("hero má psací nápis a stejné fluid.js, app.js se nenačítá", () => {
   const fluid = read("fluid.js");
   assert.doesNotMatch(fluid, /\/\*LETTERS\*\/null/);
   assert.match(fluid, /img\.logo\[data-split\]/);
-  assert.match(fluid, /s nic nezlomí!/);
+  assert.match(fluid, /Zlomil mi srdce\. Ne křídla\./);
   const fluidSrc = fs.readFileSync(path.join(ROOT, "src/fluid.js"), "utf8");
   assert.match(fluidSrc, /pointer: coarse/);
   assert.match(fluidSrc, /prefers-reduced-motion/);
@@ -74,7 +74,7 @@ test("homepage má dvě volby, osm karet a formuláře nic neodesílají", () =>
   assert.doesNotMatch(pribeh, /Čekáme na její text/);
   assert.match(pribeh, /<a class="vid" href="\/verin-pribeh\/" data-video-open /);
   assert.equal(pribeh.match(/<img /g).length, 1);
-  assert.match(pribeh, /src="\/video\/vera-pribeh-poster-v15\.jpg"[^>]*alt="Věra Komárová na plese"/);
+  assert.match(pribeh, /src="\/video\/vera-pribeh-poster-v16\.jpg"[^>]*alt="Věra Komárová na plese"/);
   assert.doesNotMatch(pribeh, /<video/);
   assert.match(home, /<script src="\/video\.js" defer><\/script>/);
   assert.doesNotMatch(visible(home), /Spouštíme|Pracovní náhled|neběží|zatím není/);
@@ -197,8 +197,8 @@ test("právní stránky mluví o souhlasu a kontakt není krizová linka", () =>
   assert.match(read("cookies/index.html"), /jen po souhlasu/);
   const verin = read("verin-pribeh/index.html");
   assert.doesNotMatch(verin, /Čekáme na její text/);
-  assert.match(verin, /<video controls playsinline preload="none"[^>]*poster="\/video\/vera-pribeh-poster-v15\.jpg"/);
-  assert.match(verin, /<source src="\/video\/vera-pribeh-v15\.mp4" type="video\/mp4">/);
+  assert.match(verin, /<video controls playsinline preload="none"[^>]*poster="\/video\/vera-pribeh-poster-v16\.jpg"/);
+  assert.match(verin, /<source src="\/video\/vera-pribeh-v16\.mp4" type="video\/mp4">/);
   assert.equal(verin.match(/class="choice"/g).length, 2);
   const policy = read("ochrana-osobnich-udaju/index.html");
   assert.match(policy, /<p class="draft">Návrh<\/p>/);
