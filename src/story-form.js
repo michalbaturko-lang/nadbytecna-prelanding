@@ -6,7 +6,7 @@
   "use strict";
   var root = document.getElementById("story-form");
   if (!root) return;
-  var AUDIO_MAX = 50 * 1024 * 1024;
+  var AUDIO_MAX = 25 * 1024 * 1024;
   var micBlob = null, micUrl = "", micMime = "", fileBlob = null, fileUrl = "", fileMime = "", fileName = "";
   var stream = null, rec = null, tick = 0;
 
@@ -155,7 +155,7 @@
     if (!file) return;
     if (file.size > AUDIO_MAX) {
       clearFile();
-      say("file-status", "Soubor je větší než 50 MB. Vyber menší.");
+      say("file-status", "Soubor je větší než 25 MB. Vyber menší.");
       return;
     }
     fileBlob = file;
@@ -201,6 +201,7 @@
     if (box) box.hidden = input === "text";
   }
   var started = Date.now();
+  var pendingId = null, pendingBlob = null;
   var sendBtn = document.getElementById("sdilet-send");
   function storySay(text) { document.getElementById("sdilet-msg").textContent = text; }
   function showThanks(text) {
@@ -232,8 +233,10 @@
     if (input === "text" && !text) { storySay("Napiš příběh, nebo přepni na hlas."); return; }
     if (input === "recording" && !micBlob) { storySay("Nejdřív nahraj hlasovou zprávu."); return; }
     if (input === "file" && !fileBlob) { storySay("Nejdřív vyber audio soubor."); return; }
-    var id = api.uuid();
     var blob = input === "recording" ? micBlob : input === "file" ? fileBlob : null;
+    // stejné id při opakování téhož odeslání, aby po výpadku nezůstávaly osiřelé nahrávky
+    if (!pendingId || pendingBlob !== blob) { pendingId = api.uuid(); pendingBlob = blob; }
+    var id = pendingId;
     var fname = input === "file" ? fileName : (micMime.indexOf("webm") >= 0 ? "hlas.webm" : "hlas.m4a");
     sendBtn.disabled = true;
     var uploaded = blob ? api.uploadAudio(id, blob, fname) : Promise.resolve(null);
@@ -261,9 +264,9 @@
       if (share.value === "anonymous") msg += " Jméno k příběhu nepřidáme.";
       if (help) msg += " Ozveme se i k tomu, že chceš pomáhat.";
       showThanks(msg);
-    }).catch(function () {
+    }).catch(function (err) {
       sendBtn.disabled = false;
-      storySay("Odeslání se nepovedlo. Napiš na veryvera@nadbytecna.cz.");
+      storySay(err && err.message === "timeout" ? api.timeoutMessage : "Odeslání se nepovedlo. Napiš na veryvera@nadbytecna.cz.");
     });
   });
 

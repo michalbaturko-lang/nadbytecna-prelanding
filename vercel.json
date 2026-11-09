@@ -250,9 +250,16 @@
     {
       "path": "/api/mail-sync/",
       "schedule": "*/5 * * * *"
+    },
+    {
+      "path": "/api/mail-retry/",
+      "schedule": "*/10 * * * *"
     }
   ],
   "functions": {
+    "api/mail-retry.js": {
+      "maxDuration": 60
+    },
     "api/ai-worker.js": {
       "maxDuration": 120
     },

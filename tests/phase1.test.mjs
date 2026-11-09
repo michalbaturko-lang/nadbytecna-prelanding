@@ -141,7 +141,7 @@ test("homepage má dvě volby, osm karet a formuláře nic neodesílají", () =>
   assert.match(storyJs, /MediaRecorder/);
   assert.doesNotMatch(storyJs, /Hlasové zprávy přepisujeme na text|Přepíšeme ji na text/);
   assert.match(storyJs, /audio\/mp4/);
-  assert.match(storyJs, /50 \* 1024 \* 1024/);
+  assert.match(storyJs, /25 \* 1024 \* 1024/);
   assert.match(storyJs, /story-audio/);
   assert.doesNotMatch(storyJs, /fetch\(|localStorage|sessionStorage|indexedDB|sendBeacon|XMLHttpRequest|supabase\.|innerHTML/);
   const help = read("mohu-pomoci/index.html");

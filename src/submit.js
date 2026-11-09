@@ -21,15 +21,31 @@
     return "";
   }
 
+  // fetch s limitem; na slabém signálu se tlačítko nezasekne navždy
+  function timed(url, init, ms) {
+    if (typeof AbortController === "undefined") return fetch(url, init);
+    var ctl = new AbortController();
+    var timer = setTimeout(function () { ctl.abort(); }, ms);
+    init.signal = ctl.signal;
+    return fetch(url, init).then(function (res) {
+      clearTimeout(timer);
+      return res;
+    }, function (err) {
+      clearTimeout(timer);
+      throw ctl.signal.aborted ? new Error("timeout") : err;
+    });
+  }
+
   function insertRow(table, row) {
     var c = cfg();
     if (!c.url || !c.key) return Promise.reject(new Error("config"));
-    return fetch(c.url + "/rest/v1/" + table, {
+    return timed(c.url + "/rest/v1/" + table, {
       method: "POST",
       headers: headers({ "Content-Type": "application/json", Prefer: "return=minimal" }),
       body: JSON.stringify(row),
-    }).then(function (res) {
-      if (!res.ok) throw new Error("insert");
+    }, 30000).then(function (res) {
+      // 409 = stejné id už v databázi je (opakované odeslání po výpadku odpovědi) -> uloženo
+      if (!res.ok && res.status !== 409) throw new Error("insert");
     });
   }
 
@@ -47,13 +63,17 @@
     var safe = String(filename || "hlas").split(/[/\\]/).pop().replace(/[^A-Za-z0-9._-]+/g, "-").replace(/^\.+/, "").slice(0, 80);
     if (!safe) safe = type.indexOf("webm") >= 0 ? "hlas.webm" : "hlas.m4a";
     var path = id + "/" + safe;
-    return fetch(c.url + "/storage/v1/object/story-audio/" + id + "/" + encodeURIComponent(safe), {
+    return timed(c.url + "/storage/v1/object/story-audio/" + id + "/" + encodeURIComponent(safe), {
       method: "POST",
       headers: headers({ "Content-Type": type, "x-upsert": "false" }),
       body: blob,
-    }).then(function (res) {
-      if (!res.ok) throw new Error("upload");
-      return path;
+    }, 180000).then(function (res) {
+      if (res.ok) return path;
+      // soubor se stejným id už ve storage je (opakování po výpadku) -> použít ho
+      return res.text().then(function (t) {
+        if (res.status === 409 || /Duplicate|already exists/i.test(t)) return path;
+        throw new Error("upload");
+      }, function () { throw new Error("upload"); });
     });
   }
 
@@ -99,5 +119,6 @@
     uploadAudio: uploadAudio,
     done: done,
     uuid: function () { return crypto.randomUUID(); },
+    timeoutMessage: "Spojení je pomalé a odeslání nedoběhlo. Zkus to prosím znovu.",
   };
 })(window);
