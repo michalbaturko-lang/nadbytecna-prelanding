@@ -116,7 +116,7 @@ test("SK stránky: jazyk, hreflang, žádná čeština v textu, slovenská diakr
   assert.match(home, /Súhlasím, že/); assert.match(home, /<a href="\/sk\/zasady-ochrany-osobnych-udajov\/">zásadách ochrany osobných údajov<\/a>/);
   assert.match(read("index.html"), /<a class="lang" href="\/sk\/" hreflang="sk"/);
   assert.match(read("sk/potvrdene/index.html"), /Nie si nadbytočná\./);
-  const fl = read("fluid.js"); assert.match(fl, /"s nič nezlomí!"/); assert.match(fl, /"s nic nezlomí!"/);
+  const fl = read("fluid.js"); assert.match(fl, /Zlomil mi srdce\. Nie krídla\./); assert.match(fl, /Zlomil mi srdce\. Ne křídla\./);
   assert.ok(fs.existsSync(new URL("../dist/fonts/damion-latin-ext-400-normal.woff2", import.meta.url)));
   const sm = read("sitemap.xml"); assert.match(sm, /xhtml:link/);
 });

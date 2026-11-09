@@ -3,7 +3,7 @@
 // (řezy vedené podle spojů mezi písmeny, ne svislé čáry).
 //  1. první přejetí (na mobilu první dotyk nebo scroll): odpadne velké „N“
 //  2. asi po 1 s samo naváže dnešní pokračování: dvě písmena, pak zbytek „Nadbytečná“,
-//     „ná“ se zlatě posune. Věta „s nic nezlomí!“ zůstává na svém místě a nepadá.
+//     „ná“ pomalu zmizí a na lince se rozvine věta „Zlomil mi srdce. Ne křídla.“ (nepadá).
 // Bez Canvasu nebo při „omezit pohyb“ zůstává obyčejný obrázek.
 (function () {
   "use strict";
@@ -14,7 +14,7 @@
   if (!DATA) return;
 
   var SPLIT = parseFloat(img.getAttribute("data-split"));        // kde v obrázku začíná rukopis (0 = celý obrázek je nápis)
-  var PHRASE = document.documentElement.lang === "sk" ? "s nič nezlomí!" : "s nic nezlomí!";
+  var PHRASE = document.documentElement.lang === "sk" ? "Zlomil mi srdce. Nie krídla." : "Zlomil mi srdce. Ne křídla.";
   var PINK = [0xD7, 0x1D, 0x62], GOLD = [0xA9, 0x80, 0x2F];
   var SCRIPT = /nadbytecna-script\.svg/.test(img.getAttribute("src") || "");
   var DRAW_SY = SCRIPT ? 0 : 688;                                 // lockup má rukopis níž; samotný nápis už začíná nahoře
@@ -134,6 +134,7 @@
     seq.k = s * (1 - b);
     var l = L.na;
     ctx.save();
+    ctx.globalAlpha = 1 - seq.k;                                  // „ná“ zmizí; věta začíná sama, bez navázání na „ná“
     ctx.translate(seq.dx * seq.k, 0);
     ctx.fillStyle = mix(PINK, GOLD, seq.k);
     ctx.fill(l.p);
@@ -200,15 +201,15 @@
       var d = Math.abs(L[id].cx - px) / 2480 * 900 + Math.random() * 50;
       dmax = Math.max(dmax, d); fallOne(id, d, now);
     });
-    var n = L.na, fsz = 400, tw, gap = -6;
+    var n = L.na, fsz = 400, tw, gap = 0;
     tx.font = fsz + "px Damion"; tw = tx.measureText(PHRASE).width;
-    var nw = n.x1 - n.x0;
+    var nw = 0;                                                    // věta je samostatná, vycentrovaná
     while (nw + gap + tw > 2480 * 0.92 && fsz > 40) { fsz -= 4; tx.font = fsz + "px Damion"; tw = tx.measureText(PHRASE).width; }
-    var total = nw + gap + tw, left = (2480 - total) / 2;
+    var total = tw, left = (2480 - total) / 2;
     // data-base je podíl výšky loga, kde leží linka rukopisu. Damion má jednu rodinu (latin i latin-ext), takže „s“ nesedne výš než zbytek věty.
     var base = 1219 * parseFloat(img.getAttribute("data-base") || "0.8403") - 688;
     var Tslide = dmax + (WOB + 1.0) * 1000 + 250, Tunroll = Tslide + 900, Dunroll = 3400, Tfade = Tunroll + Dunroll + 3200, Tback = Tfade + 100;
-    seq = { t0: now, dx: left - n.x0, tx: left + nw + gap, tw: tw, fsz: fsz, base: base, Tslide: Tslide, Tunroll: Tunroll, Dunroll: Dunroll, Tfade: Tfade, Tback: Tback, k: 0,
+    seq = { t0: now, dx: 0, tx: left + nw + gap, tw: tw, fsz: fsz, base: base, Tslide: Tslide, Tunroll: Tunroll, Dunroll: Dunroll, Tfade: Tfade, Tback: Tback, k: 0,
       end: Tback + 1100 + 300 };
     dirty = true;
     stage = 3;
@@ -287,7 +288,7 @@
     var reg = window.FontFace && document.fonts && document.fonts.add
       ? new FontFace("Damion", "url(/fonts/damion-cs-400-normal.woff2) format('woff2')", { weight: "400", style: "normal" }).load().then(function (f) { document.fonts.add(f); }, function () {})
       : Promise.resolve();
-    var p = reg.then(function () { return document.fonts && document.fonts.load ? document.fonts.load("40px Damion", "s nič nezlomí áščřžůě") : null; });
+    var p = reg.then(function () { return document.fonts && document.fonts.load ? document.fonts.load("40px Damion", "Zlomil mi srdce. Ne křídla. Nie krídla. áščřžůě") : null; });
     p.then(function () { layout(); if (pendingKick) kickMobile(); }, function () { layout(); if (pendingKick) kickMobile(); });
   }
   if (img.complete && img.naturalWidth) start(); else img.addEventListener("load", start);
