@@ -8,6 +8,7 @@
     for (var i = 0; i < radios.length; i++) if (radios[i].value === preset) radios[i].checked = true;
   }
   var started = Date.now();
+  var pendingId = null;
   var sendBtn = document.getElementById("pomoc-send");
   function say(text) { document.getElementById("pomoc-msg").textContent = text; }
   function val(id) { return document.getElementById(id).value.trim(); }
@@ -40,7 +41,8 @@
       web: val("pomoc-web"),
     };
     sendBtn.disabled = true;
-    var id = api.uuid();
+    if (!pendingId) pendingId = api.uuid();
+    var id = pendingId;
     api.insertRow("help_offers", {
       id: id,
       full_name: name,
@@ -61,9 +63,9 @@
         ? "Děkujeme, že chceš pomoct, protože sis tím prošla nebo prošel. Ozveme se na e-mail, který jsi uvedla."
         : "Děkujeme za nabídku pomoci. Ozveme se na e-mail, který jsi uvedla.";
       document.getElementById("pomoc-thanks").hidden = false;
-    }).catch(function () {
+    }).catch(function (err) {
       sendBtn.disabled = false;
-      say("Odeslání se nepovedlo. Napiš na veryvera@nadbytecna.cz.");
+      say(err && err.message === "timeout" ? api.timeoutMessage : "Odeslání se nepovedlo. Napiš na veryvera@nadbytecna.cz.");
     });
   });
 })();

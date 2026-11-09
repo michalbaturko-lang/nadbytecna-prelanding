@@ -52,4 +52,4 @@ test("Host i x-forwarded-host poznají veřejnou doménu", () => {
   assert.equal(requestHost(new Headers({ host: "www.nadbytecna.cz" })), "www.nadbytecna.cz");
 });
 
-test("admin a jeho chráněná API fungují i při SITE_LIVE=false",()=>{for(const path of ['/admin','/admin/','/api/admin/','/api/triage/','/api/retention/','/api/ai-worker/','/api/admin-mail/','/api/mail-sync/','/api/mail-connect/']) assert.equal(hostGate({host:'nadbytecna.cz',pathname:path,live:false}).type,'next');});
+test("admin a jeho chráněná API fungují i při SITE_LIVE=false",()=>{for(const path of ['/admin','/admin/','/api/admin/','/api/triage/','/api/retention/','/api/ai-worker/','/api/mail-retry/','/api/admin-mail/','/api/mail-sync/','/api/mail-connect/']) assert.equal(hostGate({host:'nadbytecna.cz',pathname:path,live:false}).type,'next');});

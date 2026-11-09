@@ -28,7 +28,10 @@
     var c = cfg();
     if (!c.url || !c.key) { say("Odeslání se nepovedlo. Napište nám na veryvera@nadbytecna.cz."); return; }
     send.disabled = true;
+    var ctl = typeof AbortController !== "undefined" ? new AbortController() : null;
+    var timer = ctl ? setTimeout(function () { ctl.abort(); }, 20000) : 0;
     fetch(c.url + "/rest/v1/launch_signups", {
+      signal: ctl ? ctl.signal : undefined,
       method: "POST",
       headers: {
         apikey: c.key,
@@ -38,12 +41,14 @@
       },
       body: JSON.stringify({ email: email, consent: true }),
     }).then(function (res) {
+      clearTimeout(timer);
       if (res.status === 409) { say("Tento e-mail už máme. 11. 11. se vám ozveme."); send.disabled = false; return; }
       if (!res.ok) throw new Error("insert");
       showThanks();
-    }).catch(function () {
+    }).catch(function (err) {
+      clearTimeout(timer);
       send.disabled = false;
-      say("Odeslání se nepovedlo. Napište nám na veryvera@nadbytecna.cz.");
+      say(ctl && ctl.signal.aborted ? "Spojení je pomalé a odeslání nedoběhlo. Zkuste to prosím znovu." : "Odeslání se nepovedlo. Napište nám na veryvera@nadbytecna.cz.");
     });
   });
 
