@@ -91,14 +91,14 @@ body[data-page="scroll"] .top-cta{border-radius:999px;padding:.45rem 1.4rem;font
 .sc-stage{position:relative;min-height:100vh;min-height:100svh;display:flex;align-items:center;padding:6rem clamp(1.25rem,10vw,10rem) 5rem}
 .sc-stage .claims{width:100%}
 body[data-page="scroll"] .claim-list{display:flex;flex-direction:column;justify-content:center;gap:clamp(.5rem,1.6vh,1rem)}
-body[data-page="scroll"] .sc-line{--fs:clamp(1.3rem,3.2vw,2.8rem);--k:2.3;display:flex;flex-wrap:nowrap;align-items:center;gap:.5em;font-size:var(--fs);line-height:1.2;white-space:nowrap;animation:none;opacity:1}
-body[data-page="scroll"] .claim-lead{font-family:var(--sans);font-size:1em;font-weight:200;line-height:1.2;letter-spacing:.1em;text-transform:uppercase;color:var(--ink)}
+body[data-page="scroll"] .sc-line{--fs:clamp(1.3rem,3.2vw,2.8rem);--k:1.95;display:flex;flex-wrap:nowrap;align-items:center;gap:.5em;font-size:var(--fs);line-height:1.2;white-space:nowrap;animation:none;opacity:1}
+body[data-page="scroll"] .claim-lead{font-family:var(--sans);font-size:1.3em;font-weight:200;line-height:1.2;letter-spacing:.1em;text-transform:uppercase;color:var(--ink)}
 body[data-page="scroll"] .claim-word{height:calc(var(--k) * 1em);width:auto;max-width:none;flex:none}
 body[data-page="scroll"] .claim-rule{position:absolute;left:clamp(1.25rem,10vw,10rem);bottom:2.6rem;margin:0;width:min(14rem,60vw)}
 .sc-count{display:none;margin:0}
 @media (max-width:47.99rem){
   .sc-stage{padding-right:2.4rem}
-  body[data-page="scroll"] .sc-line{--k:3.4;flex-direction:column;align-items:flex-start;gap:0}
+  body[data-page="scroll"] .sc-line{--k:2.75;flex-direction:column;align-items:flex-start;gap:0}
   body[data-page="scroll"] .sc-line .claim-word{margin-top:-.15em}
 }
 
@@ -123,7 +123,7 @@ html.sc-live .sc-count::before,html.sc-live .sc-count::after{content:"";display:
 }
 
 /* ---------- kapitoly 3–5 ---------- */
-.sc-chapter{min-height:100vh;min-height:100svh;display:flex;flex-direction:column;justify-content:center;gap:clamp(3rem,8vw,6rem);padding:6rem clamp(1.25rem,10vw,10rem) 5rem}
+.sc-chapter{min-height:0;display:flex;flex-direction:column;justify-content:center;gap:clamp(2rem,6vw,5rem);padding:clamp(2.5rem,9svh,5rem) clamp(1.25rem,10vw,10rem) clamp(2.5rem,9svh,5rem)}
 .sc-chapter--end{min-height:0;padding-block:6rem 4rem}
 
 /* Věřin příběh */
@@ -256,3 +256,10 @@ body[data-form] .main a:not(.backlink){color:var(--ink)}
 @media (max-width:50rem){
   body[data-form] .cookie{bottom:.6rem}
 }
+
+/* méně prázdného růžového prostoru: úvod na mobilu nižší, scéna s hesly jen 66 % výšky a vystředěná */
+@media (max-width:47.99rem){
+  .sc-hero{min-height:74vh;min-height:74svh;padding-bottom:4rem}
+}
+html.sc-live .sc-manifest{height:calc(100svh + var(--per) * 6svh)}
+html.sc-live .sc-stage{height:66vh;height:66svh;top:17vh;top:17svh}
