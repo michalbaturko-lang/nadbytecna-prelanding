@@ -333,6 +333,47 @@ test("OAuth validation and errors never expose code, cache, client secret or tok
       e.code === "oauth_reauth_required" && !String(e.stack).includes(secret),
   );
 });
+test("client credential rejection uses only fixed MSAL machine codes and drops all server details", async () => {
+  const privateText = "synthetic-secret-code-token-private-description";
+  for (const operation of ["exchange", "refresh"]) {
+    for (const reason of [
+      { errorCode: "invalid_client" },
+      { errorCode: "invalid_client_credential" },
+      { errorCode: "invalid_grant", errorNo: 7000215 },
+      { errorCode: "server_error", errorNo: 7000222 },
+      { errorCode: "server_error", errorNo: "7000215" },
+      { errorCode: "server_error", errorNo: "7000222" },
+    ]) {
+      const fail = async () => {
+        throw { ...reason, message: privateText, errorMessage: privateText, correlationId: privateText };
+      };
+      const msalFactory = mock({ acquireTokenByCode: fail, acquireTokenSilent: fail }).msalFactory;
+      await assert.rejects(
+        () => operation === "exchange"
+          ? exchangeCode({ env, code: "synthetic-code", codeVerifier: "v".repeat(43), msalFactory })
+          : refreshTokenFromCache({ env, cache, accountId: "synthetic-account", msalFactory }),
+        (error) => {
+          assert.equal(error.code, "oauth_client_rejected");
+          assert.equal(error.name, "M365OAuthError");
+          assert.ok(!String(error.stack).includes(privateText));
+          assert.ok(!JSON.stringify(error).includes(privateText));
+          assert.equal(error.cause, undefined);
+          return true;
+        },
+      );
+    }
+  }
+  // Free text and unrelated machine codes must not be interpreted as credential rejection.
+  for (const reason of [
+    { errorCode: "server_error", errorNo: 7000223 },
+    { errorCode: "server_error", message: "AADSTS7000215 invalid_client" },
+  ]) {
+    await assert.rejects(
+      () => exchangeCode({ env, code: "synthetic-code", codeVerifier: "v".repeat(43), msalFactory: mock({ acquireTokenByCode: async () => { throw reason; } }).msalFactory }),
+      (error) => error.code === "oauth_exchange_failed",
+    );
+  }
+});
 test("MSAL supported transport blocks other hosts and redirects, bounds responses and uses timeout", async () => {
   const m = mock();
   let count = 0;
