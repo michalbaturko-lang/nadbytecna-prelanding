@@ -1,95 +1,45 @@
 import { json } from "../lib/http.js";
 import { rpc } from "../lib/admin-server.mjs";
 import { cronAuthorized, mailHashSecret } from "../lib/mail-service.mjs";
-import {
-  getM365AccessToken,
-  validateM365AuthConfig,
-} from "../lib/m365-auth.mjs";
+import { getM365AccessToken, validateM365AuthConfig } from "../lib/m365-auth.mjs";
 import { readM365DeltaPage } from "../lib/m365-readonly.mjs";
-import {
-  delegatedMode,
-  getDelegatedMailToken,
-} from "../lib/mail-oauth-service.mjs";
+import { delegatedMode, getDelegatedMailToken, oauthRpc } from "../lib/mail-oauth-service.mjs";
 import { readM365OAuthConfig } from "../lib/m365-oauth-client.mjs";
+import { runMailSync, MAIL_SYNC_ERROR_CODES } from "../lib/mail-sync-worker.mjs";
 
-export default async function handler(req, res) {
-  res.setHeader("X-Robots-Tag", "noindex, nofollow, noarchive");
-  if (!["GET", "POST"].includes(req.method))
-    return json(res, 405, { error: "method" });
-  if (!cronAuthorized(req)) return json(res, 401, { error: "auth" });
-  // Off means no credential parsing, database access, OAuth or Graph request.
-  if (process.env.M365_INGEST_ENABLED !== "true")
-    return json(res, 200, { skipped: true });
-  let lease;
-  try {
-    const secret = mailHashSecret();
-    if (delegatedMode()) readM365OAuthConfig(process.env);
-    else validateM365AuthConfig(process.env);
-    const state = await rpc("mail_sync_claim", {
-      p_mailbox: process.env.M365_MAILBOX,
-      p_folder: process.env.M365_FOLDER_ID,
-      p_since: process.env.M365_SINCE,
-    });
-    if (!state) return json(res, 200, { busy: true });
-    lease = state.lease;
-    const auth = delegatedMode()
-      ? await getDelegatedMailToken()
-      : await getM365AccessToken({});
-    const page = await readM365DeltaPage({
-      env: { ...process.env, M365_SINCE: new Date(state.since).toISOString() },
-      accessToken: auth.accessToken,
-      cursor: state.cursor || null,
-    });
-    const messages = page.messages.map((m) => ({
-      external_id: m.externalId,
-      conversation_id: m.conversationId,
-      internet_message_id: m.internetMessageId,
-      sender_name: m.senderName,
-      sender_email: m.senderEmail,
-      subject: m.subject,
-      body_text: m.text,
-      received_at: m.receivedAt,
-      has_attachments: m.hasAttachments,
-    }));
-    const result = await rpc("mail_sync_commit", {
-      p_lease: lease,
-      p_messages: messages,
-      p_removed: page.removals.map((m) => m.externalId),
-      p_next_cursor: page.nextLink || page.deltaLink,
-      p_complete: !page.nextLink,
-      p_hash_secret: secret,
-    });
-    lease = null;
-    return json(res, 200, {
-      ok: true,
-      ...result,
-      more: Boolean(page.nextLink),
-    });
-  } catch (e) {
-    // Fixed error vocabulary; never persist Graph bodies, URLs, tokens or private keys.
-    const code = [
-      "cursor_expired",
-      "throttled",
-      "authentication_failed",
-      "invalid_configuration",
-      "token_request_failed",
-      "timeout",
-      "mail_reconnect_required",
-      "mail_connection_changed",
-      "oauth_interaction_required",
-    ].includes(e.code)
-      ? e.code
-      : "mail_sync_failed";
-    if (lease)
-      try {
-        await rpc("mail_sync_release", {
-          p_lease: lease,
-          p_error: code,
-          ...(e.code === "throttled" && Number.isInteger(e.retryAfterSeconds)
-            ? { p_retry_after_seconds: e.retryAfterSeconds }
-            : {}),
-        });
-      } catch {}
-    return json(res, 503, { error: code });
-  }
+export function createMailSyncHandler({
+  authorized = cronAuthorized,
+  run = () => runMailSync({
+    rpc,
+    prepare: (env) => {
+      const secret = mailHashSecret();
+      if (delegatedMode(env)) readM365OAuthConfig(env);
+      else validateM365AuthConfig(env);
+      return secret;
+    },
+    getToken: (env) => delegatedMode(env)
+      ? getDelegatedMailToken({ env })
+      : getM365AccessToken({ env }),
+    readPage: readM365DeltaPage,
+    // Check after every lease claim; disconnect/reconnect invalidates an in-flight lease.
+    getConnection: delegatedMode() ? () => oauthRpc("status") : undefined,
+    reportFailure: (record) => console.warn(JSON.stringify(record)),
+  }),
+} = {}) {
+  return async function handler(req, res) {
+    res.setHeader("X-Robots-Tag", "noindex, nofollow, noarchive");
+    res.setHeader("Cache-Control", "no-store");
+    if (!["GET", "POST"].includes(req.method)) {
+      res.setHeader("Allow", "GET, POST");
+      return json(res, 405, { error: "method" });
+    }
+    if (!authorized(req)) return json(res, 401, { error: "auth" });
+    try {
+      return json(res, 200, await run());
+    } catch (error) {
+      const code = MAIL_SYNC_ERROR_CODES.has(error?.code) ? error.code : "mail_sync_failed";
+      return json(res, 503, { error: code });
+    }
+  };
 }
+export default createMailSyncHandler();
