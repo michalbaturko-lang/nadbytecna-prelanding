@@ -112,7 +112,7 @@ ${LANGS.filter((l) => l !== lang).map((l) => `<meta property="og:locale:alternat
 <meta property="og:title" content="${esc(og.title)}">
 <meta property="og:description" content="${esc(og.desc)}">
 <meta property="og:url" content="${url}">
-<meta property="og:image" content="${SITE}/og-v2.jpg">
+<meta property="og:image" content="${SITE}/og-v3.jpg">
 <meta property="og:image:type" content="image/jpeg">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
@@ -120,7 +120,7 @@ ${LANGS.filter((l) => l !== lang).map((l) => `<meta property="og:locale:alternat
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="${esc(og.title)}">
 <meta name="twitter:description" content="${esc(og.desc)}">
-<meta name="twitter:image" content="${SITE}/og-v2.jpg">` : ""}
+<meta name="twitter:image" content="${SITE}/og-v3.jpg">` : ""}
 ${PRELOAD}
 <style>${css}</style>
 ${ld}
@@ -130,10 +130,10 @@ ${ld}
 const footer = (lang, switcher = null) => {
   const t = TXT[lang];
   const sw = switcher ? `<br><a class="lang" href="${switcher}" hreflang="${t.otherLang.code}" lang="${t.otherLang.code}">${t.otherLang.label}</a>` : "";
-  return `<footer class="foot"><img class="dom" src="/img/nadbytecna-script.svg" width="2480" height="528" alt="Nadbytečná.cz"><a class="mail" href="mailto:veryvera@nadbytecna.cz">veryvera@nadbytecna.cz</a><br><a href="${PATHS[lang].policy}">${t.policyLink}</a>${C.complete ? `<br>${esc(C.name)}, IČO ${esc(C.ico)}` : ""}${sw}</footer>`;
+  return `<footer class="foot"><img class="dom" src="/img/nadbytecna-script.svg" width="1802" height="517" alt="Nadbytečná"><a class="mail" href="mailto:veryvera@nadbytecna.cz">veryvera@nadbytecna.cz</a><br><a href="${PATHS[lang].policy}">${t.policyLink}</a>${C.complete ? `<br>${esc(C.name)}, IČO ${esc(C.ico)}` : ""}${sw}</footer>`;
 };
 const analytics = '<script defer src="/_vercel/insights/script.js"></script>';
-const LOGO_ATTRS = 'width="2480" height="528" data-split="0" data-base="0.8403" alt="Nadbytečná.cz"';
+const LOGO_ATTRS = 'width="1802" height="517" data-split="0" data-base="0.6333" alt="Nadbytečná"';
 
 function home(lang, variant) {
   const t = TXT[lang], P = PATHS[lang], cl = CLAIMS[lang][variant];
@@ -300,7 +300,7 @@ ${C.complete ? `<p><a href="mailto:${esc(C.email)}">${esc(C.email)}</a></p>` : T
 <div class="page">
 <main class="main main-one main-top">
 <article class="doc">
-<a class="back" href="${P.home}"><img src="/img/nadbytecna-script.svg" width="2480" height="528" alt="${t.backAlt}"></a>
+<a class="back" href="${P.home}"><img src="/img/nadbytecna-script.svg" width="1802" height="517" alt="${t.backAlt}"></a>
 ${sk ? skBody : cs}
 <p><a class="lang" href="${PATHS[t.otherLang.code].policy}" hreflang="${t.otherLang.code}" lang="${t.otherLang.code}">${t.otherLang.label}</a></p>
 </article>
@@ -393,7 +393,7 @@ function build(out, variant) {
   const urls = LANGS.flatMap((l) => [PATHS[l].home].concat(C.complete ? [PATHS[l].policy] : []));
   const altOf = (u) => { const l = LANGS.find((x) => PATHS[x].home === u || PATHS[x].policy === u); const key = PATHS[l].home === u ? "home" : "policy"; return LANGS.map((x) => `<xhtml:link rel="alternate" hreflang="${x}" href="${SITE}${PATHS[x][key]}"/>`).join(""); };
   write(path.join(out, "sitemap.xml"), `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">\n${urls.map((u) => `<url><loc>${SITE}${u}</loc>${altOf(u)}</url>`).join("\n")}\n</urlset>\n`);
-  write(path.join(out, "robots.txt"), LIVE ? `User-agent: *\nAllow: /\nDisallow: /api/\n\nSitemap: ${SITE}/sitemap.xml\n` : `User-agent: *\nAllow: /og-v2.jpg\nDisallow: /\n`);
+  write(path.join(out, "robots.txt"), LIVE ? `User-agent: *\nAllow: /\nDisallow: /api/\n\nSitemap: ${SITE}/sitemap.xml\n` : `User-agent: *\nAllow: /og-v3.jpg\nDisallow: /\n`);
 }
 
 function buildPhase1(out) {

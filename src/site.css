@@ -61,7 +61,7 @@ body{
 .main{flex:1;width:100%;max-width:70rem;margin:0 auto;display:grid;align-content:center;gap:1.5rem;padding:1.75rem 0 1rem}
 
 .brand{display:flex;flex-direction:column;align-items:center;max-width:100%;overflow:visible}
-.logo{display:block;width:min(100%,28rem);max-width:100%;height:auto;aspect-ratio:2480/528}
+.logo{display:block;width:min(100%,22rem);max-width:100%;height:auto;aspect-ratio:1802/517}
 .rule{display:flex;align-items:center;gap:.75rem;width:min(70vw,17rem);margin-top:1rem;color:var(--gold)}
 .rule::before,.rule::after{content:"";flex:1;height:1px;background:currentColor}
 .rule svg{width:.95rem;height:.95rem;flex:none;fill:currentColor}
@@ -115,13 +115,13 @@ button.cta[disabled]{opacity:.7;cursor:progress}
 
 /* stránky s potvrzením, odhlášením a zásadami */
 .card{max-width:34rem;margin:0 auto;text-align:center}
-.card .logo{width:min(64vw,14rem);margin:0 auto 1.2rem}
+.card .logo{width:min(60vw,11rem);margin:0 auto 1.2rem}
 .card h1{font-size:clamp(1.7rem,7vw,2.3rem)}
 .card p{margin:0 0 1rem;color:var(--ink-soft)}
 .card .cta{max-width:20rem}
 .doc{max-width:42rem;margin:0 auto;text-align:left;padding:1.5rem 0 1rem}
 .doc .back{display:inline-block;margin:0 0 1.5rem}
-.doc .back img{width:11rem;height:auto;display:block}
+.doc .back img{width:8.5rem;height:auto;display:block}
 .doc h1{font-size:clamp(1.7rem,6.5vw,2.4rem);text-align:left}
 .doc h2{font-family:var(--sans);font-weight:600;font-size:1.25rem;line-height:1.25;margin:1.8rem 0 .5rem}
 .doc p,.doc li{color:var(--ink);max-width:68ch}
@@ -133,7 +133,7 @@ button.cta[disabled]{opacity:.7;cursor:progress}
 @media (min-width:60rem){
   .page{padding:0 3rem}
   .main{grid-template-columns:1fr 1fr;align-items:center;gap:4rem;padding:2rem 0}
-  .logo{width:min(44vw,36rem)}
+  .logo{width:min(36vw,28rem)}
   .rule{width:min(30vw,22rem);margin-top:1.6rem}
   .content{text-align:left;margin:0;max-width:31rem}
   h1{font-size:clamp(2.6rem,3.6vw,3.4rem)}
@@ -141,12 +141,12 @@ button.cta[disabled]{opacity:.7;cursor:progress}
   .sub{margin-left:0;font-size:1.25rem}
 }
 @media (max-height:30rem) and (orientation:landscape){
-  .logo{width:min(42vw,16rem)}
+  .logo{width:min(40vw,13rem)}
   .hero{gap:.75rem}
   .rule{margin-top:.45rem}
   h1{font-size:clamp(1.45rem,4.2vw,2rem)}
 }
-@media (min-width:60rem) and (max-height:46rem){.logo{width:min(36vw,26rem)}}
+@media (min-width:60rem) and (max-height:46rem){.logo{width:min(30vw,21rem)}}
 /* děkovací stránky: velké, čitelné písmo */
 body[data-page=thanks] .content{max-width:36rem}
 body[data-page=thanks] h1{font-size:clamp(2.75rem,13vw,3.75rem);line-height:1.05;margin-bottom:.7rem}
@@ -291,7 +291,7 @@ body[data-page="phase1"] .page{overflow-wrap:break-word}
     padding:1.5rem 0 0;margin:0;column-gap:clamp(2rem,4vw,4rem);row-gap:1.5rem;
   }
   body[data-page="phase1"] .hero .brand{overflow:visible;width:100%;max-width:none;margin:0;align-items:flex-start}
-  body[data-page="phase1"] .hero .logo{width:100%;max-width:none;height:auto;margin:0;aspect-ratio:2480/528}
+  body[data-page="phase1"] .hero .logo{width:100%;max-width:none;height:auto;margin:0;aspect-ratio:1802/517}
   body[data-page="phase1"] .hero .content{max-width:none;width:100%;margin:0;text-align:left;align-self:start}
   body[data-page="phase1"] .fork .block,
   body[data-page="phase1"] .choices{padding-top:0;margin-top:0}
@@ -357,7 +357,7 @@ body[data-page="phase1"] select{min-height:48px;font:inherit;background:var(--pa
 
 body[data-page="soon"] .soon{width:min(100%,32rem);margin-inline:auto;padding:1.25rem 0 2.5rem;text-align:center}
 body[data-page="soon"] .brand{width:100%;align-items:center;overflow:visible}
-body[data-page="soon"] .logo{width:min(100%,32rem);margin-inline:auto;aspect-ratio:2480/528}
+body[data-page="soon"] .logo{width:min(100%,25rem);margin-inline:auto;aspect-ratio:1802/517}
 body[data-page="soon"] .rule{width:min(68vw,16rem);margin-inline:auto}
 body[data-page="soon"] .soon-date{font-family:var(--sans);font-weight:600;font-size:clamp(1.8rem,4.4vw,2.5rem);line-height:1.15;margin:1.2rem auto .4rem}
 body[data-page="soon"] .soon-note{margin:0 auto 1.3rem;max-width:26rem;color:var(--ink-soft);font-size:1.05rem}
@@ -388,7 +388,7 @@ body[data-page="soon"] a.mail:hover{text-decoration:underline}
   .admin-filters.is-open{transform:none}
 }
 @media (min-width:60rem){
-  body[data-page="soon"] .logo{width:min(32rem,100%)}
+  body[data-page="soon"] .logo{width:min(25rem,100%)}
   body[data-page="soon"] .rule{width:min(20rem,72%)}
 }
 
@@ -396,7 +396,7 @@ body[data-page="soon"] a.mail:hover{text-decoration:underline}
 body[data-page="phase1"] .hero{display:grid;grid-template-columns:1fr;align-items:start;text-align:left;gap:1.75rem}
 body[data-page="phase1"] .hero-copy{min-width:0;text-align:left}
 body[data-page="phase1"] .hero .brand{overflow:visible;width:100%;max-width:none;margin:0;align-items:flex-start}
-body[data-page="phase1"] .hero .logo{width:100%;max-width:none;height:auto;margin:0;aspect-ratio:2480/528}
+body[data-page="phase1"] .hero .logo{width:100%;max-width:none;height:auto;margin:0;aspect-ratio:1802/517}
 body[data-page="phase1"] .hero .content{max-width:none;width:100%;margin:.85rem 0 0;text-align:left}
 body[data-page="phase1"] .hero h1,
 body[data-page="phase1"] .claim,
@@ -404,7 +404,7 @@ body[data-page="phase1"] .claim-lead{font-family:var(--sans);font-weight:600;fon
 body[data-page="phase1"] .hero h1{margin:0 0 .45rem}
 body[data-page="phase1"] .hero .lead{margin:0}
 .site-mark{display:block;line-height:0;order:1;overflow:visible}
-.wordmark{display:block;width:min(54vw,15rem);height:auto;aspect-ratio:2480/528;overflow:visible}
+.wordmark{display:block;width:min(46vw,12rem);height:auto;aspect-ratio:1802/517;overflow:visible}
 .top-cta{order:3;margin-left:auto;display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:.45rem 1rem;border-radius:.5rem;background:var(--magenta-deep);color:#fff;font-weight:700;text-decoration:none}
 .top-cta:hover{color:#fff;background:#9F0842}
 .nav-toggle{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);border:0}
@@ -416,7 +416,7 @@ body[data-page="phase1"] .hero .lead{margin:0}
 .site-nav a.nav-shop{margin-left:.6rem;border:1.5px solid var(--magenta-deep);border-radius:999px;padding:.35rem .9rem;color:var(--magenta-deep)}
 .site-nav a.nav-shop:hover{background:var(--magenta-deep);color:#fff}
 @media (max-width:767px){
-  .wordmark{width:min(58vw,15rem)}
+  .wordmark{width:min(50vw,12rem)}
   .nav-burger{display:inline-flex}
   .site-nav{order:4;display:none;flex-basis:100%;flex-direction:column;padding:.2rem 0 .4rem}
   .nav-toggle:checked~.site-nav{display:flex}

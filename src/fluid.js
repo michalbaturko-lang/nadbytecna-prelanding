@@ -1,7 +1,7 @@
 // Logo reaguje na přiblížení myši / dotek prstu. Bez knihoven, bez třetích stran.
-// Efekt běží na rukopisném „Nadbytečná.cz“. Písmena jsou skutečné vektorové tvary
+// Efekt běží na rukopisném „nadbytečná“. Písmena jsou skutečné vektorové tvary
 // (řezy vedené podle spojů mezi písmeny, ne svislé čáry).
-//  1. první přejetí (na mobilu první dotyk nebo scroll): odpadne velké „N“
+//  1. první přejetí (na mobilu první dotyk nebo scroll): odpadne první písmeno „n“
 //  2. asi po 0,5 s samo naváže dnešní pokračování: dvě písmena, pak zbytek „Nadbytečná“,
 //     „ná“ pomalu zmizí a na lince se rozvine věta „Zlomil mi srdce. Ne křídla.“ (nepadá).
 // Bez Canvasu nebo při „omezit pohyb“ zůstává obyčejný obrázek.
@@ -15,12 +15,13 @@
 
   var SPLIT = parseFloat(img.getAttribute("data-split"));        // kde v obrázku začíná rukopis (0 = celý obrázek je nápis)
   var PHRASE = document.documentElement.lang === "sk" ? "Zlomil mi srdce. Nie krídla." : "Zlomil mi srdce. Ne křídla.";
-  var PINK = [0xD7, 0x1D, 0x62], GOLD = [0xA9, 0x80, 0x2F];
+  var PINK = [0xDB, 0x0B, 0x5F], GOLD = [0xA9, 0x80, 0x2F];
   var SCRIPT = /nadbytecna-script\.svg/.test(img.getAttribute("src") || "");
   var DRAW_SY = SCRIPT ? 0 : 688;                                 // lockup má rukopis níž; samotný nápis už začíná nahoře
   var DRAW_OX = 0;                                                // souřadnice písmen sedí na levý okraj zobrazeného nápisu
   var CHAIN = true;                                               // po 2. přiblížení hned padá i zbytek
-  var ORDER = ["N", "a", "d", "b", "y", "t", "e", "c", "na", "cz"];
+  var FW = 1802;                                                  // šířka kresby (viewBox loga)
+  var ORDER = ["n", "a", "d", "b", "y", "t", "e", "c", "na"];
 
   var MX = 0.12, MYB = 1.0;                                       // okraj vlevo/vpravo; prostor pro pád dolů (násobek výšky rukopisu)
   var wrap = document.createElement("span");
@@ -57,7 +58,7 @@
     if (!lw) return;
     hs = lh * (1 - SPLIT);
     w = lw * (1 + 2 * MX); h = hs * (1 + MYB);
-    k0 = lw / 2480;
+    k0 = lw / FW;
     dpr = Math.min(window.devicePixelRatio || 1, 2);
     cv.style.width = w + "px"; cv.style.height = h + "px";
     cv.style.left = -lw * MX + "px"; cv.style.top = lh * SPLIT + "px";
@@ -67,7 +68,7 @@
     dirty = true;
     if (active) draw(performance.now());
   }
-  function setScript(c) {                                         // souřadnice kresby (2480 široká) -> pixely plátna
+  function setScript(c) {                                         // souřadnice kresby (FW široká) -> pixely plátna
     c.setTransform(dpr * k0, 0, 0, dpr * k0, dpr * (MX * lw - DRAW_OX * k0), dpr * (DRAW_SY * k0 - SPLIT * lh));
   }
   function show(on) {
@@ -153,7 +154,7 @@
     tx.globalCompositeOperation = "destination-in";
     var g = tx.createLinearGradient(front - soft, 0, front, 0);
     g.addColorStop(0, "rgba(0,0,0,1)"); g.addColorStop(1, "rgba(0,0,0,0)");
-    tx.fillStyle = g; tx.fillRect(-100, -300, 2480 + 200, 1500);
+    tx.fillStyle = g; tx.fillRect(-100, -300, FW + 200, 1500);
     tx.globalCompositeOperation = "source-over";
     ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha = 1 - ex; ctx.drawImage(tc, 0, 0); ctx.restore();
   }
@@ -198,16 +199,16 @@
   function finalSeq(px, now) {
     var ids = ORDER.filter(function (id) { return id !== "na" && L[id].mode === "on"; }), dmax = 0;
     ids.forEach(function (id) {
-      var d = Math.abs(L[id].cx - px) / 2480 * 400 + Math.random() * 40;
+      var d = Math.abs(L[id].cx - px) / FW * 400 + Math.random() * 40;
       dmax = Math.max(dmax, d); fallOne(id, d, now);
     });
     var n = L.na, fsz = 400, tw, gap = 0;
     tx.font = fsz + "px Damion"; tw = tx.measureText(PHRASE).width;
     var nw = 0;                                                    // věta je samostatná, vycentrovaná
-    while (nw + gap + tw > 2480 * 0.92 && fsz > 40) { fsz -= 4; tx.font = fsz + "px Damion"; tw = tx.measureText(PHRASE).width; }
-    var total = tw, left = (2480 - total) / 2;
+    while (nw + gap + tw > FW * 0.92 && fsz > 40) { fsz -= 4; tx.font = fsz + "px Damion"; tw = tx.measureText(PHRASE).width; }
+    var total = tw, left = (FW - total) / 2;
     // data-base je podíl výšky loga, kde leží linka rukopisu. Damion má jednu rodinu (latin i latin-ext), takže „s“ nesedne výš než zbytek věty.
-    var base = 1219 * parseFloat(img.getAttribute("data-base") || "0.8403") - 688;
+    var base = 517 * parseFloat(img.getAttribute("data-base") || "0.6333");
     var Tslide = dmax + (WOB + 1.0) * 1000 + 250, Tunroll = Tslide + 900, Dunroll = 3400, Tfade = Tunroll + Dunroll + 3200, Tback = Tfade + 100;
     seq = { t0: now, dx: 0, tx: left + nw + gap, tw: tw, fsz: fsz, base: base, Tslide: Tslide, Tunroll: Tunroll, Dunroll: Dunroll, Tfade: Tfade, Tback: Tback, k: 0,
       end: Tback + 1100 + 300 };
@@ -232,7 +233,7 @@
     if (!active) show(true);
     stage++;
     if (stage === 1) {
-      fallOne("N", 0, now);
+      fallOne("n", 0, now);
       autoT = setTimeout(function () {
         autoT = 0;
         if (stage !== 1 || seq) return;
@@ -259,7 +260,7 @@
     if (e.pointerType !== "touch") wrap.style.cursor = ins ? "pointer" : "";
     if (ins && !inside && ready) {
       var r = img.getBoundingClientRect();
-      poke((e.clientX - r.left) / r.width * 2480, performance.now());
+      poke((e.clientX - r.left) / r.width * FW, performance.now());
     }
     inside = ins;
   }
