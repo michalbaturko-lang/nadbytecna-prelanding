@@ -264,3 +264,8 @@ body[data-form] .main a:not(.backlink){color:var(--ink)}
 }
 html.sc-live .sc-manifest{height:calc(100svh + var(--per) * 6svh)}
 html.sc-live .sc-stage{height:66vh;height:66svh;top:17vh;top:17svh}
+
+/* úvod bez celé obrazovky: Příběh Věry navazuje hned pod nadpisem */
+.sc-hero{min-height:0;padding-bottom:clamp(1.5rem,4svh,3rem)}
+@media (max-width:47.99rem){.sc-hero{min-height:0;padding-bottom:1.5rem}}
+.sc-chapter[data-chapter="1"]{padding-top:clamp(.5rem,2svh,1.5rem)}

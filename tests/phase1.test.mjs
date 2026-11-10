@@ -79,7 +79,7 @@ test("homepage má dvě volby, osm karet a formuláře nic neodesílají", () =>
   assert.match(home, /<script src="\/video\.js" defer><\/script>/);
   assert.doesNotMatch(visible(home), /Spouštíme|Pracovní náhled|neběží|zatím není/);
   assert.match(home, /Žádná žena není nadbytečná\./);
-  assert.match(home, /Místo pro ženy, které si prošly něčím podobným, a pro ty, kdo jim chtějí pomoci\./);
+  assert.doesNotMatch(home, /class="lead"/)  // úvod bez doplňujícího textu, Příběh Věry navazuje hned
   assert.match(home, /<a class="choice choice-shop" id="cil" href="#parfem"><span class="choice-title">Předprodej parfému</);
   assert.match(home, /Podpořte platformu Nadbytečná\.cz předobjednáním parfému!/);
   assert.match(home, /Dodání do Vánoc!/);
