@@ -12,10 +12,13 @@ let s,
   msalCalls = 0,
   graphCalls = 0,
   expectedChallenge;
+let exchangeError = null, folderStatus = 200;
+const failures = [];
 const tenant = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
 test.before(async () => {
   s = await startAdminServer({
     mailConnectClient: {
+      reportFailure: (record) => failures.push(record),
       authUrl: async ({ state, codeChallenge }) => {
         msalCalls++;
         expectedChallenge = codeChallenge;
@@ -26,6 +29,7 @@ test.before(async () => {
       },
       exchange: async ({ code, codeVerifier }) => {
         msalCalls++;
+        if (exchangeError) throw exchangeError;
         assert.equal(code, "synthetic-code");
         assert.ok(codeVerifier.length >= 43);
         return {
@@ -54,7 +58,7 @@ test.before(async () => {
           url,
           "https://graph.microsoft.com/v1.0/me/mailFolders/inbox?$select=id",
         );
-        return Response.json({ id: "synthetic-inbox" });
+        return Response.json({ id: "synthetic-inbox" }, { status: folderStatus });
       },
     },
   });
@@ -265,4 +269,30 @@ test("delegated refresh uses encrypted cache and refuses token if disconnected d
     { enabled: false, accessToken: null },
   );
   assert.equal(s.metrics.external, 0);
+});
+
+
+test("callback failures report safe stages without credentials or provider payloads", async () => {
+  const previous = await oauthRpc("cache_get");
+  try {
+    for (const code of ["oauth_client_rejected", "secret-value-in-error-code"]) {
+      exchangeError = Object.assign(new Error("secret-value token-payload provider-response"), { code, response: "provider-response" });
+      const a = await started(), before = failures.length;
+      assert.equal((await callback(a)).status, 303);
+      assert.equal(failures.length, before + 1);
+      assert.deepEqual(failures.at(-1), { event: "mail_oauth_callback_failed", stage: "token_exchange", code: code === "oauth_client_rejected" ? code : "unexpected" });
+      const after = await oauthRpc("cache_get");
+      assert.deepEqual(after, previous);
+    }
+    exchangeError = null;
+    folderStatus = 403;
+    assert.equal((await callback(await started())).status, 303);
+    assert.equal(failures.at(-1).stage, "mailbox_lookup");
+    folderStatus = 200;
+    const a = await started();
+    assert.equal((await callback(a, "")).status, 303);
+    assert.equal(failures.at(-1).stage, "callback_validation");
+    const safe = JSON.stringify(failures);
+    for (const secret of ["secret-value", "token-payload", "provider-response", "synthetic-code", "synthetic-access"]) assert.ok(!safe.includes(secret));
+  } finally { exchangeError = null; folderStatus = 200; }
 });
