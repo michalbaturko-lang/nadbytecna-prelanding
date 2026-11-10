@@ -1338,6 +1338,22 @@
     help: "Nabídka pomoci",
     other: "Ostatní",
   };
+  var MAIL_SUBTYPES = {
+    personal_story: "Osobní příběh",
+    request_help: "Žádost o pomoc",
+    offer_help: "Nabídka pomoci",
+    press: "Média",
+    partnership: "Spolupráce",
+    operational: "Organizační pošta",
+    automated: "Automatická zpráva",
+    spam: "Spam / podezřelá pošta",
+    other: "Ostatní",
+  };
+  var MAIL_CONFIDENCES = { low: "nižší", medium: "střední", high: "vyšší" };
+  function mailReviewed(row) {
+    return Number.isInteger(row.revision) && row.revision > 0 &&
+      row.reviewed_revision === row.revision;
+  }
   function mailApi(body, download) {
     return api(body, download, "/api/admin-mail/");
   }
@@ -1350,7 +1366,13 @@
     mailSay(
       e && (e.message === "ai_disabled" || e.message === "mail_ai_disabled")
         ? "AI nad e-maily čeká na schválení. Třídění můžete provést ručně."
-        : "Akci s místní kopií e-mailu se nepodařilo dokončit. Zkuste to znovu.",
+        : e && e.message === "mail_archive_cleanup_pending"
+          ? "Přístup k originálům je zablokovaný. Dokončuje se jejich bezpečné odstranění; výmaz zatím není hotový. Zkuste jej znovu za několik minut."
+          : e && e.message === "archive_not_ready"
+            ? "Originál zatím není uložený. Zkontrolujte stav zálohy a zkuste to později."
+            : e && e.message === "mail_ai_scope_required"
+              ? "Vlákno není povolené pro AI. Ověřte projektový obsah a nastavte jeho rozsah AI."
+            : "Akci s místní kopií e-mailu se nepodařilo dokončit. Zkuste to znovu.",
     );
   }
   function clearMail() {
@@ -1381,6 +1403,7 @@
     $("mail-count").textContent = "";
     $("mail-page").textContent = "";
     $("mail-sync-status").textContent = "";
+    clear($("mail-triage-stats"));
     $("mail-filters").open = false;
     mailSay("");
     document
@@ -1439,7 +1462,10 @@
     box.append(
       tag(MAIL_STATUSES[row.status] || "Nový"),
       tag(MAIL_TYPES[row.email_type] || "Nezařazeno"),
+      tag(mailReviewed(row) ? "Zkontrolováno člověkem" : "Ke kontrole"),
     );
+    if (MAIL_SUBTYPES[row.ai_subtype])
+      box.append(tag(MAIL_SUBTYPES[row.ai_subtype]));
     if (mailCategory(row)) box.append(tag(category(mailCategory(row))));
     if (urgency)
       box.append(tag(URGENCIES[urgency] || urgency, urgency === "acute"));
@@ -1468,6 +1494,12 @@
     );
     if (row.ai_help_type)
       box.append(node("p", "", "Navržená pomoc: " + row.ai_help_type));
+    if (MAIL_CONFIDENCES[row.ai_confidence])
+      box.append(tag("Návrh AI: " + MAIL_CONFIDENCES[row.ai_confidence] + " jistota"));
+    if (row.ai_review_required === true)
+      box.append(node("p", "mail-ai-review", "AI upozorňuje na potřebu lidského posouzení."));
+    if (row.ai_review_reason)
+      box.append(node("p", "hint mail-review-reason", row.ai_review_reason));
     if (row.ai_model)
       box.append(node("p", "hint", row.ai_model + " · " + when(row.ai_at)));
     if (row.ai_error) box.append(node("p", "", "AI se nepodařilo spustit."));
@@ -1475,6 +1507,7 @@
   }
   function renderMailStatus(status) {
     M.status = status;
+    if ($("mail-source-check")) $("mail-source-check").disabled = !(status.syncEnabled && status.configured && (status.authMode !== "delegated" || status.connected));
     var pieces = [];
     if (status.authMode === "delegated" && status.connected !== true)
       pieces.push("Načítání nových e-mailů čeká na připojení schránky.");
@@ -1492,6 +1525,8 @@
       pieces.push(
         "Poslední načtení se nezdařilo; zobrazené kopie mohou být neúplné.",
       );
+    if (status.syncEnabled && status.initial_complete === false)
+      pieces.push("Historie se ještě načítá; přehled zatím nemusí obsahovat všechny příchozí zprávy.");
     if (status.aiAutomationEnabled)
       pieces.push("Automatická AI analýza je zapnutá; návrhy vyžadují lidskou kontrolu.");
     else if (status.aiEnabled)
@@ -1501,13 +1536,46 @@
       var queue = status.aiQueue;
       if (Number.isInteger(queue.queued) && queue.queued > 0)
         pieces.push("Čeká na automatickou AI: " + queue.queued + ".");
+      if (Number.isInteger(queue.awaitingScope) && queue.awaitingScope > 0)
+        pieces.push("Bez povolení pro AI: " + queue.awaitingScope + ".");
       if (Number.isInteger(queue.processing) && queue.processing > 0)
         pieces.push("Právě se zpracovává: " + queue.processing + ".");
       if (Number.isInteger(queue.failed) && queue.failed > 0)
         pieces.push("Po neúspěšných pokusech je nutná ruční kontrola: " + queue.failed + ".");
     }
+    if (status.originals) {
+      var originals = status.originals;
+      pieces.push("Uložené originály: " + (originals.archived || 0) + ".");
+      if (!status.archiveEnabled) pieces.push("Ukládání originálů je zatím vypnuté.");
+      if ((originals.pending || 0) + (originals.processing || 0) > 0) pieces.push("Čeká na uložení originálu: " + ((originals.pending || 0) + (originals.processing || 0)) + ".");
+      if (originals.failed > 0) pieces.push("Neuložené originály vyžadující kontrolu: " + originals.failed + ".");
+      if (originals.cleanupPending > 0) pieces.push("Dokončuje se odstranění originálů: " + originals.cleanupPending + ".");
+    }
     $("mail-sync-status").textContent = pieces.join(" ");
+    renderMailTriageStats(status.triageStats);
     renderMailConnection(status);
+  }
+  function renderMailTriageStats(stats) {
+    var box = $("mail-triage-stats");
+    clear(box);
+    if (!stats || !Number.isInteger(stats.unreviewed) || stats.unreviewed < 0) return;
+    var pending = button("Ke kontrole: " + stats.unreviewed, function () {
+      M.filters.review = "pending";
+      M.filters.sort = "newest";
+      M.page = 0;
+      closeMailDetail();
+      renderMailFilters();
+      return loadMailList();
+    });
+    pending.classList.add("mail-review-shortcut");
+    box.append(pending);
+    if (Number.isInteger(stats.urgent) && stats.urgent >= 0)
+      box.append(node("span", "mail-stat", "Akutní a vysoká naléhavost: " + stats.urgent));
+    var breakdown = Object.entries(MAIL_SUBTYPES).filter(function (entry) {
+      return Number.isInteger(stats.subtypes?.[entry[0]]) && stats.subtypes[entry[0]] > 0;
+    }).map(function (entry) { return entry[1] + ": " + stats.subtypes[entry[0]]; });
+    if (breakdown.length)
+      box.append(node("p", "hint mail-subtype-counts", breakdown.join(" · ")));
   }
   function clearMailInvite() {
     if (M.inviteTimer) clearTimeout(M.inviteTimer);
@@ -1826,6 +1894,8 @@
     [
       ["status", "Stav", Object.entries(MAIL_STATUSES)],
       ["email_type", "Druh e-mailu", Object.entries(MAIL_TYPES)],
+      ["subtype", "Podtyp návrhu AI", Object.entries(MAIL_SUBTYPES)],
+      ["review", "Lidská kontrola", [["pending", "Ke kontrole"], ["reviewed", "Zkontrolováno"]]],
       [
         "category",
         "Kategorie",
@@ -2033,6 +2103,41 @@
       mailTags(row),
       mailAiBlock(row),
     );
+    var checked = mailReviewed(row);
+    var reviewBox = section("Lidská kontrola"),
+      reviewText = checked
+        ? "Aktuální obsah zkontrolován" + (row.reviewed_at ? " · " + when(row.reviewed_at) : "") + (row.reviewed_email ? " · " + row.reviewed_email : "")
+        : "Aktuální obsah čeká na kontrolu člověkem.";
+    reviewBox.classList.add("mail-human-review");
+    reviewBox.append(node("p", "", reviewText));
+    var reviewButton = button(checked ? "Vrátit ke kontrole" : "Označit jako zkontrolované", async function () {
+      var epoch = S.authEpoch, result;
+      reviewButton.disabled = true;
+      try {
+        try {
+          result = await mailApi({ action: "review", id: row.id, revision: row.revision, reviewed: !checked });
+        } catch (error) {
+          if (error.message !== "mail_changed" && error.message !== "changed") throw error;
+          result = { saved: false, reason: "changed" };
+        }
+        if (epoch !== S.authEpoch || serial !== M.detailSerial || S.view !== "mail") return;
+        if (result?.saved !== true && result?.reason !== "changed") throw new Error("mail_review_failed");
+        await openMailDetail(row.id, messagePage);
+        if (epoch !== S.authEpoch || S.view !== "mail" || M.detail?.id !== row.id) return;
+        await loadMailList();
+        var status = await mailApi({ action: "status" });
+        if (epoch !== S.authEpoch || S.view !== "mail") return;
+        renderMailStatus(status);
+        mailSay(result.saved === true
+          ? (!checked ? "Aktuální obsah vlákna je označený jako zkontrolovaný." : "Vlákno je znovu ke kontrole.")
+          : "Mezitím se změnil obsah vlákna. Načetli jsme novou verzi; před označením ji zkontrolujte.");
+      } finally {
+        if (epoch === S.authEpoch && serial === M.detailSerial) reviewButton.disabled = false;
+      }
+    });
+    reviewButton.disabled = !Number.isInteger(row.revision) || row.revision < 1;
+    reviewBox.append(reviewButton);
+    box.append(reviewBox);
     if (mailUrgency(row) === "acute")
       box.append(
         node(
@@ -2041,6 +2146,43 @@
           "Akutní případ — vyžaduje bezodkladné lidské posouzení. Platforma není krizová služba.",
         ),
       );
+    var aiScopeAllowed = row.ai_scope_blocked !== true &&
+      (row.ai_scope_approved === true || M.status?.aiScopeMode === "all");
+    var scopeBox = section("Rozsah AI"),
+      scopeState = row.ai_scope_blocked === true ? "zablokováno" : row.ai_scope_approved === true ? "povoleno" : "nenastaven",
+      scopeLabel = node("label", "check"), scopeInput = node("input");
+    scopeInput.type = "checkbox";
+    scopeInput.id = "mail-ai-scope-approved";
+    scopeInput.checked = row.ai_scope_approved === true && row.ai_scope_blocked !== true;
+    scopeLabel.append(scopeInput, document.createTextNode("Projektová konverzace – lze analyzovat AI"));
+    scopeBox.classList.add("mail-ai-scope");
+    scopeBox.append(
+      node("p", "", "Rozsah AI: " + scopeState), scopeLabel,
+      node("p", "hint", "Povolení platí pro celé vlákno včetně budoucích odpovědí. Samotné označení AI nezapíná. Uložením bez zaškrtnutí AI pro vlákno zablokujete."),
+    );
+    if (M.status?.aiScopeMode === "all")
+      scopeBox.append(node("p", "hint", "Nastavení projektu dovoluje také neoznačená vlákna; výslovné zablokování má přednost."));
+    var saveScope = button("Uložit rozsah AI", async function () {
+      var epoch = S.authEpoch;
+      saveScope.disabled = true;
+      try {
+        var result = await mailApi({ action: "ai_scope", id: row.id, revision: row.revision, approved: scopeInput.checked });
+        if (epoch !== S.authEpoch || serial !== M.detailSerial || S.view !== "mail") return;
+        if (result?.saved !== true && result?.reason !== "changed") throw new Error("mail_scope_failed");
+        await openMailDetail(row.id, messagePage);
+        if (epoch !== S.authEpoch || S.view !== "mail" || M.detail?.id !== row.id) return;
+        await loadMailList();
+        var scopeStatus = await mailApi({action:"status"});
+        if (epoch !== S.authEpoch || S.view !== "mail" || M.detail?.id !== row.id) return;
+        renderMailStatus(scopeStatus);
+        mailSay(result.saved === true ? "Rozsah AI pro celé vlákno je uložený. Zapnutí AI se tím nemění."
+          : "Mezitím se změnil obsah vlákna. Před určením rozsahu AI zkontrolujte novou verzi.");
+      } catch (error) { mailError(error); }
+      finally { if (epoch === S.authEpoch && serial === M.detailSerial) saveScope.disabled = false; }
+    });
+    saveScope.disabled = !Number.isInteger(row.revision) || row.revision < 1;
+    scopeBox.append(saveScope);
+    box.append(scopeBox);
     var run = button(
       row.ai_error
         ? "Zkusit AI znovu"
@@ -2055,12 +2197,14 @@
           await openMailDetail(row.id);
           await loadMailList();
         } finally {
-          if (serial === M.detailSerial) run.disabled = !M.status?.aiEnabled;
+          if (serial === M.detailSerial) run.disabled = !M.status?.aiEnabled || !aiScopeAllowed;
         }
       },
     );
-    run.disabled = !M.status?.aiEnabled;
+    run.disabled = !M.status?.aiEnabled || !aiScopeAllowed;
     box.append(run);
+    if (!aiScopeAllowed)
+      box.append(node("p", "hint", "Toto vlákno zatím není povolené pro AI. Nejprve ověřte, že jde o projektovou konverzaci, a uložte rozsah výše."));
     box.append(
       node(
         "p",
@@ -2194,6 +2338,28 @@
         ),
         node("p", "body-text", m.body_text || "Text zprávy není k dispozici."),
       );
+      if (m.has_attachments) article.append(node("p", "hint", "Zpráva obsahuje přílohy."));
+      var original = data.originals && Array.isArray(data.originals.messages) ? data.originals.messages.find(function (item) { return item.id === m.id; }) : null;
+      if (m.body_truncated || (original && original.bodyTruncated)) article.append(node("p", "mail-notice", "Zobrazený text je zkrácený. Úplné znění uchovává původní e-mail, pokud je jeho originál už uložený."));
+      if (original && original.status === "archived") {
+        var getOriginal = button("Stáhnout originál .eml", async function () {
+          getOriginal.disabled = true;
+          try {
+            var signed = await mailApi({action: "archive_download", id: m.id});
+            var target = new URL(signed.url), expectedOrigin = new URL(cfg().url).origin;
+            if (target.origin !== expectedOrigin || !target.pathname.startsWith("/storage/v1/object/sign/mail-originals/") || target.username || target.password || target.hash) throw new Error("archive_url");
+            var response = await fetch(target.href, {credentials: "omit", referrerPolicy: "no-referrer", cache: "no-store", redirect: "error"});
+            if (!response.ok) throw new Error("archive_download");
+            var blob = await response.blob();
+            if (blob.size > 50 * 1024 * 1024 || blob.size !== signed.size) throw new Error("archive_integrity");
+            downloadBlob(blob, "email-" + m.id + ".eml");
+          } catch (error) { mailError(error); } finally { getOriginal.disabled = false; }
+        });
+        article.append(getOriginal);
+      } else if (original) {
+        article.append(node("p", "hint", original.status === "failed" ? "Originál se nepodařilo uložit; vyžaduje kontrolu." : original.status === "blocked" ? "Originál je zablokovaný kvůli výmazu." : "Originál čeká na uložení."));
+        if (original.status === "failed") article.append(button("Zkusit uložit originál znovu", async function () { try { await mailApi({action: "archive_retry", id: m.id}); await openMailDetail(row.id, currentMessagePage); } catch (error) { mailError(error); } }));
+      }
       messages.append(article);
     });
     if (!data.messages?.length)
@@ -2474,6 +2640,16 @@
   $("mail-connect-invite").addEventListener("click", createMailInvite);
   $("mail-connect-copy").addEventListener("click", copyMailInvite);
   $("mail-connect-disconnect").addEventListener("click", askDisconnectMail);
+  $("mail-archive-check").addEventListener("click", async function () {
+    var btn=$("mail-archive-check");btn.disabled=true;mailSay("Ověřuji uložení a načtení krátkého testovacího originálu…");
+    try { var result=await mailApi({action:"archive_integrity_check"});mailSay(result.ok && result.hashVerified && result.deleted ? "Úložiště originálů ověřeno: testovací soubor se uložil, načetl beze změny a byl odstraněn." : "Test úložiště není dokončený. Zkontrolujte stav ukládání originálů."); }
+    catch(error) {mailError(error);}finally{btn.disabled=false;}
+  });
+  $("mail-source-check").addEventListener("click", async function () {
+    var btn=$("mail-source-check");btn.disabled=true;mailSay("Porovnávám uložené zprávy s Inboxem Microsoftu…");
+    try { var result=await mailApi({action:"source_check"});mailSay((result.matches ? "Počty při kontrole odpovídají. " : "Počty se při kontrole liší; načítání může ještě probíhat. ")+"Inbox Microsoftu: "+result.sourceMessages+" zpráv. Aktivní místní kopie: "+result.activeMessages+". Celkem místně: "+result.allMessages+"."); }
+    catch(error) {mailError(error);}finally{btn.disabled=false;}
+  });
   $("mail-refresh").addEventListener("click", function () {
     closeMailDetail();
     loadMail().catch(mailError);

@@ -30,7 +30,7 @@ try {
     const first=()=>page.locator("#mail-cards article h2").first().textContent();
     assert.equal(await first(),"Starší naléhavý test");
     assert.match(await page.locator("#mail-sync-status").textContent(),/AI analýza je vypnutá/);
-    assert.match(await page.locator("#mail-sync-status").textContent(),/Čeká na automatickou AI: 3/);
+    assert.match(await page.locator("#mail-sync-status").textContent(),/Bez povolení pro AI: 3/);
     await page.locator("#mail-sort").selectOption("newest");
     await page.waitForFunction(()=>document.querySelector("#mail-cards article h2")?.textContent==="Novější běžný test");
     await page.locator("#mail-sort").selectOption("urgency");

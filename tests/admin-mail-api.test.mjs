@@ -99,14 +99,29 @@ test("mail list/detail and classification preserve unknown web consent and block
   assert.equal((await call({ action: "ai", id })).status, 423);
   assert.equal(s.metrics.external, before);
 });
+test("AI scope marking requires an admin, valid boolean and current content revision", async () => {
+  const current=(await(await call({action:"detail",id})).json()).thread;
+  const request={action:"ai_scope",id,revision:current.revision,approved:true};
+  assert.equal((await call(request,"")).status,401);
+  assert.equal((await call(request,otherToken)).status,403);
+  assert.equal((await call({...request,approved:"true"})).status,400);
+  assert.deepEqual(await(await call({...request,revision:current.revision+1})).json(),{saved:false,reason:"changed"});
+  assert.equal((await(await call({action:"detail",id})).json()).thread.ai_scope_approved,false);
+});
 test("approved mail AI fallback retains messages and successful AI preserves manual category", async () => {
   Object.assign(process.env, {
     AI_TRIAGE_ENABLED: "true",
     AI_EMAIL_CLASSIFICATION_ENABLED: "true",
     AI_EMAIL_PROCESSING_APPROVED: "true",
     OPENAI_API_KEY: "synthetic-only",
+    AI_EMAIL_SCOPE: "marked",
   });
   try {
+    const before=s.metrics.ai;
+    assert.equal((await call({action:"ai",id})).status,423);
+    assert.equal(s.metrics.ai,before);
+    const current=(await(await call({action:"detail",id})).json()).thread;
+    assert.equal((await call({action:"ai_scope",id,revision:current.revision,approved:true})).status,200);
     s.setAIResponse("timeout");
     assert.equal((await call({ action: "ai", id })).status, 502);
     let d = await (await call({ action: "detail", id })).json();

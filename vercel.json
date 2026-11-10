@@ -254,6 +254,10 @@
     {
       "path": "/api/mail-ai-worker/",
       "schedule": "* * * * *"
+    },
+    {
+      "path": "/api/mail-archive-worker/",
+      "schedule": "* * * * *"
     }
   ],
   "functions": {
@@ -264,16 +268,19 @@
       "maxDuration": 60
     },
     "api/mail-sync.js": {
-      "maxDuration": 60
+      "maxDuration": 180
     },
     "api/admin-mail.js": {
-      "maxDuration": 120
+      "maxDuration": 180
     },
     "api/mail-connect.js": {
       "maxDuration": 120
     },
     "api/mail-ai-worker.js": {
       "maxDuration": 120
+    },
+    "api/mail-archive-worker.js": {
+      "maxDuration": 300
     }
   }
 }

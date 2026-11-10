@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { runMailSync } from "../lib/mail-sync-worker.mjs";
 import { createMailSyncHandler } from "../api/mail-sync.js";
+import { readM365DeltaPage } from "../lib/m365-readonly.mjs";
 
 const env = { M365_INGEST_ENABLED: "true", M365_MAILBOX: "veryvera@nadbytecna.cz", M365_FOLDER_ID: "inbox", M365_SINCE: "1970-01-01T00:00:00Z" };
 function fixture({ pageCount = 9, busyAt = 0, failPage = 0, failCommit = 0, failAuth = false, error = new Error("private-graph-body-token"), elapsedPerPage = 0 } = {}) {
@@ -72,6 +73,8 @@ test("catchup commits at most five pages sequentially with current cursor and on
   const result = await runMailSync(f.options);
   assert.deepEqual(result, { ok: true, pages: 5, imported: 10, skipped: 5, removed: 5, more: true });
   assert.equal(f.committed.length, 5);
+  assert.equal(f.committed[0].p_messages[0].body_truncated, false);
+  assert.equal(f.committed[0].p_messages[0].source_change_key, null);
   assert.equal(f.calls.filter((c) => c === "auth").length, 1);
   assert.deepEqual(f.calls.slice(0, 5), ["prepare", "mail_sync_claim", "auth", "graph", "mail_sync_commit"]);
   assert.equal(JSON.stringify(result).includes("private"), false);
@@ -201,4 +204,42 @@ test("cursor diagnostics strictly project fixed enums and booleans and reject pr
     assert.deepEqual(diagnostics, [{ event: "mail_sync_failed", stage: "read", code: "invalid_cursor", ...(shape === valid ? { cursorShape: valid } : {}) }]);
     assert.equal(JSON.stringify(diagnostics).includes("private-"), false);
   }
+});
+
+test("sync commits explicit preview and source revision metadata", async () => {
+  const f = fixture({ pageCount: 1 });
+  const read = f.options.readPage;
+  f.options.readPage = async (args) => {
+    const page = await read(args);
+    Object.assign(page.messages[0], { bodyTruncated: true, sourceChangeKey: "synthetic-revision-key", hasAttachments: true });
+    return page;
+  };
+  await runMailSync(f.options);
+  assert.equal(f.committed[0].p_messages[0].body_truncated, true);
+  assert.equal(f.committed[0].p_messages[0].source_change_key, "synthetic-revision-key");
+  assert.equal(f.committed[0].p_messages[0].has_attachments, true);
+});
+test("unrecoverable oversized Graph page releases its lease and never commits a new cursor", async () => {
+  const cursor = "https://graph.microsoft.com/v1.0/me/mailfolders('inbox')/messages/delta?$skiptoken=synthetic-retained-cursor";
+  let requests = 0;
+  const events = [];
+  const options = {
+    env: { ...env, M365_AUTH_MODE: "delegated" },
+    prepare: () => "synthetic-secret", getToken: async () => ({ accessToken: "synthetic-access" }),
+    rpc: async (method, args) => {
+      events.push({ method, args });
+      if (method === "mail_sync_claim") return { lease: "synthetic-lease", cursor, since: env.M365_SINCE };
+      if (method === "mail_sync_commit") assert.fail("oversized data must never advance cursor");
+      return null;
+    },
+    readPage: (args) => readM365DeltaPage({ ...args, fetcher: async (url) => {
+      requests++;
+      assert.equal(url, cursor);
+      return new Response("", { headers: { "content-type": "application/json", "content-length": String(8 * 1024 * 1024 + 1) } });
+    } }),
+  };
+  await assert.rejects(() => runMailSync(options), (error) => error.code === "response_too_large");
+  assert.equal(requests, 2);
+  assert.deepEqual(events.map((event) => event.method), ["mail_sync_claim", "mail_sync_release"]);
+  assert.equal(events[1].args.p_error, "response_too_large");
 });

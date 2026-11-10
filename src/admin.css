@@ -741,3 +741,17 @@ button.primary:hover:not(:disabled) {
   color: white;
   border-color: var(--rose);
 }
+
+.mail-triage-stats {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 16px;
+  margin: 16px 0;
+}
+.mail-triage-stats:empty { display: none; }
+.mail-subtype-counts { flex-basis: 100%; margin: 0; }
+.mail-stat, .mail-review-reason { overflow-wrap: anywhere; }
+.mail-human-review { padding-block: 8px; }
+.mail-human-review p { margin-top: 0; }
+.mail-ai-review { font-weight: 600; }
