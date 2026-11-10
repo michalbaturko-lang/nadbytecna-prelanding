@@ -1492,6 +1492,20 @@
       pieces.push(
         "Poslední načtení se nezdařilo; zobrazené kopie mohou být neúplné.",
       );
+    if (status.aiAutomationEnabled)
+      pieces.push("Automatická AI analýza je zapnutá; návrhy vyžadují lidskou kontrolu.");
+    else if (status.aiEnabled)
+      pieces.push("AI lze spustit ručně; automatická analýza je vypnutá.");
+    else pieces.push("AI analýza je vypnutá; e-maily můžete zpracovat ručně.");
+    if (status.aiQueue) {
+      var queue = status.aiQueue;
+      if (Number.isInteger(queue.queued) && queue.queued > 0)
+        pieces.push("Čeká na automatickou AI: " + queue.queued + ".");
+      if (Number.isInteger(queue.processing) && queue.processing > 0)
+        pieces.push("Právě se zpracovává: " + queue.processing + ".");
+      if (Number.isInteger(queue.failed) && queue.failed > 0)
+        pieces.push("Po neúspěšných pokusech je nutná ruční kontrola: " + queue.failed + ".");
+    }
     $("mail-sync-status").textContent = pieces.join(" ");
     renderMailConnection(status);
   }
@@ -1833,6 +1847,7 @@
   }
   function renderMailList() {
     var cards = $("mail-cards");
+    $("mail-sort").value = M.filters.sort || "urgency";
     clear(cards);
     $("mail-count").textContent = quantity(M.total, "e-mailové vlákno", "e-mailová vlákna", "e-mailových vláken");
     if (!M.rows.length) {
@@ -2050,7 +2065,7 @@
       node(
         "p",
         "hint",
-        "Návrh AI vychází nejvýše z 20 nejnovějších zpráv a 20 000 znaků. U dlouhého vlákna zkontrolujte také starší zprávy.",
+        "Návrh AI vychází nejvýše z 30 nejnovějších zpráv a 20 000 znaků. U dlouhého vlákna zkontrolujte také starší zprávy.",
       ),
     );
     if (!M.status?.aiEnabled)
@@ -2462,6 +2477,12 @@
   $("mail-refresh").addEventListener("click", function () {
     closeMailDetail();
     loadMail().catch(mailError);
+  });
+  $("mail-sort").addEventListener("change", function () {
+    M.filters.sort = this.value;
+    M.page = 0;
+    closeMailDetail();
+    loadMailList().catch(mailError);
   });
   $("mail-reset").addEventListener("click", function () {
     M.filters = {};
