@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-const HTML = '<meta property="og:image" content="https://nadbytecna.cz/og-v3.jpg"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630"><meta property="og:image:alt" content="Nadbytečná. Žádná žena není nadbytečná."><link rel="canonical" href="https://nadbytecna.cz/">';
+const HTML = '<meta property="og:image" content="https://nadbytecna.cz/og-v3.jpg"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630"><meta property="og:image:alt" content="nadbytečná. Žádná žena není nadbytečná."><link rel="canonical" href="https://nadbytecna.cz/">';
 const req = (url) => new Request(url, { headers: { host: new URL(url).host } });
 
 test("veřejná doména dál přesměruje a vercel.app přepíše og adresu", async () => {
@@ -43,7 +43,7 @@ test("veřejná doména dál přesměruje a vercel.app přepíše og adresu", as
     assert.match(text, /property="og:image" content="https:\/\/nadbytecna-prelanding\.vercel\.app\/og-v3\.jpg"/);
     assert.match(text, /og:image:width" content="1200"/);
     assert.match(text, /og:image:height" content="630"/);
-    assert.match(text, /og:image:alt" content="Nadbytečná\. Žádná žena není nadbytečná\."/);
+    assert.match(text, /og:image:alt" content="nadbytečná\. Žádná žena není nadbytečná\."/);
     assert.match(text, /href="https:\/\/nadbytecna-prelanding\.vercel\.app\/"/);
     assert.deepEqual(calls, ["https://nadbytecna-prelanding.vercel.app/"]);
 
