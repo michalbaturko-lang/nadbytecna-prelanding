@@ -6,10 +6,12 @@ import {
   fail,
   supa,
   restPath,
+  rpc,
 } from "../lib/admin-server.mjs";
 import { UUID, STATUSES, URGENCIES } from "../lib/admin-model.mjs";
 import { MAILBOX, mailRpc, mailHashSecret } from "../lib/mail-service.mjs";
 import { mailAiEnabled, classifyMail } from "../lib/mail-ai.mjs";
+import { mailAiAutomationEnabled } from "../lib/mail-ai-worker.mjs";
 import { validateM365AuthConfig } from "../lib/m365-auth.mjs";
 import {
   delegatedMode,
@@ -46,12 +48,15 @@ export default async function handler(req, res) {
         } catch {}
       const state = await mailRpc("status");
       const connection = delegatedMode() ? await oauthRpc("status") : null;
+      const aiQueue = await rpc("mail_ai_status", {});
       return json(res, 200, {
         ...state,
         mailbox: MAILBOX,
         configured,
         syncEnabled: process.env.M365_INGEST_ENABLED === "true",
         aiEnabled: mailAiEnabled(),
+        aiAutomationEnabled: mailAiAutomationEnabled(),
+        aiQueue,
         needsSetup: !configured,
         ...readiness,
         connected: connection?.connected === true,
@@ -75,12 +80,13 @@ export default async function handler(req, res) {
         if (f[k] && !values.includes(f[k])) throw fail(400, "filter");
       if (f.category && !/^[a-z_]{1,40}$/.test(f.category))
         throw fail(400, "filter");
+      if (f.sort && !["urgency", "newest", "oldest"].includes(f.sort))
+        throw fail(400, "filter");
       return json(
         res,
         200,
-        await mailRpc("list", {
-          ...actor,
-          filters: {
+        await rpc("mail_list_sorted", {
+          p_filters: {
             ...f,
             q: String(f.q || "").slice(0, 200),
             page: Math.max(0, Math.min(4000, Math.floor(Number(f.page) || 0))),
@@ -172,8 +178,9 @@ export default async function handler(req, res) {
     }
     if (b.action === "ai") {
       if (!mailAiEnabled()) throw fail(423, "mail_ai_disabled");
-      const d = await mailRpc("detail", { ...actor, id }),
-        revision = d.thread.revision;
+      const d = await rpc("mail_ai_snapshot", { p_id: id });
+      if (!d || !d.messages?.length) throw fail(404, "mail_ai_empty");
+      const revision = d.revision;
       const c = await supa(
         restPath("categories", { select: "code", active: "eq.true" }),
       );

@@ -121,6 +121,85 @@ test("M365 one-page cursor is returned without following it; removals deduplicat
   assert.equal(r.deltaLink, null);
   assert.ok(r.nextLink);
 });
+
+test("approved epoch history uses unfiltered folder delta and keeps the local lower date boundary", async () => {
+  for (const mode of [undefined, "delegated"]) {
+    const scopeEnv = { ...env, M365_SINCE: "1970-01-01T00:00:00Z", M365_AUTH_MODE: mode };
+    const endpoint = mode === "delegated"
+      ? "https://graph.microsoft.com/v1.0/me/mailFolders/Inbox/messages/delta" : base;
+    const result = await read({
+      env: scopeEnv,
+      fetcher: async (url, options) => {
+        const request = new URL(url);
+        assert.equal(request.origin + request.pathname, endpoint);
+        assert.equal(request.searchParams.has("$filter"), false);
+        assert.deepEqual([...request.searchParams.keys()], ["$select"]);
+        assert.equal(options.method, "GET");
+        assert.equal(options.body, undefined);
+        assert.match(options.headers.Prefer, /odata.maxpagesize=25/);
+        return response([
+          { ...message, id: "before-epoch", receivedDateTime: "1969-12-31T23:59:59Z" },
+          { ...message, id: "at-epoch", receivedDateTime: "1970-01-01T00:00:00Z" },
+          { ...message, id: "historical", receivedDateTime: "1999-01-01T00:00:00Z" },
+        ], { "@odata.deltaLink": endpoint + "?$deltatoken=all-history" });
+      },
+    });
+    assert.deepEqual(result.messages.map((m) => m.externalId), ["at-epoch", "historical"]);
+    assert.equal(readM365Config(scopeEnv).since, "1970-01-01T00:00:00.000Z");
+  }
+});
+
+test("full historical Inbox can continue beyond 5,000 synthetic messages in bounded token-only pages", async () => {
+  const scopeEnv = { ...env, M365_SINCE: "1970-01-01T00:00:00Z" };
+  const total = 5010;
+  const ids = new Set();
+  let calls = 0, cursor = null, completed = false;
+  const fetcher = async (url, options) => {
+    const request = new URL(url);
+    assert.equal(request.searchParams.has("$filter"), false);
+    assert.equal(options.method, "GET");
+    if (calls === 0) assert.deepEqual([...request.searchParams.keys()], ["$select"]);
+    else {
+      assert.deepEqual([...request.searchParams.keys()], ["$skiptoken"]);
+      assert.equal(request.searchParams.get("$skiptoken"), "history-" + calls);
+    }
+    const start = calls++ * 25;
+    const values = Array.from({ length: Math.min(25, total - start) }, (_, n) => ({
+      ...message, id: "historical-" + (start + n), receivedDateTime: "1999-01-01T00:00:00Z",
+    }));
+    return response(values, start + values.length < total
+      ? { "@odata.nextLink": base + "?$skiptoken=history-" + calls }
+      : { "@odata.deltaLink": base + "?$deltatoken=history-complete" });
+  };
+  do {
+    const previousCalls = calls;
+    const result = await read({ env: scopeEnv, cursor, fetcher });
+    assert.equal(calls, previousCalls + 1, "one read never follows another page internally");
+    assert.ok(result.messages.length <= 25);
+    for (const item of result.messages) ids.add(item.externalId);
+    cursor = result.nextLink;
+    completed = result.deltaLink === base + "?$deltatoken=history-complete";
+  } while (cursor);
+  assert.equal(ids.size, total);
+  assert.equal(calls, Math.ceil(total / 25));
+  assert.equal(completed, true);
+});
+
+test("a non-epoch start still requests and enforces its precise received-date filter", async () => {
+  for (const since of ["1970-01-01T00:00:00.001Z", "1970-01-01T00:00:01Z"]) {
+    const result = await read({
+      env: { ...env, M365_SINCE: since },
+      fetcher: async (url) => {
+        assert.equal(new URL(url).searchParams.get("$filter"), "receivedDateTime ge " + new Date(since).toISOString());
+        return response([
+          { ...message, id: "at-epoch", receivedDateTime: "1970-01-01T00:00:00Z" },
+          message,
+        ]);
+      },
+    });
+    assert.deepEqual(result.messages.map((m) => m.externalId), [message.id]);
+  }
+});
 test("M365 continuation rejects other origins, paths, credentials, fragments and query expansion before bearer transmission", async () => {
   const malicious = [
     "https://evil.invalid/path",

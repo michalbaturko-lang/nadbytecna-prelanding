@@ -1,0 +1,29 @@
+{
+  "date": "2026-11-10",
+  "environment": "local synthetic PostgreSQL/API; no provider calls",
+  "results": [
+    {
+      "width": 375,
+      "priorityOrder": true,
+      "dateAlternative": true,
+      "filterAndReset": true,
+      "disabledAiAndQueuedCount": true,
+      "axeViolations": 0,
+      "overflow": false
+    },
+    {
+      "width": 1440,
+      "priorityOrder": true,
+      "dateAlternative": true,
+      "filterAndReset": true,
+      "disabledAiAndQueuedCount": true,
+      "axeViolations": 0,
+      "overflow": false
+    },
+    {
+      "processingCountVisible": true
+    }
+  ],
+  "realModelCalls": 0,
+  "realGraphCalls": 0
+}
