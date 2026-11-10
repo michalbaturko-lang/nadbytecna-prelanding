@@ -48,7 +48,7 @@ test("hero má psací nápis a stejné fluid.js, app.js se nenačítá", () => {
   const fluidSrc = fs.readFileSync(path.join(ROOT, "src/fluid.js"), "utf8");
   assert.match(fluidSrc, /pointer: coarse/);
   assert.match(fluidSrc, /prefers-reduced-motion/);
-  assert.match(fluidSrc, /autoT = setTimeout\(function \(\) \{[\s\S]*?\}, 1000\)/);
+  assert.match(fluidSrc, /autoT = setTimeout\(function \(\) \{[\s\S]*?\}, 450\)/);
   assert.equal(fluidSrc.includes("/*LETTERS*/null"), true);
 });
 
@@ -98,7 +98,7 @@ test("homepage má dvě volby, osm karet a formuláře nic neodesílají", () =>
   assert.match(home, /class="claim-lead">Never</);
   assert.equal(home.match(/class="claim-word" src="\/img\/nadbytecna-word\.svg"/g).length, 6);
   assert.match(home, /class="rule claim-rule"/);
-  assert.ok(home.indexOf('class="claims"') < home.indexOf('id="pribeh"'));
+  assert.ok(home.indexOf('id="pribeh"') < home.indexOf('class="claims"'))  // video je hned za úvodní obrazovkou, před hesly;
   assert.ok(home.indexOf('id="pribeh"') < home.indexOf('class="choices"'));
   assert.ok(home.indexOf('class="choices"') < home.indexOf('id="cil"'));
   const stripAt = home.indexOf('class="vera-strip"');
