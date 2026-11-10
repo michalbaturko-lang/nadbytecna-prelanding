@@ -85,11 +85,22 @@ function redirectResult(res, c, outcome) {
   );
   return res.end();
 }
+const CALLBACK_CODES = new Set([
+  "oauth_configuration", "oauth_cache_invalid", "oauth_encryption_context",
+  "oauth_cache_decryption_failed", "oauth_network_blocked", "oauth_network_failed",
+  "oauth_request_invalid", "oauth_identity_invalid", "oauth_scope_missing",
+  "oauth_reauth_required", "oauth_exchange_failed", "oauth_client_rejected", "database",
+]);
+export function mailConnectFailure(stage, error) {
+  return { event: "mail_oauth_callback_failed", stage,
+    code: CALLBACK_CODES.has(error?.code) ? error.code : "unexpected" };
+}
 export function createMailConnectHandler({
   authUrl = getAuthUrl,
   exchange = exchangeCode,
   store = oauthRpc,
   fetcher = (...a) => fetch(...a),
+  reportFailure = (record) => console.warn(JSON.stringify(record)),
 } = {}) {
   return async function handler(req, res) {
     res.setHeader("Cache-Control", "no-store");
@@ -177,12 +188,18 @@ export function createMailConnectHandler({
           error: e.code || "mail_connect_failed",
         });
       }
-    if (req.method === "GET" && step === "callback")
+    if (req.method === "GET" && step === "callback") {
+      let stage = "callback_validation";
+      const reject = (outcome = "failed", error) => {
+        try { reportFailure(mailConnectFailure(stage, error)); } catch {}
+        return redirectResult(res, c, outcome);
+      };
       try {
         const state = url.searchParams.get("state"),
           proof = cookie(req, FLOW_COOKIE);
         if (!opaque(state) || !opaque(proof))
-          return redirectResult(res, c, "failed");
+          return reject();
+        stage = "callback_claim";
         const attempt = await store("callback_claim", {
           state_hash: oauthHash(state),
           cookie_hash: oauthHash(proof),
@@ -192,28 +209,30 @@ export function createMailConnectHandler({
           attempt.mailbox !== MAILBOX ||
           attempt.tenant_id !== c.tenantId
         )
-          return redirectResult(res, c, "failed");
+          return reject();
+        stage = "provider_reply";
         if (url.searchParams.has("error"))
-          return redirectResult(
-            res,
-            c,
+          return reject(
             url.searchParams.get("error") === "access_denied"
               ? "denied"
               : "failed",
           );
         const code = url.searchParams.get("code");
         if (!code || code.length > 8192)
-          return redirectResult(res, c, "failed");
+          return reject();
+        stage = "flow_decrypt";
         const flow = JSON.parse(
           decryptM365Cache({
             encrypted: attempt.encrypted_flow,
             context: "oauth-flow",
           }),
         );
+        stage = "token_exchange";
         const token = await exchange({ code, codeVerifier: flow.verifier });
         if (!token.enabled || token.tenantId !== c.tenantId)
-          return redirectResult(res, c, "wrong_account");
+          return reject("wrong_account");
         // Verify the actual Graph resource owner, not a login_hint or editable profile text.
+        stage = "identity_lookup";
         const r = await fetcher(
           "https://graph.microsoft.com/v1.0/me?$select=id,mail,userPrincipalName",
           {
@@ -228,7 +247,7 @@ export function createMailConnectHandler({
           },
         );
         if (!r.ok || r.redirected)
-          return redirectResult(res, c, "wrong_account");
+          return reject("wrong_account");
         const me = await readM365Json(r, 16384);
         if (
           !me.id ||
@@ -236,7 +255,8 @@ export function createMailConnectHandler({
             (v) => typeof v === "string" && v.toLowerCase() === MAILBOX,
           )
         )
-          return redirectResult(res, c, "wrong_account");
+          return reject("wrong_account");
+        stage = "mailbox_lookup";
         const folder = await fetcher(
           "https://graph.microsoft.com/v1.0/me/mailFolders/inbox?$select=id",
           {
@@ -255,7 +275,8 @@ export function createMailConnectHandler({
           folder.redirected ||
           !(await readM365Json(folder, 16384)).id
         )
-          return redirectResult(res, c, "failed");
+          return reject();
+        stage = "persist_connection";
         const saved = await store("save_connection", {
           attempt_id: attempt.attempt_id,
           account_id: token.accountId,
@@ -266,10 +287,11 @@ export function createMailConnectHandler({
             context: "oauth-cache",
           }),
         });
-        return redirectResult(res, c, saved.saved ? "connected" : "failed");
-      } catch {
-        return redirectResult(res, c, "failed");
+        return saved.saved ? redirectResult(res, c, "connected") : reject();
+      } catch (error) {
+        return reject("failed", error);
       }
+    }
     return json(res, 405, { error: "method" });
   };
 }
