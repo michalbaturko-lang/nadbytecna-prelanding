@@ -9,7 +9,7 @@ Stav přípravy k 10. 11. 2026. Tento postup odděluje připojení Microsoftu, i
 - Aplikace: `088856cf-672f-45f2-8cae-8a0bb26ba96d`.
 - Zvolená varianta: delegované přihlášení soukromým jednorázovým odkazem. [Nastavení registrace aplikace](microsoft365-odkaz.md).
 - Schválený rozsah importu: **celá dosavadní historie složky Inbox**, včetně další příchozí pošty. Konfigurace `M365_FOLDER_ID=Inbox`, `M365_SINCE=1970-01-01T00:00:00.000Z` vyjadřuje, že aplikace nemá historickou časovou hranici. Není to souhlas se čtením dalších složek nebo schránek.
-- Microsoft se používá pouze ke čtení. Zprávy se v Outlooku neposílají, nemažou, nepřesouvají ani neoznačují jako přečtené. Přílohy se nekopírují a AI jejich obsah neanalyzuje.
+- Microsoft se používá pouze ke čtení. Zprávy se v Outlooku neposílají, nemažou, nepřesouvají ani neoznačují jako přečtené. Textový náhled neobsahuje přílohy. Samostatně povolený soukromý archiv ukládá původní `.eml` včetně jeho příloh; AI obsah příloh nedostává.
 
 Schválený rozsah ještě není důkaz úplnosti importu. Úplnost a pokračování po stránkách se musí ověřit na skutečné schránce; počet místních vláken nemusí odpovídat počtu zpráv v Inboxu.
 
@@ -62,10 +62,10 @@ Ruční AI v detailu vyžaduje první tři přepínače; automatický worker vš
 
 ## Jak automatika pracuje
 
-- `/api/mail-ai-worker/` má minutový cron. Jeden běh zpracuje postupně nejvýše tři vlákna. To je horní mez, nikoli příslib tří výsledků každou minutu: worker má rozpočet 105 sekund a hostingový limit 120 sekund. Při pomalých požadavcích už další práci nepřebírá.
+- `/api/mail-ai-worker/` má minutový cron. Jeden běh zpracuje postupně nejvýše deset vlákna. To je horní mez, nikoli příslib tří výsledků každou minutu: worker má rozpočet 105 sekund a hostingový limit 120 sekund. Při pomalých požadavcích už další práci nepřebírá.
 - Ruční i automatická AI používají stejný omezený kontext: nejvýše 30 nejnovějších dostupných zpráv a celkem 20 000 znaků Unicode. U dlouhé korespondence jde o výřez; starší část musí případně posoudit člověk. Přílohy se neanalyzují.
 - Změna obsahu, odstranění/přesun zdrojové zprávy nebo místní výmaz zneplatní starý rozpracovaný výsledek. Návrat zprávy zpět do sledované složky může vytvořit novou revizi. Pouhé opakování stejného importu nový AI pokus nevytváří.
-- Lease brání převzetí téhož aktivního jobu více workery. Na jednu revizi jsou nejvýše tři pokusy; po chybě následuje odklad pět a pak patnáct minut. Také opuštěný či přerušený běh podléhá omezení pokusů. Po vyčerpání je nutná ruční kontrola.
+- Lease brání převzetí téhož aktivního jobu více workery. Na jednu revizi jsou nejvýše deset pokusy; po chybě následuje odklad pět a pak patnáct minut. Také opuštěný či přerušený běh podléhá omezení pokusů. Po vyčerpání je nutná ruční kontrola.
 - AI ukládá pouze své návrhy. Nemění lidskou klasifikaci ani stav, nerozesílá odpovědi, nenabízí služby automaticky a nic nepublikuje. Novější ručně vyžádaný AI výsledek má před rozpracovaným automatickým během přednost. U nové zprávy v dříve ručně zařazeném vláknu člověk ověří, zda původní zařazení ještě platí.
 - Archivované vlákno se automaticky nezpracovává. Archivace zruší rozpracovaný job; po obnovení neanalyzovaného vlákna se práce znovu zařadí. AI archiv sama neotevírá.
 - Audit a provozní odpovědi obsahují stavové údaje a počty, nikoli těla, předměty, adresy odesílatelů nebo tokeny. Obsah zprávy je nedůvěryhodný vstup modelu a nesmí se stát příkazem pro aplikaci.
@@ -89,3 +89,20 @@ Závěrečné produkční ověření zaznamenat samostatně s konkrétním nasaz
 Obě migrace aplikované v jedné transakci s evidencí verzí. Syntetická zkouška v produkční databázi ověřila 11 podmínek (fronta, výběr práce, uložení výsledku, přednost ruční klasifikace, řazení, audit, změna revize a výmaz). Test byl celý vrácen přes ROLLBACK; počty vláken, zpráv a úloh po testu jsou 0. Žádné volání modelu nebo Microsoftu. Bezpečnostní poradce nehlásí nové nálezy oproti stavu před migrací.
 
 Schválená celá historie Inboxu používá první delta dotaz bez časového filtru, aby se neuplatnil limit 5 000 zpráv filtrované varianty. Regrese prošla 5 010 syntetických zpráv ve 201 stránkách; skutečný počet a úplnost historie potvrdí až import Microsoftu. Viz [Microsoft Graph](https://learn.microsoft.com/en-us/graph/delta-query-messages#use-query-parameters-in-a-delta-query-for-messages).
+
+
+## Příprava před spuštěním 11. 11. 2026
+
+Import běží každou minutu, nejvýše pět stránek za běh; po každé stránce ukládá zprávy a kurzor v jedné transakci. Novou stránku nezačíná po 25 sekundách běhu. Vadná dávka se neoznačí za načtenou. Při nadměrné odpovědi zkusí tentýž pokračovací odkaz jednou s menší stránkou; chybu ukáže v adminu. Text nad 100 000 znaků Unicode je výslovně označený náhled, plný obsah patří do originálního `.eml`.
+
+Originály jsou v neveřejném bucketu `mail-originals`, jejich stav, cesta, velikost, revize a SHA-256 jsou v databázi. `M365_MAIL_ARCHIVE_ENABLED` je samostatný vypínač. Archivní worker zvládne nejvýše 20 postupných úloh v jednom běhu, má časový rozpočet 270 sekund a limit hostingu 300 sekund. Jeden originál má limit 50 MiB; větší nebo chybující soubor se výslovně označí jako neuložený a původní zpráva zůstane v Microsoftu. Žádný z těchto stropů není slib měřené kapacity. Stav „text načten“ neznamená „originál zazálohován“.
+
+V adminu je pod „Kontrola načítání a ukládání“ porovnání počtu zpráv s Inboxem a test zápisu, načtení, SHA-256 a odstranění syntetického souboru. Test nepoužívá skutečnou poštu. Jednotlivý originál lze stáhnout až po uložení přes autorizovaný přístup s krátkou platností. Osobní ZIP obsahuje skutečné dostupné `.eml`; nedokončený archiv má manifest `complete:false`. Velikost exportu je omezená, překročení se odmítne výslovně.
+
+AI má navíc režim rozsahu `AI_EMAIL_SCOPE=marked` (bezpečný výchozí stav). Operátor označí konkrétní projektovou konverzaci; globální AI tím nezapne. Výslovný zákaz platí i při pozdějším režimu `all`. Odvolání zneplatní rozpracovaný výsledek, včetně odvolání následovaného novým povolením. Schránka obsahuje i nesouvisející poštu, proto režim `all` nepoužívat bez výslovného rozhodnutí vlastníka.
+
+AI vrací hlavní druh, jeden z devíti podtypů, kategorii pomoci, naléhavost, shrnutí, návrh dalšího kroku, orientační slovní jistotu a důvod kontroly. Nízká jistota, akutní návrh nebo zkrácený zdroj vynutí lidskou kontrolu. Data přijetí a aktuální UTC pomáhají vyložit časové odkazy; marketingové akce nejsou automaticky naléhavé případy. Návrh není odborný závěr, souhlas se zveřejněním ani doklad věku.
+
+Lidské „Zkontrolováno“ se váže k revizi vlákna. Nová odpověď či změna zdroje otevře vlákno znovu ke kontrole. Lidské zařazení má před návrhem AI přednost. Odlišovat „Bez povolení pro AI“ od skutečně povolené fronty.
+
+Výmaz nejprve zablokuje originály příslušného rozsahu, poté je odstraní a až po ověření dokončení potvrdí úspěch. Rozpracovaný upload může vyžadovat doběhnutí ochranné lhůty; admin vrátí výslovný stav čekajícího úklidu. Trvalý anonymizovaný rozsah dovolí dokončit úklid i po smazání původních databázových řádků. Úklid probíhá i při vypnutém importu nebo archivu. Automatická retence má nadále samostatné schválení a není tímto postupem povolená.
