@@ -57,6 +57,7 @@ export async function startAdminServer({
   );
   await seed(db);
   for (const filename of [
+    "20261110221500_mail_scoped_updates.sql",
     "20261110211204_mail_ai_queue.sql",
     "20261110211416_mail_priority_sort.sql",
   ]) await db.exec(fs.readFileSync(new URL("../../supabase/migrations/" + filename, import.meta.url), "utf8"));
