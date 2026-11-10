@@ -250,6 +250,10 @@
     {
       "path": "/api/mail-sync/",
       "schedule": "*/5 * * * *"
+    },
+    {
+      "path": "/api/mail-ai-worker/",
+      "schedule": "* * * * *"
     }
   ],
   "functions": {
@@ -266,6 +270,9 @@
       "maxDuration": 120
     },
     "api/mail-connect.js": {
+      "maxDuration": 120
+    },
+    "api/mail-ai-worker.js": {
       "maxDuration": 120
     }
   }

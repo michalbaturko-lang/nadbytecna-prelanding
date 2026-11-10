@@ -13,7 +13,9 @@
     "check:m365": "node tools/m365-check.mjs",
     "test:mail:connect": "node --test tests/m365-oauth-client.test.mjs tests/m365-oauth-db.test.mjs tests/mail-connect-api.test.mjs",
     "test:mail:connect:browser": "node tools/admin-mail-connect-browser.mjs && node tools/mail-connect-public-browser.mjs",
-    "test:admin:login": "PHASE1=1 node build.mjs && node tools/admin-login-browser.mjs"
+    "test:admin:login": "PHASE1=1 node build.mjs && node tools/admin-login-browser.mjs",
+    "check:m365:readiness": "node tools/m365-readiness.mjs",
+    "test:mail:ai": "node --test tests/mail-ai.test.mjs tests/mail-ai-worker.test.mjs tests/mail-ai-worker-api.test.mjs tests/mail-ai-queue-db.test.mjs tests/mail-priority.test.mjs"
   },
   "dependencies": {
     "@azure/msal-node": "7.2.1",
