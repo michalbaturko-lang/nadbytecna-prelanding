@@ -21,6 +21,7 @@ import { STATUSES, URGENCIES, UUID, toCsv } from "../lib/admin-model.mjs";
 import { triageEnabled, triageText } from "../lib/triage.mjs";
 import { zipSync, strToU8 } from "fflate";
 import { mailRpc, mailHashSecret } from "../lib/mail-service.mjs";
+import { archiveExportFiles,prepareArchiveErase,finishArchiveErase } from "../lib/mail-archive.mjs";
 import { streamDownload } from "../lib/admin-download.mjs";
 
 export default async function handler(req, res) {
@@ -89,8 +90,12 @@ export default async function handler(req, res) {
           actor_id: user.id,
           actor_email: user.email,
         });
-        const files = { "data.json": strToU8(JSON.stringify(person, null, 2)) };
-        let size = 0;
+        const originals=await archiveExportFiles({email:row.email});
+        person.email_originals=originals.manifest;
+        const data=strToU8(JSON.stringify(person,null,2));
+        const files = { ...originals.files, "data.json":data };
+        let size = originals.size+data.length;
+        if(size>100*1024*1024)throw fail(413,"export_too_large");
         for (const r of person.records)
           if (r.audio_path) {
             assertAudioPath(r.audio_path, r.id);
@@ -124,13 +129,16 @@ export default async function handler(req, res) {
       };
       // Local e-mail copies only. Suppression is committed before the web/audio erasure;
       // repeating a partly completed cross-source request is safe.
-      await mailRpc("erase", {
+      const mailSecret=mailHashSecret();
+      const preparedArchive=await prepareArchiveErase({email:row.email,hash_secret:mailSecret});
+      const erasedMail=await mailRpc("erase", {
         email: row.email,
         email_hash: emailHash(row.email),
-        hash_secret: mailHashSecret(),
+        hash_secret: mailSecret,
         actor_id: user.id,
         actor_email: user.email,
       });
+      await finishArchiveErase(preparedArchive,erasedMail);
       const locked = await rpc("admin_erase", { ...args, p_mark_only: true });
       for (const r of locked.records)
         if (r.audio_path) await removeAudio(r.audio_path, r.id);
