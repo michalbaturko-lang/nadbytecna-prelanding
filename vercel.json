@@ -249,7 +249,7 @@
     },
     {
       "path": "/api/mail-sync/",
-      "schedule": "*/5 * * * *"
+      "schedule": "* * * * *"
     },
     {
       "path": "/api/mail-ai-worker/",
