@@ -2,7 +2,7 @@
 // Efekt běží na rukopisném „Nadbytečná.cz“. Písmena jsou skutečné vektorové tvary
 // (řezy vedené podle spojů mezi písmeny, ne svislé čáry).
 //  1. první přejetí (na mobilu první dotyk nebo scroll): odpadne velké „N“
-//  2. asi po 1 s samo naváže dnešní pokračování: dvě písmena, pak zbytek „Nadbytečná“,
+//  2. asi po 0,5 s samo naváže dnešní pokračování: dvě písmena, pak zbytek „Nadbytečná“,
 //     „ná“ pomalu zmizí a na lince se rozvine věta „Zlomil mi srdce. Ne křídla.“ (nepadá).
 // Bez Canvasu nebo při „omezit pohyb“ zůstává obyčejný obrázek.
 (function () {
@@ -198,7 +198,7 @@
   function finalSeq(px, now) {
     var ids = ORDER.filter(function (id) { return id !== "na" && L[id].mode === "on"; }), dmax = 0;
     ids.forEach(function (id) {
-      var d = Math.abs(L[id].cx - px) / 2480 * 900 + Math.random() * 50;
+      var d = Math.abs(L[id].cx - px) / 2480 * 400 + Math.random() * 40;
       dmax = Math.max(dmax, d); fallOne(id, d, now);
     });
     var n = L.na, fsz = 400, tw, gap = 0;
@@ -237,12 +237,12 @@
         autoT = 0;
         if (stage !== 1 || seq) return;
         poke(lastPx, performance.now(), true);
-      }, 1000);
+      }, 450);
       idleT = setTimeout(function () { restoreAll(performance.now()); }, 9000);
     } else if (stage === 2) {
       var cand = ["a", "d", "b", "y", "t", "e", "c"].filter(function (id) { return L[id].mode === "on"; }), n = 0;
-      while (n < 2 && cand.length) { fallOne(cand.splice(Math.floor(Math.random() * cand.length), 1)[0], n * 160, now); n++; }
-      if (CHAIN) chainT = setTimeout(function () { finalSeq(px, performance.now()); wake(); }, 1500);
+      while (n < 2 && cand.length) { fallOne(cand.splice(Math.floor(Math.random() * cand.length), 1)[0], n * 90, now); n++; }
+      if (CHAIN) chainT = setTimeout(function () { finalSeq(px, performance.now()); wake(); }, 600);
       else idleT = setTimeout(function () { restoreAll(performance.now()); }, 9000);
     } else finalSeq(px, now);
     wake();
