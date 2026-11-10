@@ -30,7 +30,7 @@
     var consent = document.getElementById("pomoc-gdpr").checked;
     if (!name || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { say("Doplň jméno a e-mail."); return; }
     if (!type) { say("Vyber, jak chceš pomoci."); return; }
-    if (!document.getElementById("pomoc-age").checked) { say("Potvrď, že ti je 18 let."); return; }
+    if (!document.getElementById("pomoc-age").checked) { say("Potvrď, že ti je 18 a více let."); return; }
     if (!consent) { say("Bez souhlasu se zpracováním nabídky to poslat nemůžeme."); return; }
     var kinds = [type.value];
     var links = {
