@@ -11,7 +11,7 @@
       "headers": [
         {
           "key": "Content-Security-Policy",
-          "value": "default-src 'self'; script-src 'self' https://www.googletagmanager.com https://connect.facebook.net https://analytics.tiktok.com; style-src 'self' 'sha256-t3irOe8XZIEyXV7wKzLIbRXvhe4v6oDREOV/kRRLdlc='; img-src 'self' data: https://www.facebook.com https://www.google-analytics.com https://www.googletagmanager.com https://googleads.g.doubleclick.net https://analytics.tiktok.com; font-src 'self'; media-src 'self' blob: https://gjzsifxldxaogcuqzivb.supabase.co; connect-src 'self' https://gjzsifxldxaogcuqzivb.supabase.co https://www.googletagmanager.com https://www.google-analytics.com https://www.google.com https://googleads.g.doubleclick.net https://www.googleadservices.com https://connect.facebook.net https://www.facebook.com https://analytics.tiktok.com; form-action 'self'; base-uri 'none'; frame-ancestors 'none'; frame-src 'self' https://www.googletagmanager.com https://www.facebook.com; object-src 'none'; manifest-src 'self'; upgrade-insecure-requests"
+          "value": "default-src 'self'; script-src 'self' https://www.googletagmanager.com https://connect.facebook.net https://analytics.tiktok.com; style-src 'self' 'sha256-eegmhRqfqq0iz88leLYe6hEcpKgbGnw0vS1kBDp46Vc='; img-src 'self' data: https://www.facebook.com https://www.google-analytics.com https://www.googletagmanager.com https://googleads.g.doubleclick.net https://analytics.tiktok.com; font-src 'self'; media-src 'self' blob: https://gjzsifxldxaogcuqzivb.supabase.co; connect-src 'self' https://gjzsifxldxaogcuqzivb.supabase.co https://www.googletagmanager.com https://www.google-analytics.com https://www.google.com https://googleads.g.doubleclick.net https://www.googleadservices.com https://connect.facebook.net https://www.facebook.com https://analytics.tiktok.com; form-action 'self'; base-uri 'none'; frame-ancestors 'none'; frame-src 'self' https://www.googletagmanager.com https://www.facebook.com; object-src 'none'; manifest-src 'self'; upgrade-insecure-requests"
         },
         {
           "key": "Strict-Transport-Security",
@@ -219,23 +219,23 @@
   "redirects": [
     {
       "source": "/kontakt",
-      "destination": "/o-nasi-platforme/",
+      "destination": "/o-nas/",
       "permanent": false
     },
     {
       "source": "/kontakt/",
-      "destination": "/o-nasi-platforme/",
+      "destination": "/o-nas/",
       "permanent": false
     },
     {
-      "source": "/o-nas",
-      "destination": "/o-nasi-platforme/",
-      "permanent": false
+      "source": "/o-nasi-platforme",
+      "destination": "/o-nas/",
+      "permanent": true
     },
     {
-      "source": "/o-nas/",
-      "destination": "/o-nasi-platforme/",
-      "permanent": false
+      "source": "/o-nasi-platforme/",
+      "destination": "/o-nas/",
+      "permanent": true
     }
   ],
   "crons": [

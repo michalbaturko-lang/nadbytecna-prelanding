@@ -15,7 +15,7 @@ execFileSync(process.execPath, ["build.mjs"], {
 });
 
 const read = (p) => fs.readFileSync(path.join(OUT, p), "utf8");
-const pages = ["index.html", "sdilet-pribeh/index.html", "mohu-pomoci/index.html", "potrebuji-pomoc/index.html", "verin-pribeh/index.html", "o-nasi-platforme/index.html", "cookies/index.html", "ochrana-osobnich-udaju/index.html", "pravidla-zverejnovani/index.html", "kontakt/index.html"];
+const pages = ["index.html", "sdilet-pribeh/index.html", "mohu-pomoci/index.html", "potrebuji-pomoc/index.html", "verin-pribeh/index.html", "o-nas/index.html", "cookies/index.html", "ochrana-osobnich-udaju/index.html", "pravidla-zverejnovani/index.html", "kontakt/index.html"];
 const home = read("index.html");
 const visible = (h) => h.replace(/<style>[\s\S]*?<\/style>/g, "").replace(/<script[\s\S]*?<\/script>/g, "");
 
@@ -55,8 +55,7 @@ test("hero má psací nápis a stejné fluid.js, app.js se nenačítá", () => {
 test("homepage má dvě volby, osm karet a formuláře nic neodesílají", () => {
   assert.match(home, /<a class="choice" href="\/sdilet-pribeh\/"><span class="choice-title">Sdílej svůj příběh<\/span><span class="choice-note">Napiš ho, nebo nahraj hlas\.<\/span><\/a>/);
   assert.match(home, /<a class="choice" href="\/mohu-pomoci\/"><span class="choice-title">Mohu pomoci<\/span><span class="choice-note">Nabídni práci, péči, nebo se přidej\.<\/span><\/a>/);
-  assert.match(home, /O naší platformě/);
-  assert.doesNotMatch(home, />O nás</);
+  assert.match(home, /O nás/);
   assert.equal(visible(home).match(/class="choice"/g).length, 2);
   assert.doesNotMatch(home, /class="cat"|Jak se přidat|Prověřené kontakty|proverene-kontakty/);
   assert.match(home, /class="top-cta" href="\/sdilet-pribeh\/">Chci sdílet svůj příběh</);
@@ -190,9 +189,8 @@ test("homepage má dvě volby, osm karet a formuláře nic neodesílají", () =>
 test("právní stránky mluví o souhlasu a kontakt není krizová linka", () => {
   assert.match(read("pravidla-zverejnovani/index.html"), /Souhlas se zpracováním údajů a souhlas se zveřejněním příběhu jsou dvě různé věci/);
   assert.match(read("pravidla-zverejnovani/index.html"), /Příběh zveřejníme jen tehdy/);
-  assert.match(read("o-nasi-platforme/index.html"), /<h1>O naší platformě<\/h1>/);
-  assert.match(read("o-nasi-platforme/index.html"), /Není to krizová linka/);
-  assert.equal(fs.existsSync(path.join(OUT, "o-nas/index.html")), false);
+  assert.match(read("o-nas/index.html"), /<h1>O nás<\/h1>/);
+  assert.match(read("o-nas/index.html"), /Není to krizová linka/);
   assert.match(read("kontakt/index.html"), /Není to krizová linka/);
   assert.match(read("cookies/index.html"), /jen po souhlasu/);
   const verin = read("verin-pribeh/index.html");
