@@ -60,6 +60,11 @@ export async function startAdminServer({
     "20261110221500_mail_scoped_updates.sql",
     "20261110211204_mail_ai_queue.sql",
     "20261110211416_mail_priority_sort.sql",
+    "20261110222424_mail_original_archive.sql",
+    "20261110222500_mail_archive_probe.sql",
+    "20261110224500_mail_triage_review.sql",
+    "20261110224600_mail_message_metadata.sql",
+    "20261110230000_mail_ai_scope.sql",
   ]) await db.exec(fs.readFileSync(new URL("../../supabase/migrations/" + filename, import.meta.url), "utf8"));
   const mailLease = (
     await db.query(
@@ -209,7 +214,7 @@ export async function startAdminServer({
       throw new Error("external_network_blocked");
     }
     const method = opts.method || "GET",
-      body = opts.body ? JSON.parse(opts.body) : undefined;
+      body = opts.body && !(method === "POST" && u.pathname.startsWith("/storage/v1/object/mail-originals/")) ? JSON.parse(opts.body) : undefined;
     const respond = (d, status = 200, headers = {}) =>
       new Response(d == null ? null : JSON.stringify(d), {
         status,
@@ -224,12 +229,17 @@ export async function startAdminServer({
       });
     }
     if (u.pathname.startsWith("/storage/v1/")) {
-      const name = u.pathname.split("/story-audio/")[1];
+      const bucket = u.pathname.includes("/mail-originals/") ? "mail-originals" : "story-audio";
+      const name = u.pathname.split("/" + bucket + "/")[1];
       if (method === "POST" && u.pathname.includes("/object/sign/")) {
         metrics.signed++;
         return respond({
-          signedURL: "/object/sign/story-audio/" + name + "?token=offline",
+          signedURL: "/object/sign/" + bucket + "/" + name + "?token=offline",
         });
+      }
+      if (method === "POST" && bucket === "mail-originals") {
+        storage.set(decodeURIComponent(name), Buffer.from(opts.body));
+        return respond({ Key: bucket + "/" + name });
       }
       if (method === "DELETE") {
         for (const p of body.prefixes) storage.delete(p);
@@ -237,7 +247,7 @@ export async function startAdminServer({
       }
       return new Response(storage.get(decodeURIComponent(name)) || null, {
         status: storage.has(decodeURIComponent(name)) ? 200 : 404,
-        headers: { "Content-Type": "audio/wav" },
+        headers: { "Content-Type": bucket === "mail-originals" ? "message/rfc822" : "audio/wav" },
       });
     }
     try {
@@ -429,6 +439,7 @@ export async function startAdminServer({
     AI_EMAIL_PROCESSING_APPROVED: "false",
     AI_EMAIL_AUTOMATION_ENABLED: "false",
     M365_RETENTION_ENABLED: "false",
+    M365_MAIL_ARCHIVE_ENABLED: "false",
   });
   const admin = (await import("../../api/admin.js")).default;
   const triage = (await import("../../api/triage.js")).default;
@@ -437,6 +448,7 @@ export async function startAdminServer({
   const adminMail = (await import("../../api/admin-mail.js")).default;
   const mailSync = (await import("../../api/mail-sync.js")).default;
   const mailAiWorker = (await import("../../api/mail-ai-worker.js")).default;
+  const mailArchiveWorker = (await import("../../api/mail-archive-worker.js")).default;
   const connectModule = await import("../../api/mail-connect.js");
   const mailConnect = mailConnectClient
     ? connectModule.createMailConnectHandler(mailConnectClient)
@@ -479,6 +491,7 @@ export async function startAdminServer({
       "/api/admin-mail/": adminMail,
       "/api/mail-sync/": mailSync,
       "/api/mail-ai-worker/": mailAiWorker,
+      "/api/mail-archive-worker/": mailArchiveWorker,
       "/api/mail-connect/": mailConnect,
     };
     if (routes[u.pathname]) {

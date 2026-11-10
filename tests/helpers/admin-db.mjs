@@ -182,6 +182,7 @@ export async function freshAdminDb({
   await db.exec(
     `INSERT INTO public.admin_emails(email) VALUES('admin@example.invalid')`,
   );
+  await db.exec('ALTER TABLE storage.buckets ADD COLUMN name text');
   return db;
 }
 export async function seed(db) {
