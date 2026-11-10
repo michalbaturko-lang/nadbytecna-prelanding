@@ -190,3 +190,15 @@ test("disconnect or new connection generation between pages prevents any further
     assert.deepEqual(f.calls.at(-1), { p_lease: "lease-2", p_error: "mail_connection_changed" });
   }
 });
+
+test("cursor diagnostics strictly project fixed enums and booleans and reject provider text", async () => {
+  const valid = { ownerStyle: "users_odata", folderStyle: "other", queryStyle: "skip", sameOwner: false, sameFolder: false };
+  for (const shape of [valid, { ...valid, ownerStyle: "private-user@example.invalid" }, { ...valid, sameOwner: "private-token" }]) {
+    const diagnostics = [];
+    const f = fixture({ failPage: 1, error: Object.assign(new Error("private-url-token"), { code: "invalid_cursor", cursorShape: { ...shape, url: "private-url-token" } }) });
+    f.options.reportFailure = (record) => diagnostics.push(record);
+    await assert.rejects(() => runMailSync(f.options));
+    assert.deepEqual(diagnostics, [{ event: "mail_sync_failed", stage: "read", code: "invalid_cursor", ...(shape === valid ? { cursorShape: valid } : {}) }]);
+    assert.equal(JSON.stringify(diagnostics).includes("private-"), false);
+  }
+});

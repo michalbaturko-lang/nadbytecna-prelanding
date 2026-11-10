@@ -354,3 +354,53 @@ test("delegated sync rejects old certificate and other-user cursors before trans
   );
   assert.equal(calls, 0);
 });
+
+test("documented OData folder cursors preserve same mailbox, Inbox alias and exact opaque folder IDs", async () => {
+  // Microsoft Learn delta-query-messages uses /me/mailfolders('AQMk...') in responses.
+  for (const mode of ["delegated", "certificate"]) {
+    for (const folder of ["Inbox", "AQMkCaseSensitive_123="]) {
+      const e = { ...env, M365_AUTH_MODE: mode, M365_FOLDER_ID: folder };
+      const owner = mode === "delegated" ? "me" : "users/veryvera%40nadbytecna.cz";
+      for (const spelling of folder === "Inbox" ? ["Inbox", "inbox", "INBOX"] : [folder]) {
+        for (const collection of ["mailFolders", "mailfolders"]) {
+          for (const path of [`${collection}('${spelling}')`, `${collection}/${spelling}`]) {
+            const next = `https://graph.microsoft.com/v1.0/${owner}/${path}/messages/delta?$skiptoken=synthetic%2Bopaque%3D%3D`;
+            const delta = next.replace("$skiptoken", "$deltatoken");
+            assert.equal(validateM365Cursor(next, readM365Scope(e)), next);
+            let calls = 0;
+            const result = await read({ env: e, cursor: next, fetcher: async (url) => {
+              calls++;
+              assert.equal(url, next, "opaque continuation must be sent unchanged");
+              return response([message], { "@odata.deltaLink": delta });
+            } });
+            assert.equal(calls, 1);
+            assert.equal(result.deltaLink, delta);
+          }
+        }
+      }
+    }
+  }
+});
+test("OData cursor equivalence never widens folder, owner, collection or token scope", async () => {
+  const e = { ...env, M365_AUTH_MODE: "delegated", M365_FOLDER_ID: "AQMkCaseSensitive" };
+  const original = "https://graph.microsoft.com/v1.0/me/mailfolders('AQMkCaseSensitive')/messages/delta?$skiptoken=private-opaque-token";
+  const hostile = [
+    original.replace("AQMkCaseSensitive", "aqmkcasesensitive"),
+    original.replace("AQMkCaseSensitive", "Inbox"),
+    original.replace("AQMkCaseSensitive", "AQMkCaseSensitive%2Fmessages"),
+    original.replace("AQMkCaseSensitive", "AQMkCaseSensitive%27%29%2Fmessages"),
+    original.replace("/me/", "/users/other%40example.invalid/"),
+    original.replace("/me/", "/users('private-user-guid')/"),
+    original.replace("mailfolders", "childFolders"),
+    original.replace("/messages/delta", "/messages"),
+    original + "&$select=body", original + "&$skiptoken=another", original + "#fragment",
+  ];
+  let calls = 0;
+  for (const cursor of hostile) await assert.rejects(() => read({ env: e, cursor, fetcher: () => { calls++; } }), (error) => {
+    assert.equal(error.code, "invalid_cursor");
+    assert.equal(JSON.stringify(error.cursorShape || {}).includes("private-"), false);
+    assert.equal(JSON.stringify(error.cursorShape || {}).includes("AQMk"), false);
+    return true;
+  });
+  assert.equal(calls, 0);
+});
