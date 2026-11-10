@@ -38,7 +38,8 @@ function fixture(jobs = [job()], changes = {}) {
       classify: async () => { metrics.model++; return valid; },
       rpc: async (name, payload) => {
         metrics.calls.push({ name, payload });
-        if (name === "mail_ai_claim") return queue.shift() || null;
+        if (name === "mail_ai_claim_scoped") return queue.shift() || null;
+        if (name === "mail_ai_scope_active") return { active: true };
         assert.equal(name, "mail_ai_finish");
         return { saved: true };
       },
@@ -91,12 +92,13 @@ test("empty mail queue reads no messages or model and returns only counters", as
   const f = fixture([]);
   assert.deepEqual(await runMailAiWorker(f.options), { processed: 0, saved: 0, failed: 0, discarded: 0, empty: true });
   assert.equal(f.metrics.model, 0);
-  assert.deepEqual(f.metrics.calls, [{ name: "mail_ai_claim", payload: {} }]);
+  assert.deepEqual(f.metrics.calls, [{ name: "mail_ai_claim_scoped", payload: { p_allow_unmarked: false } }]);
 });
 
-test("three sequential threads maximum; accepted output excludes any extra provider fields", async () => {
+test("ten fast sequential threads maximum; accepted output excludes any extra provider fields", async () => {
   let active = 0;
-  const f = fixture([job(1), job(2), job(3), job(4)], {
+  const queued = Array.from({ length: 11 }, (_, index) => job(index + 1));
+  const f = fixture(queued, {
     classify: async ({ categories, messages, env: config }) => {
       assert.equal(active++, 0);
       assert.deepEqual(categories, ["pravni", "prace"]);
@@ -107,11 +109,17 @@ test("three sequential threads maximum; accepted output excludes any extra provi
       return { ...valid, private_provider_debug: "must not persist" };
     },
   });
-  assert.deepEqual(await runMailAiWorker(f.options), { processed: 3, saved: 3, failed: 0, discarded: 0 });
+  assert.equal(MAIL_AI_BATCH_SIZE, 10);
+  assert.deepEqual(await runMailAiWorker(f.options), { processed: 10, saved: 10, failed: 0, discarded: 0 });
   const finishes = f.metrics.calls.filter((c) => c.name === "mail_ai_finish");
   assert.equal(finishes.length, MAIL_AI_BATCH_SIZE);
-  assert.deepEqual(finishes.map((c) => c.payload.p_lease), [job(1).lease, job(2).lease, job(3).lease]);
-  for (const c of finishes) assert.deepEqual(c.payload.p_output, valid);
+  assert.deepEqual(finishes.map((c) => c.payload.p_lease), queued.slice(0, 10).map((item) => item.lease));
+  assert.equal(f.metrics.calls.filter((c) => c.name === "mail_ai_claim_scoped").length, 10);
+  assert.equal(f.metrics.calls.filter((c) => c.name === "mail_ai_scope_active").length, 10);
+  for (const c of finishes) assert.deepEqual(c.payload.p_output, {
+    ...valid, subtype: "other", review_required: true,
+    review_reason: "Starší výsledek bez rozšířeného posouzení.", confidence: "low",
+  });
 });
 
 test("slow run stops before claiming another minute of work near the hosting deadline", async () => {
@@ -123,7 +131,26 @@ test("slow run stops before claiming another minute of work near the hosting dea
   const result = await runMailAiWorker(f.options);
   assert.equal(result.processed, 1);
   assert.equal(result.deadline, true);
-  assert.equal(f.metrics.calls.filter((c) => c.name === "mail_ai_claim").length, 1);
+  assert.equal(f.metrics.calls.filter((c) => c.name === "mail_ai_claim_scoped").length, 1);
+});
+
+test("synthetic four-second jobs stop at eight with the full75-second job reserve intact", async () => {
+  let milliseconds = 0;
+  const f = fixture(Array.from({ length: 20 }, (_, index) => job(index + 1)), {
+    now: () => milliseconds,
+    classify: async () => { milliseconds += 3500; return valid; },
+  });
+  const rpc = f.options.rpc;
+  f.options.rpc = async (name, payload) => {
+    const result = await rpc(name, payload);
+    if (name === "mail_ai_finish") milliseconds += 500;
+    return result;
+  };
+  assert.deepEqual(await runMailAiWorker(f.options), { processed: 8, saved: 8, failed: 0, discarded: 0, deadline: true });
+  assert.equal(milliseconds, 32000);
+  assert.ok(milliseconds < 105000);
+  for (const name of ["mail_ai_claim_scoped", "mail_ai_scope_active", "mail_ai_finish"])
+    assert.equal(f.metrics.calls.filter((call) => call.name === name).length, 8);
 });
 
 test("timeout and malformed classifications finish one error attempt with no private exception", async () => {
@@ -147,7 +174,8 @@ test("stale revision, deleted thread or manual winner is discarded according to 
     let claimed = false;
     const f = fixture([job()], {
       rpc: async (name) => {
-        if (name !== "mail_ai_claim") return { saved: false, reason };
+        if (name === "mail_ai_scope_active") return { active: true };
+        if (name !== "mail_ai_claim_scoped") return { saved: false, reason };
         if (claimed) return null;
         claimed = true;
         return job();
@@ -164,14 +192,15 @@ test("successful model followed by failed finish never calls failure finish or m
   const f = fixture([job()], {
     rpc: async (name, payload) => {
       calls.push({ name, payload });
-      if (name === "mail_ai_claim") return job();
+      if (name === "mail_ai_claim_scoped") return job();
+      if (name === "mail_ai_scope_active") return { active: true };
       throw new Error("PRIVATE FINISH ERROR / secret");
     },
   });
   await assert.rejects(runMailAiWorker(f.options), /^Error: mail_ai_worker_failed$/);
   assert.equal(f.metrics.model, 1);
-  assert.deepEqual(calls.map((c) => c.name), ["mail_ai_claim", "mail_ai_finish"]);
-  assert.equal(calls[1].payload.p_error, false);
+  assert.deepEqual(calls.map((c) => c.name), ["mail_ai_claim_scoped", "mail_ai_scope_active", "mail_ai_finish"]);
+  assert.equal(calls[2].payload.p_error, false);
 });
 
 test("model failure followed by failed error persistence also stops immediately", async () => {
@@ -180,13 +209,14 @@ test("model failure followed by failed error persistence also stops immediately"
     classify: async () => { throw new Error("synthetic timeout"); },
     rpc: async (name, payload) => {
       calls.push({ name, payload });
-      if (name === "mail_ai_claim") return job();
+      if (name === "mail_ai_claim_scoped") return job();
+      if (name === "mail_ai_scope_active") return { active: true };
       throw new Error("storage unavailable");
     },
   });
   await assert.rejects(runMailAiWorker(f.options), /^Error: mail_ai_worker_failed$/);
-  assert.equal(calls.length, 2);
-  assert.equal(calls[1].payload.p_error, true);
+  assert.equal(calls.length, 3);
+  assert.equal(calls[2].payload.p_error, true);
 });
 
 test("malformed claimed content fails closed without using a model or fabricated lease", async () => {
@@ -199,6 +229,26 @@ test("malformed claimed content fails closed without using a model or fabricated
     await assert.rejects(runMailAiWorker(f.options), /configuration/);
     assert.equal(f.metrics.model, 0);
     assert.equal(f.metrics.calls.length, 1);
+  }
+});
+
+test("worker rechecks scoped lease before provider and never calls a model for revoked scope", async () => {
+  const f = fixture([job()]);
+  const original = f.options.rpc;
+  f.options.rpc = async (name, payload) => name === "mail_ai_scope_active" ? { active: false } : original(name, payload);
+  assert.deepEqual(await runMailAiWorker(f.options), { processed: 1, saved: 0, failed: 0, discarded: 1, empty: true });
+  assert.equal(f.metrics.model, 0);
+  assert.equal(f.metrics.calls.some(c => c.name === "mail_ai_finish"), false);
+});
+
+test("unmarked scope is allowed only by exact all setting and is supplied to both scoped RPCs", async () => {
+  for (const setting of [undefined, "marked", "ALL", "true", "all"]) {
+    const f = fixture([job()]);
+    f.options.env.AI_EMAIL_SCOPE = setting;
+    await runMailAiWorker(f.options);
+    const scoped = f.metrics.calls.filter(c => ["mail_ai_claim_scoped", "mail_ai_scope_active"].includes(c.name));
+    assert.ok(scoped.length >= 2);
+    assert.ok(scoped.every(c => c.payload.p_allow_unmarked === (setting === "all")));
   }
 });
 

@@ -20,6 +20,7 @@ const flags = (enabled) => Object.assign(process.env, {
   AI_EMAIL_CLASSIFICATION_ENABLED: enabled ? "true" : "false",
   AI_EMAIL_PROCESSING_APPROVED: enabled ? "true" : "false",
   AI_EMAIL_AUTOMATION_ENABLED: enabled ? "true" : "false",
+  AI_EMAIL_SCOPE: "marked",
 });
 
 test("imported synthetic mail is queued, while unauthorized or disabled HTTP workers consume no attempt", async () => {
@@ -46,6 +47,13 @@ test("approved worker executes real local queue and saves analysis visible throu
   flags(true);
   process.env.OPENAI_API_KEY = "synthetic-only";
   server.setAIResponse("success");
+  const before=server.metrics.ai;
+  const unmarked=await worker();
+  assert.equal(unmarked.status,200);assert.equal(unmarked.data.processed,0);assert.equal(server.metrics.ai,before);
+  assert.equal((await server.db.query('select attempts from private.mail_ai_jobs where thread_id=$1',[id])).rows[0].attempts,0);
+  const t=(await admin({action:"detail",id})).data.thread;
+  const scoped=await admin({action:"ai_scope",id,revision:t.revision,approved:true});
+  assert.equal(scoped.status,200);assert.equal(scoped.data.saved,true);
   const result = await worker();
   assert.equal(result.status, 200);
   assert.equal(result.data.processed, 1);

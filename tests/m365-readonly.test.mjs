@@ -88,7 +88,7 @@ test("M365 initial GET has minimal select, since, immutable and text preferences
     );
     assert.equal(
       u.searchParams.get("$select"),
-      "id,from,subject,body,conversationId,internetMessageId,receivedDateTime,hasAttachments,webLink",
+      "id,from,subject,body,conversationId,internetMessageId,receivedDateTime,hasAttachments,webLink,changeKey",
     );
     return response([message, message]);
   };
@@ -239,7 +239,7 @@ test("M365 continuation rejects other origins, paths, credentials, fragments and
 test("M365 body must be plain text, bounded and structurally valid; older records skipped", async () => {
   for (const patch of [
     { body: { contentType: "html", content: "<script>secret</script>" } },
-    { body: { contentType: "text", content: "x".repeat(210000) } },
+    { body: { contentType: "text", content: "invalid\u0000body" } },
     { hasAttachments: "false" },
     { webLink: "javascript:secret" },
   ])
@@ -283,8 +283,8 @@ test("M365 auth, throttling, redirect, network and oversized errors never expose
     () =>
       read({
         fetcher: async () =>
-          new Response("x".repeat(2100000), {
-            headers: { "content-type": "application/json" },
+          new Response("synthetic-only", {
+            headers: { "content-type": "application/json", "content-length": String(8 * 1024 * 1024 + 1) },
           }),
       }),
     (e) => e.code === "response_too_large",
@@ -403,4 +403,87 @@ test("OData cursor equivalence never widens folder, owner, collection or token s
     return true;
   });
   assert.equal(calls, 0);
+});
+
+test("long Unicode bodies become explicit bounded previews without splitting surrogate pairs", async () => {
+  for (const [content, expected, truncated] of [
+    ["😀".repeat(100000), "😀".repeat(100000), false],
+    ["😀".repeat(100001), "😀".repeat(100000), true],
+    ["a".repeat(99999) + "😀" + "z", "a".repeat(99999) + "😀", true],
+    ["Příběh\r\n" + "ž".repeat(210000), "Příběh\r\n" + "ž".repeat(99992), true],
+  ]) {
+    const result = await read({ fetcher: async () => response([{ ...message, changeKey: "synthetic-change-key", hasAttachments: true, body: { contentType: "text", content } }]) });
+    const normalized = result.messages[0];
+    assert.equal(normalized.text, expected);
+    assert.equal([...normalized.text].length, 100000);
+    assert.equal(normalized.bodyTruncated, truncated);
+    assert.equal(normalized.sourceChangeKey, "synthetic-change-key");
+    assert.equal(normalized.hasAttachments, true);
+    assert.equal(normalized.aiEligible, false);
+    assert.equal(normalized.consentPublish, null);
+  }
+  const normal = await read({ fetcher: async () => response() });
+  assert.equal(normal.messages[0].bodyTruncated, false);
+  assert.equal(normal.messages[0].sourceChangeKey, null);
+  await assert.rejects(() => read({ fetcher: async () => response([{ ...message, changeKey: { invalid: true } }]) }), (error) => error.code === "invalid_response");
+});
+
+test("oversized page retries exactly the same initial URL or opaque cursor once with a smaller preference", async () => {
+  for (const cursor of [null, next]) {
+    const requests = [];
+    let cancelled = false;
+    const result = await read({ cursor, fetcher: async (url, options) => {
+      requests.push({ url, options });
+      if (requests.length === 1) return {
+        status: 200,
+        headers: new Headers({ "content-type": "application/json", "content-length": String(8 * 1024 * 1024 + 1) }),
+        body: { cancel: async () => { cancelled = true; } },
+      };
+      assert.equal(cancelled, true);
+      return response([{ ...message, body: { contentType: "text", content: "x".repeat(200001) } }]);
+    } });
+    assert.equal(requests.length, 2);
+    assert.equal(requests[0].url, requests[1].url);
+    if (cursor) assert.equal(requests[0].url, cursor);
+    else {
+      assert.equal(new URL(requests[0].url).searchParams.get("$filter"), "receivedDateTime ge 2026-11-07T00:00:00.000Z");
+      assert.ok(new URL(requests[0].url).searchParams.get("$select").includes("changeKey"));
+    }
+    assert.match(requests[0].options.headers.Prefer, /odata.maxpagesize=25$/);
+    assert.match(requests[1].options.headers.Prefer, /odata.maxpagesize=1$/);
+    assert.equal(requests[1].options.method, "GET");
+    assert.equal(result.messages[0].bodyTruncated, true);
+    assert.equal(result.messages[0].text.length, 100000);
+    assert.equal(result.deltaLink, delta);
+  }
+});
+
+test("a valid page above the old2MiB cap is imported as a preview without an extra request", async () => {
+  let calls = 0;
+  const result = await read({ fetcher: async () => {
+    calls++;
+    return response([{ ...message, body: { contentType: "text", content: "x".repeat(3 * 1024 * 1024) } }]);
+  } });
+  assert.equal(calls, 1);
+  assert.equal(result.messages[0].text.length, 100000);
+  assert.equal(result.messages[0].bodyTruncated, true);
+  assert.equal(result.deltaLink, delta);
+});
+
+test("8MiB page cap applies to streaming bytes; second oversize fails without advancing or resetting cursor", async () => {
+  let calls = 0, cancelled = 0;
+  await assert.rejects(() => read({ cursor: next, fetcher: async (url, options) => {
+    calls++;
+    assert.equal(url, next);
+    assert.match(options.headers.Prefer, calls === 1 ? /maxpagesize=25$/ : /maxpagesize=1$/);
+    return new Response(new ReadableStream({
+      start(controller) { controller.enqueue(Buffer.alloc(8 * 1024 * 1024 + 1)); },
+      cancel() { cancelled++; },
+    }), { headers: { "content-type": "application/json" } });
+  } }), (error) => error.code === "response_too_large");
+  assert.equal(calls, 2);
+  assert.equal(cancelled, 2);
+  let malformedCalls = 0;
+  await assert.rejects(() => read({ fetcher: async () => { malformedCalls++; return new Response("private-invalid-json", { headers: { "content-type": "application/json" } }); } }), (error) => error.code === "invalid_response");
+  assert.equal(malformedCalls, 1);
 });

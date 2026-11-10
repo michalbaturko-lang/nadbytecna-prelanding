@@ -1,0 +1,17 @@
+import test from 'node:test';import assert from 'node:assert/strict';
+import {checkArchiveStorage} from '../lib/mail-archive-probe.mjs';
+const path='objects/aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa/bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb.eml';
+function harness(){let object=null;const calls=[];return{calls,args:{call:async(action,payload)=>{calls.push([action,payload]);if(action==='probe_begin')return{path};if(action==='probe_finish')return{deleted:true};throw new Error('unexpected RPC');},write:async(p,bytes)=>{assert.equal(p,path);object=Buffer.from(bytes);calls.push(['write',bytes.length]);},read:async p=>{assert.equal(p,path);calls.push(['read']);if(!object)throw Object.assign(new Error('private missing body'),{status:404});return object;},remove:async p=>{assert.equal(p,path);object=null;calls.push(['remove']);}}};}
+test('synthetic probe verifies exact bytes and hash, confirms404 afterdelete, then removes private intent',async()=>{
+ const h=harness();const result=await checkArchiveStorage(h.args);assert.deepEqual(result,{ok:true,upload:true,read:true,hashVerified:true,deleted:true,bytes:h.calls.find(x=>x[0]==='write')[1]});
+ assert.deepEqual(h.calls.map(x=>x[0]),['probe_begin','write','read','remove','read','probe_finish']);assert.equal(JSON.stringify(result).includes('objects/'),false);
+});
+test('corrupt or failed read cannot claim success and still cleans only its own object',async()=>{
+ for(const bad of [Buffer.from('corrupt'),null]){const h=harness();let removed=false;h.args.read=async()=>{if(removed)throw Object.assign(new Error('missing'),{status:404});if(bad)return bad;throw new Error('private-secret-body');};h.args.remove=async p=>{assert.equal(p,path);removed=true;};await assert.rejects(checkArchiveStorage(h.args),e=>e.code==='archive_storage_probe_failed'&&!e.message.includes('secret'));assert.equal(h.calls.at(-1)[0],'probe_finish');}
+});
+test('failed or unconfirmed Storage deletion leaves durable intent for cron rather than reporting success',async()=>{
+ for(const fails of [true,false]){const h=harness();h.args.remove=async()=>{if(fails)throw new Error('private credential');};await assert.rejects(checkArchiveStorage(h.args),e=>e.code==='archive_storage_probe_failed');assert.equal(h.calls.some(x=>x[0]==='probe_finish'),false);}
+});
+test('failed upload cleans absent object but cannot claim upload verified',async()=>{const h=harness();h.args.write=async()=>{throw new Error('private provider response');};await assert.rejects(checkArchiveStorage(h.args),e=>e.code==='archive_storage_probe_failed');assert.equal(h.calls.at(-1)[0],'probe_finish');});
+test('invalid intent or RPC errors cannot disclose paths or credentials or mutate arbitrary storage',async()=>{for(const pathValue of ['other-bucket/private',null]){const h=harness();h.args.call=async()=>({path:pathValue});await assert.rejects(checkArchiveStorage(h.args),e=>e.code==='archive_storage_probe_failed');assert.equal(h.calls.length,0);}const h=harness();h.args.call=async()=>{throw new Error('private credential');};await assert.rejects(checkArchiveStorage(h.args),e=>e.code==='archive_storage_probe_failed');assert.equal(h.calls.length,0);});
+test('failed final ledger removal never reports completed probe',async()=>{const h=harness();const call=h.args.call;h.args.call=async(a,p)=>a==='probe_finish'?{deleted:false}:call(a,p);await assert.rejects(checkArchiveStorage(h.args),e=>e.code==='archive_storage_probe_failed');});
