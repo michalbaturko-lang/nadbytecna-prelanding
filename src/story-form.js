@@ -225,7 +225,7 @@
     if (spam === "bot") { showThanks("Děkujeme. Ozveme se na e-mail, který jsi uvedla."); return; }
     if (!name || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { storySay("Doplň jméno a e-mail."); return; }
     if (!share) { storySay("Vyber, jestli chceš sdílet anonymně, nebo se jménem."); return; }
-    if (!document.getElementById("sdilet-age").checked) { storySay("Potvrď, že ti je 18 let."); return; }
+    if (!document.getElementById("sdilet-age").checked) { storySay("Potvrď, že ti je 18 a více let."); return; }
     if (!consent) { storySay("Bez souhlasu se zpracováním příběhu to poslat nemůžeme."); return; }
     var audio = input === "recording" || input === "file";
     if (audio && !document.getElementById("sdilet-prepis").checked) { storySay("U hlasu potvrď souhlas s případným budoucím přepisem. Přepis nyní neprobíhá."); return; }
