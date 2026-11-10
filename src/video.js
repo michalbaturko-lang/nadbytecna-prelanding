@@ -1,4 +1,4 @@
-// Věřin příběh: celoobrazovkový přehrávač na klepnutí. Bez JavaScriptu odkaz vede na /verin-pribeh/ s běžným přehrávačem.
+// Příběh Věry: celoobrazovkový přehrávač na klepnutí. Bez JavaScriptu odkaz vede na /verin-pribeh/ s běžným přehrávačem.
 // Video se nestahuje, dokud na něj člověk neklepne. Zvuk je zapnutý (spouští ho klepnutí).
 (function () {
   "use strict";
@@ -16,7 +16,7 @@
     if (dlg) return;
     dlg = document.createElement("dialog");
     dlg.className = "vp";
-    dlg.setAttribute("aria-label", "Věřin příběh");
+    dlg.setAttribute("aria-label", "Příběh Věry");
     dlg.innerHTML =
       '<div class="vp-stage">' +
       '<video class="vp-video" playsinline preload="auto" poster="' + POSTER + '"><source src="' + SRC + '" type="video/mp4"></video>' +
