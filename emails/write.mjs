@@ -11,7 +11,7 @@ function fill(s, vars) {
 }
 
 function letter({ hello, paragraphs }) {
-  const text = [hello, "", ...paragraphs, "", "Věra", "Nadbytečná.cz", "VERY VERA", FROM_LINE, "", "Správce osobních údajů: Věra Komárová, fyzická osoba."].join("\n");
+  const text = [hello, "", ...paragraphs, "", "Věra", "Nadbytečná", "VERY VERA", FROM_LINE, "", "Správce osobních údajů: Věra Komárová, fyzická osoba."].join("\n");
   const body = paragraphs.map((p) => `<p style="margin:0 0 16px;font-size:16px;line-height:1.55">${p.replace(/&/g, "&amp;").replace(/</g, "&lt;")}</p>`).join("");
   const html = `<!doctype html><html lang="cs"><body style="margin:0;background:#F4CCD8;font-family:Arial,Helvetica,sans-serif;color:#3A0B22">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#F4CCD8"><tr><td align="center" style="padding:24px 12px">
@@ -19,7 +19,7 @@ function letter({ hello, paragraphs }) {
 <p style="margin:0 0 16px;font-size:16px;line-height:1.55">${hello.replace(/&/g, "&amp;").replace(/</g, "&lt;")}</p>
 ${body}
 <p style="margin:24px 0 0;font-family:Georgia,'Times New Roman',serif;font-size:18px">Věra</p>
-<p style="margin:4px 0 0;font-size:14px;line-height:1.5;color:#5E2A41">Nadbytečná.cz<br>VERY VERA<br><a href="mailto:${FROM_LINE}" style="color:#5E2A41">${FROM_LINE}</a><br>Správce osobních údajů: Věra Komárová, fyzická osoba.</p>
+<p style="margin:4px 0 0;font-size:14px;line-height:1.5;color:#5E2A41">Nadbytečná<br>VERY VERA<br><a href="mailto:${FROM_LINE}" style="color:#5E2A41">${FROM_LINE}</a><br>Správce osobních údajů: Věra Komárová, fyzická osoba.</p>
 </td></tr></table></td></tr></table></body></html>`;
   return { text, html };
 }
@@ -86,7 +86,7 @@ Pokud zprávy dostávat nechcete, stačí odpovědět na tento e-mail a vaši ad
 
 S úctou
 Věra Komárová
-Nadbytečná.cz
+Nadbytečná
 VERY VERA
 `;
 const launchHtml = `<!doctype html><html lang="cs"><body style="margin:0;background:#F4CCD8;font-family:Arial,Helvetica,sans-serif;color:#3A0B22">
@@ -96,7 +96,7 @@ const launchHtml = `<!doctype html><html lang="cs"><body style="margin:0;backgro
 <p style="margin:0 0 16px;font-size:16px;line-height:1.55">děkujeme, že chcete být u otevření platformy Nadbytečná. Spouštíme ji 11. 11. 2026 a vám dáme vědět jako prvním.</p>
 <p style="margin:0 0 16px;font-size:16px;line-height:1.55">Nadbytečná vzniká pro ženy, které se ocitly v nerovném postavení, a pro všechny, kdo jim chtějí pomoci. Brzy u nás budete moct sdílet svůj příběh nebo nabídnout pomoc.</p>
 <p style="margin:0 0 16px;font-size:16px;line-height:1.55">Pokud zprávy dostávat nechcete, stačí odpovědět na tento e-mail a vaši adresu smažeme.</p>
-<p style="margin:24px 0 0;font-size:16px;line-height:1.55">S úctou<br>Věra Komárová<br>Nadbytečná.cz<br>VERY VERA</p>
+<p style="margin:24px 0 0;font-size:16px;line-height:1.55">S úctou<br>Věra Komárová<br>Nadbytečná<br>VERY VERA</p>
 </td></tr></table></td></tr></table></body></html>`;
 jobs.push({ id: "launch-signup", dir: "launch", file: "signup", subject: "Děkujeme, že chcete být u toho", text: launchText, html: launchHtml, anonymous: true });
 jobs.push({ id: "help-been-through", dir: "can-help", file: "been-through", ...been, anonymous: false });

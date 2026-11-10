@@ -53,7 +53,7 @@ try {
   const assets = [
     "cookies.js",
     "fluid.js",
-    "og-v2.jpg",
+    "og-v3.jpg",
     "img/nadbytecna-lockup.svg",
     "launch-form.js",
   ];

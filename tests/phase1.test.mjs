@@ -34,8 +34,8 @@ test("hero má psací nápis a stejné fluid.js, app.js se nenačítá", () => {
   const logo = home.match(/<img class="logo"[^>]*>/)[0];
   assert.match(logo, /src="\/img\/nadbytecna-script\.svg"/);
   assert.match(logo, /data-split="0"/);
-  assert.match(logo, /data-base="0\.8403"/);
-  assert.match(logo, /alt="Nadbytečná\.cz"/);
+  assert.match(logo, /data-base="0\.6333"/);
+  assert.match(logo, /alt="Nadbytečná"/);
   assert.doesNotMatch(home, /nadbytecna-lockup|VERY VERA|very-vera\.cz/);
   assert.equal(home.match(/data-split="/g).length, 1);
   assert.match(home, /<script src="\/fluid\.js" defer><\/script>/);
@@ -80,7 +80,7 @@ test("homepage má dvě volby, osm karet a formuláře nic neodesílají", () =>
   assert.match(home, /Žádná žena není nadbytečná\./);
   assert.doesNotMatch(home, /class="lead"/)  // úvod bez doplňujícího textu, Příběh Věry navazuje hned
   assert.match(home, /<a class="choice choice-shop" id="cil" href="#parfem"><span class="choice-title">Předprodej parfému</);
-  assert.match(home, /Podpořte platformu Nadbytečná\.cz předobjednáním parfému!/);
+  assert.match(home, /Podpořte platformu Nadbytečná předobjednáním parfému!/);
   assert.match(home, /Dodání do Vánoc!/);
   assert.match(home, /Expedujeme v týdnu od 14\. 12\./);
   assert.match(home, /Předobjednat parfém/);
@@ -160,7 +160,7 @@ test("homepage má dvě volby, osm karet a formuláře nic neodesílají", () =>
   assert.match(soon, /Chci být u toho/);
   assert.match(soon, /Děkujeme\. 11\. 11\. se vám ozveme jako prvním\./);
   assert.match(soon, /Souhlasím se zasláním zprávy o spuštění platformy/);
-  assert.match(soon, /alt="Nadbytečná\.cz"/);
+  assert.match(soon, /alt="Nadbytečná"/);
   assert.doesNotMatch(soon, /VERY VERA|nadbytecna-lockup|very-vera\.cz/);
   assert.match(soon, /id="brzy-gdpr" type="checkbox"/);
   assert.doesNotMatch(soon, /id="brzy-gdpr"[^>]*checked/);
@@ -170,15 +170,15 @@ test("homepage má dvě volby, osm karet a formuláře nic neodesílají", () =>
   assert.match(soon, /mailto:veryvera@nadbytecna\.cz/);
   assert.match(soon, /noindex, nofollow, noarchive/);
   assert.match(soon, /src="\/cookies\.js"/);
-  assert.match(soon, /<title>Nadbytečná\.cz — spouštíme 11\. 11\. 2026<\/title>/);
+  assert.match(soon, /<title>Nadbytečná — spouštíme 11\. 11\. 2026<\/title>/);
   const soonDesc = soon.match(/<meta name="description" content="([^"]*)"/)[1];
-  assert.equal(soonDesc, "11. 11. 2026 spouštíme Nadbytečná.cz. Zanechte e-mail a o spuštění se dozvíte jako první.");
-  assert.equal(soonDesc.length, 89);
-  assert.match(soon, /property="og:image" content="https:\/\/nadbytecna\.cz\/og-v2\.jpg"/);
+  assert.equal(soonDesc, "11. 11. 2026 spouštíme Nadbytečnou. Zanechte e-mail a o spuštění se dozvíte jako první.");
+  assert.equal(soonDesc.length, 87);
+  assert.match(soon, /property="og:image" content="https:\/\/nadbytecna\.cz\/og-v3\.jpg"/);
   assert.match(soon, /og:image:width" content="1200"/);
   assert.match(soon, /og:image:height" content="630"/);
-  assert.match(soon, /og:image:alt" content="Nadbytečná\.cz\. Žádná žena není nadbytečná\."/);
-  assert.match(soon, /twitter:image" content="https:\/\/nadbytecna\.cz\/og-v2\.jpg"/);
+  assert.match(soon, /og:image:alt" content="Nadbytečná\. Žádná žena není nadbytečná\."/);
+  assert.match(soon, /twitter:image" content="https:\/\/nadbytecna\.cz\/og-v3\.jpg"/);
   assert.doesNotMatch(soon, /submit\.js|story-form\.js/);
   const launchJs = fs.readFileSync(path.join(ROOT, "src/launch-form.js"), "utf8");
   assert.match(launchJs, /return=minimal/);
@@ -220,11 +220,11 @@ test("právní stránky mluví o souhlasu a kontakt není krizová linka", () =>
   const homeDesc = home.match(/<meta name="description" content="([^"]*)"/)[1];
   assert.equal(homeDesc, "Žádná žena není nadbytečná. Místo pro ženy v nerovném postavení a pro ty, kdo jim chtějí pomoci. Sdílejte příběh, nebo nabídněte pomoc.");
   assert.equal(homeDesc.length, 135);
-  assert.match(home, /property="og:image" content="https:\/\/nadbytecna\.cz\/og-v2\.jpg"/);
+  assert.match(home, /property="og:image" content="https:\/\/nadbytecna\.cz\/og-v3\.jpg"/);
   assert.match(home, /og:image:width" content="1200"/);
   assert.match(home, /og:image:height" content="630"/);
-  assert.match(home, /og:image:alt" content="Nadbytečná\.cz\. Žádná žena není nadbytečná\."/);
-  assert.match(home, /twitter:image" content="https:\/\/nadbytecna\.cz\/og-v2\.jpg"/);
+  assert.match(home, /og:image:alt" content="Nadbytečná\. Žádná žena není nadbytečná\."/);
+  assert.match(home, /twitter:image" content="https:\/\/nadbytecna\.cz\/og-v3\.jpg"/);
   assert.match(home, /href="\/ochrana-osobnich-udaju\/"/);
   assert.doesNotMatch(home, /googletagmanager|connect\.facebook|analytics\.tiktok/);
   const admin = read("admin/index.html");

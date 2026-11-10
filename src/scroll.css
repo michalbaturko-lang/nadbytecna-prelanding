@@ -49,7 +49,7 @@ body[data-page="scroll"] .top-cta{border-radius:999px;padding:.45rem 1.4rem;font
   body[data-page="scroll"] .top-cta{margin-left:1.25rem}
 }
 @media (max-width:767px){
-  body[data-page="scroll"] .wordmark{width:min(32vw,9rem)}
+  body[data-page="scroll"] .wordmark{width:min(34vw,7.2rem)}
   body[data-page="scroll"] .sc-hint{display:none}
   body[data-page="scroll"] .site-head{gap:.4rem .5rem}
   body[data-page="scroll"] .top-cta{padding:.35rem .7rem;font-size:.6rem;letter-spacing:.08em;line-height:1.15;text-align:center;max-width:7.6rem;white-space:normal}
@@ -75,7 +75,7 @@ body[data-page="scroll"] .top-cta{border-radius:999px;padding:.45rem 1.4rem;font
 .sc-hero{position:relative;min-height:100vh;min-height:100svh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:6rem clamp(1rem,5vw,4rem) 5.5rem}
 .sc-hero .hero-copy{width:100%}
 .sc-hero .brand{width:100%;align-items:center}
-.sc-hero .logo{width:min(92vw,62rem);max-width:none;margin:0 auto}
+.sc-hero .logo{width:min(88vw,46rem);max-width:none;margin:0 auto}
 .sc-hero .content{max-width:40rem;margin:clamp(1.2rem,3vw,2.2rem) auto 0;text-align:center}
 .sc-hero h1 span{display:block}
 .sc-hero h1{font-weight:400;font-size:clamp(.95rem,2vw,1.55rem);line-height:1.55;letter-spacing:.16em;padding-left:.16em;text-transform:uppercase;margin:0 0 1.1rem}
