@@ -56,6 +56,10 @@ export async function startAdminServer({
     ),
   );
   await seed(db);
+  for (const filename of [
+    "20261110211204_mail_ai_queue.sql",
+    "20261110211416_mail_priority_sort.sql",
+  ]) await db.exec(fs.readFileSync(new URL("../../supabase/migrations/" + filename, import.meta.url), "utf8"));
   const mailLease = (
     await db.query(
       "SELECT public.mail_sync_claim($1,'inbox','2026-11-01T00:00:00Z') d",
@@ -422,6 +426,7 @@ export async function startAdminServer({
     M365_CONNECT_ENABLED: "false",
     AI_EMAIL_CLASSIFICATION_ENABLED: "false",
     AI_EMAIL_PROCESSING_APPROVED: "false",
+    AI_EMAIL_AUTOMATION_ENABLED: "false",
     M365_RETENTION_ENABLED: "false",
   });
   const admin = (await import("../../api/admin.js")).default;
@@ -430,6 +435,7 @@ export async function startAdminServer({
   const worker = (await import("../../api/ai-worker.js")).default;
   const adminMail = (await import("../../api/admin-mail.js")).default;
   const mailSync = (await import("../../api/mail-sync.js")).default;
+  const mailAiWorker = (await import("../../api/mail-ai-worker.js")).default;
   const connectModule = await import("../../api/mail-connect.js");
   const mailConnect = mailConnectClient
     ? connectModule.createMailConnectHandler(mailConnectClient)
@@ -471,6 +477,7 @@ export async function startAdminServer({
       "/api/ai-worker/": worker,
       "/api/admin-mail/": adminMail,
       "/api/mail-sync/": mailSync,
+      "/api/mail-ai-worker/": mailAiWorker,
       "/api/mail-connect/": mailConnect,
     };
     if (routes[u.pathname]) {
