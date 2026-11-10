@@ -96,7 +96,7 @@ test("homepage má dvě volby, osm karet a formuláře nic neodesílají", () =>
   assert.match(home, /class="claim-lead">Žádná práce není</);
   assert.match(home, /class="claim-lead">Žádná láska není</);
   assert.match(home, /class="claim-lead">Never</);
-  assert.equal(home.match(/class="claim-word" src="\/img\/nadbytecna-word\.svg"/g).length, 6);
+  assert.equal(home.match(/class="claim-word" src="\/img\/nadbytecna-word-lc\.svg"/g).length, 6);
   assert.match(home, /class="rule claim-rule"/);
   assert.ok(home.indexOf('id="pribeh"') < home.indexOf('class="claims"'))  // video je hned za úvodní obrazovkou, před hesly;
   assert.ok(home.indexOf('id="pribeh"') < home.indexOf('class="choices"'));
