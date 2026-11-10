@@ -111,7 +111,7 @@ test("SK stránky: jazyk, hreflang, žádná čeština v textu, slovenská diakr
   const home = read("sk/index.html");
   assert.match(home, /hreflang="cs" href="https:\/\/[^"]+\/"/); assert.match(home, /hreflang="sk" href="https:\/\/[^"]+\/sk\/"/); assert.match(home, /hreflang="x-default"/);
   assert.match(home, /rel="canonical" href="https:\/\/[^"]+\/sk\/"/);
-  assert.match(home, /og:locale" content="sk_SK"/); assert.match(home, /Nadbytočná – niečo sa chystá/);
+  assert.match(home, /og:locale" content="sk_SK"/); assert.match(home, /nadbytočná – niečo sa chystá/);
   assert.match(home, /data-consent-version="2026-11-04-sk-v1"/);
   assert.match(home, /Súhlasím, že/); assert.match(home, /<a href="\/sk\/zasady-ochrany-osobnych-udajov\/">zásadách ochrany osobných údajov<\/a>/);
   assert.match(read("index.html"), /<a class="lang" href="\/sk\/" hreflang="sk"/);

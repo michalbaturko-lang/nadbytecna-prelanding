@@ -7,7 +7,7 @@ const root = path.resolve(path.dirname(new URL(import.meta.url).pathname), "..")
 const { from, replyTo, templates, resendPayload } = await import("../emails/resend.mjs");
 
 test("šablony pro Resend jsou v repu a nic neposílají", () => {
-  assert.equal(from, "Nadbytečná <veryvera@nadbytecna.cz>");
+  assert.equal(from, "nadbytečná <veryvera@nadbytecna.cz>");
   assert.equal(replyTo, "veryvera@nadbytecna.cz");
   assert.equal(templates.length, 16);
   const ids = templates.map((t) => t.id);
@@ -26,13 +26,13 @@ test("šablony pro Resend jsou v repu a nic neposílají", () => {
     const html = fs.readFileSync(path.join(root, "emails", t.html), "utf8");
     if (t.id === "launch-signup") {
       assert.equal(t.subject, "Děkujeme, že chcete být u toho");
-      assert.match(text, /děkujeme, že chcete být u otevření platformy Nadbytečná\. Spouštíme ji 11\. 11\. 2026 a vám dáme vědět jako prvním\./);
-      assert.match(text, /S úctou\nVěra Komárová\nNadbytečná\nVERY VERA/);
+      assert.match(text, /děkujeme, že chcete být u otevření platformy nadbytečná\. Spouštíme ji 11\. 11\. 2026 a vám dáme vědět jako prvním\./);
+      assert.match(text, /S úctou\nVěra Komárová\nnadbytečná\nVERY VERA/);
       assert.doesNotMatch(text + html, /Správce osobních údajů|\{\{jmeno\}\}|fetch\(/);
     } else {
       assert.match(text, /veryvera@nadbytecna\.cz/);
-      assert.match(text, /Nadbytečná\nVERY VERA/);
-      assert.match(html, /Nadbytečná<br>VERY VERA/);
+      assert.match(text, /nadbytečná\nVERY VERA/);
+      assert.match(html, /nadbytečná<br>VERY VERA/);
       assert.match(text, /Věra Komárová/);
       if (t.anonymous) assert.doesNotMatch(text + html, /\{\{jmeno\}\}/);
       else assert.match(text, /\{\{jmeno\}\}/);

@@ -19,44 +19,44 @@ const CLAIMS = {
   cs: {
     1: { h1: "Žádná žena není nadbytečná.", lead: "Jsi zvědavá, co se chystá?" },
     2: { h1: "Nejsi nadbytečná.", lead: "Něco se chystá a ty u toho budeš první." },
-    3: { h1: "Nadbytečná? Nikdy.", lead: "Zjisti jako první, co se chystá." },
+    3: { h1: "nadbytečná? Nikdy.", lead: "Zjisti jako první, co se chystá." },
   },
   sk: {
     1: { h1: "Žiadna žena nie je nadbytočná.", lead: "Si zvedavá, čo sa chystá?" },
     2: { h1: "Nie si nadbytočná.", lead: "Niečo sa chystá a ty pri tom budeš prvá." },
-    3: { h1: "Nadbytočná? Nikdy.", lead: "Zisti ako prvá, čo sa chystá." },
+    3: { h1: "nadbytočná? Nikdy.", lead: "Zisti ako prvá, čo sa chystá." },
   },
 };
 const TXT = {
   cs: {
-    locale: "cs_CZ", brand: "Nadbytečná",
+    locale: "cs_CZ", brand: "nadbytečná",
     sub: "Připravujeme místo pro ženy, které si prošly něčím podobným. Nech nám e-mail a dáme ti vědět jako první.",
-    title: "Nadbytečná – něco se chystá",
+    title: "nadbytečná – něco se chystá",
     nojsSend: "Pro odeslání je potřeba zapnout JavaScript.", nojsDone: "Pro dokončení je potřeba zapnout JavaScript.",
     email: "E-mail", placeholder: "jmeno@email.cz", cta: "Chci vědět víc", hp: "Web",
     policyLink: "Zásady ochrany osobních údajů", otherLang: { label: "Slovensky", code: "sk" },
-    backAlt: "Nadbytečná, zpět na úvodní stránku",
+    backAlt: "nadbytečná, zpět na úvodní stránku",
     confirm: { title: "Potvrzení e-mailu", h1: "Potvrď svůj e-mail", p: "Jedním kliknutím potvrdíš, že chceš vědět, co se chystá.", button: "Potvrdit e-mail" },
     thanks: { title: "Děkujeme", h1: "Skoro tam jsi.", lead: "Ještě jedno kliknutí.", sub: "Pošleme ti e-mail. Klikni v něm na tlačítko a potvrď, že chceš vědět, co se chystá. Nic nepřišlo? Zkus složku Spam." },
     confirmed: { title: "Potvrzeno", h1: "Jsi v tom s námi.", lead: "Děkujeme, že jsi tu.", sub: "Ozveme se ti jako první, jakmile bude co ukázat." },
     vote: { h2: "Co z toho jsi ty?", sub: (n) => `Vyber až ${n === 3 ? "tři" : n} věty, které tě vystihují nejvíc. Přidáme je k tvému e-mailu a ukážeme ti, co vybraly ostatní.`, send: "Odeslat výběr", others: "Co vybraly ostatní" },
     unsub: { title: "Odhlášení", h1: "Odhlašuji tě…", p: "Chvilku strpení." },
-    policyTitle: "Zásady ochrany osobních údajů – Nadbytečná", policyDesc: "Jak zacházíme s e-mailovou adresou, kterou nám necháš na stránce Nadbytečná.",
+    policyTitle: "Zásady ochrany osobních údajů – nadbytečná", policyDesc: "Jak zacházíme s e-mailovou adresou, kterou nám necháš na stránce nadbytečná.",
   },
   sk: {
-    locale: "sk_SK", brand: "Nadbytočná",
+    locale: "sk_SK", brand: "nadbytočná",
     sub: "Pripravujeme miesto pre ženy, ktoré si prešli niečím podobným. Nechaj nám e-mail a dáme ti vedieť ako prvej.",
-    title: "Nadbytočná – niečo sa chystá",
+    title: "nadbytočná – niečo sa chystá",
     nojsSend: "Na odoslanie je potrebné zapnúť JavaScript.", nojsDone: "Na dokončenie je potrebné zapnúť JavaScript.",
     email: "E-mail", placeholder: "meno@email.sk", cta: "Chcem vedieť viac", hp: "Web",
     policyLink: "Zásady ochrany osobných údajov", otherLang: { label: "Česky", code: "cs" },
-    backAlt: "Nadbytočná, späť na úvodnú stránku",
+    backAlt: "nadbytočná, späť na úvodnú stránku",
     confirm: { title: "Potvrdenie e-mailu", h1: "Potvrď svoj e-mail", p: "Jedným kliknutím potvrdíš, že chceš vedieť, čo sa chystá.", button: "Potvrdiť e-mail" },
     thanks: { title: "Ďakujeme", h1: "Skoro tam si.", lead: "Ešte jedno kliknutie.", sub: "Pošleme ti e-mail. Klikni v ňom na tlačidlo a potvrď, že chceš vedieť, čo sa chystá. Nič neprišlo? Skús priečinok Spam." },
     confirmed: { title: "Potvrdené", h1: "Si v tom s nami.", lead: "Ďakujeme, že si tu.", sub: "Ozveme sa ti ako prvej, len čo bude čo ukázať." },
     vote: { h2: "Čo z toho si ty?", sub: (n) => `Vyber až ${n === 3 ? "tri" : n} vety, ktoré ťa vystihujú najviac. Pridáme ich k tvojmu e-mailu a ukážeme ti, čo vybrali ostatné.`, send: "Odoslať výber", others: "Čo vybrali ostatné" },
     unsub: { title: "Odhlásenie", h1: "Odhlasujem ťa…", p: "Chvíľku strpenia." },
-    policyTitle: "Zásady ochrany osobných údajov – Nadbytočná", policyDesc: "Ako zaobchádzame s e-mailovou adresou, ktorú nám necháš na stránke Nadbytočná.",
+    policyTitle: "Zásady ochrany osobných údajov – nadbytočná", policyDesc: "Ako zaobchádzame s e-mailovou adresou, ktorú nám necháš na stránke nadbytočná.",
   },
 };
 
@@ -130,10 +130,10 @@ ${ld}
 const footer = (lang, switcher = null) => {
   const t = TXT[lang];
   const sw = switcher ? `<br><a class="lang" href="${switcher}" hreflang="${t.otherLang.code}" lang="${t.otherLang.code}">${t.otherLang.label}</a>` : "";
-  return `<footer class="foot"><img class="dom" src="/img/nadbytecna-script.svg" width="1802" height="517" alt="Nadbytečná"><a class="mail" href="mailto:veryvera@nadbytecna.cz">veryvera@nadbytecna.cz</a><br><a href="${PATHS[lang].policy}">${t.policyLink}</a>${C.complete ? `<br>${esc(C.name)}, IČO ${esc(C.ico)}` : ""}${sw}</footer>`;
+  return `<footer class="foot"><img class="dom" src="/img/nadbytecna-script.svg" width="1802" height="517" alt="nadbytečná"><a class="mail" href="mailto:veryvera@nadbytecna.cz">veryvera@nadbytecna.cz</a><br><a href="${PATHS[lang].policy}">${t.policyLink}</a>${C.complete ? `<br>${esc(C.name)}, IČO ${esc(C.ico)}` : ""}${sw}</footer>`;
 };
 const analytics = '<script defer src="/_vercel/insights/script.js"></script>';
-const LOGO_ATTRS = 'width="1802" height="517" data-split="0" data-base="0.6333" alt="Nadbytečná"';
+const LOGO_ATTRS = 'width="1802" height="517" data-split="0" data-base="0.6333" alt="nadbytečná"';
 
 function home(lang, variant) {
   const t = TXT[lang], P = PATHS[lang], cl = CLAIMS[lang][variant];
@@ -212,13 +212,13 @@ function policy(lang) {
     ? `<p>${esc(C.name)}, IČO ${esc(C.ico)}, ${sk ? "so sídlom" : "se sídlem"} ${esc(C.address)}.<br>${sk ? "Kontakt" : "Kontakt"}: <a href="mailto:${esc(C.email)}">${esc(C.email)}</a></p>`
     : T(sk ? "[Doplniť pred spustením zberu: názov s.r.o., IČO, sídlo, kontaktný e-mail prevádzkovateľa.]" : "[Doplnit před spuštěním sběru: název s.r.o., IČO, sídlo, kontaktní e-mail správce.]");
   const cs = `<h1>Zásady ochrany osobních údajů</h1>
-<p>Platí pro přihlášení k informacím o spuštění platformy Nadbytečná na stránce nadbytecna.cz.</p>
+<p>Platí pro přihlášení k informacím o spuštění platformy nadbytečná na stránce nadbytecna.cz.</p>
 <h2>1. Kdo je správce</h2>
 ${who}
 <p>Správce nejmenoval pověřence pro ochranu osobních údajů.</p>
 <h2>2. Jaké údaje zpracováváme, proč a na jakém základě</h2>
 <ul>
-<li><strong>E-mailová adresa, kterou zadáš.</strong> Pošleme ti potvrzovací e-mail a pak informaci, že platforma Nadbytečná byla spuštěna. Základ: tvůj souhlas (čl. 6 odst. 1 písm. a) nařízení GDPR).</li>
+<li><strong>E-mailová adresa, kterou zadáš.</strong> Pošleme ti potvrzovací e-mail a pak informaci, že platforma nadbytečná byla spuštěna. Základ: tvůj souhlas (čl. 6 odst. 1 písm. a) nařízení GDPR).</li>
 <li><strong>Výroky, které si po potvrzení e-mailu nepovinně vybereš</strong> (až tři). Uložíme je k tvému e-mailu, abychom poznali, co tě oslovuje, a zveřejníme jen souhrnné počty, ze kterých nepoznáš nikoho konkrétního. Základ: tvůj souhlas, který dáš samotným výběrem (čl. 6 odst. 1 písm. a) GDPR). Výběr můžeš kdykoli změnit odhlášením, tím se vymaže.</li>
 <li><strong>Čas udělení souhlasu, znění souhlasu, které jsi viděla, čas potvrzení e-mailu a čas případného odvolání.</strong> Abychom mohli prokázat, že jsi souhlas udělila, a respektovat jeho odvolání. Základ: povinnost prokázat souhlas (čl. 7 odst. 1 GDPR) a náš oprávněný zájem na obhajobě právních nároků (čl. 6 odst. 1 písm. f) GDPR).</li>
 <li><strong>Otisk IP adresy</strong> (hash, ne samotná adresa), ukládaný nejdéle 30 dnů. Ochrana formuláře před zneužitím a automatickým vyplňováním. Základ: náš oprávněný zájem na bezpečném provozu (čl. 6 odst. 1 písm. f) GDPR).</li>
@@ -254,13 +254,13 @@ ${T("[Doplnit před spuštěním: subjekt a region Supabase, poskytovatel e-mail
 ${C.complete ? `<p><a href="mailto:${esc(C.email)}">${esc(C.email)}</a></p>` : T("[Doplnit kontaktní e-mail správce.]")}
 <p><small>Znění z ${esc(CONSENT_VERSIONS.cs.slice(0, 10))}.</small></p>`;
   const skBody = `<h1>Zásady ochrany osobných údajov</h1>
-<p>Platia pre prihlásenie na informácie o spustení platformy Nadbytočná na stránke nadbytecna.cz.</p>
+<p>Platia pre prihlásenie na informácie o spustení platformy nadbytočná na stránke nadbytecna.cz.</p>
 <h2>1. Kto je prevádzkovateľ</h2>
 ${who}
 <p>Prevádzkovateľ nemenoval zodpovednú osobu pre ochranu osobných údajov.</p>
 <h2>2. Aké údaje spracúvame, prečo a na akom základe</h2>
 <ul>
-<li><strong>E-mailová adresa, ktorú zadáš.</strong> Pošleme ti potvrdzovací e-mail a potom informáciu, že platforma Nadbytočná bola spustená. Základ: tvoj súhlas (čl. 6 ods. 1 písm. a) nariadenia GDPR).</li>
+<li><strong>E-mailová adresa, ktorú zadáš.</strong> Pošleme ti potvrdzovací e-mail a potom informáciu, že platforma nadbytočná bola spustená. Základ: tvoj súhlas (čl. 6 ods. 1 písm. a) nariadenia GDPR).</li>
 <li><strong>Výroky, ktoré si po potvrdení e-mailu nepovinne vyberieš</strong> (až tri). Uložíme ich pri tvojom e-maile, aby sme vedeli, čo ťa oslovuje, a zverejníme len súhrnné počty, z ktorých nespoznáš nikoho konkrétneho. Základ: tvoj súhlas, ktorý dáš samotným výberom (čl. 6 ods. 1 písm. a) GDPR). Výber môžeš kedykoľvek zrušiť odhlásením, tým sa vymaže.</li>
 <li><strong>Čas udelenia súhlasu, znenie súhlasu, ktoré si videla, čas potvrdenia e-mailu a čas prípadného odvolania.</strong> Aby sme vedeli preukázať, že si súhlas udelila, a rešpektovať jeho odvolanie. Základ: povinnosť preukázať súhlas (čl. 7 ods. 1 GDPR) a náš oprávnený záujem na obhajobe právnych nárokov (čl. 6 ods. 1 písm. f) GDPR).</li>
 <li><strong>Odtlačok IP adresy</strong> (hash, nie samotná adresa), ukladaný najviac 30 dní. Ochrana formulára pred zneužitím a automatickým vypĺňaním. Základ: náš oprávnený záujem na bezpečnej prevádzke (čl. 6 ods. 1 písm. f) GDPR).</li>

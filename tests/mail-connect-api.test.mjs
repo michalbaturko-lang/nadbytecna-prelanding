@@ -131,7 +131,7 @@ test("public landing requires no admin, is private and opening does not consume 
   const r = await s.fetch(s.url + "/api/mail-connect/");
   assert.equal(r.status, 200);
   const html = await r.text();
-  assert.match(html, /Účet v adminu Nadbytečné nepotřebujete/);
+  assert.match(html, /Účet v adminu nadbytečné nepotřebujete/);
   assert.ok(!html.includes(inv));
   assert.equal(r.headers.get("Referrer-Policy"), "no-referrer");
   assert.equal(r.headers.get("Cache-Control"), "no-store");
