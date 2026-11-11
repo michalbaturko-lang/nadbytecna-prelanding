@@ -432,14 +432,15 @@ function buildPhase1(out) {
     tiktok: process.env.NEXT_PUBLIC_TIKTOK_PIXEL_ID || "",
   };
   fs.writeFileSync(path.join(out, "config.js"), "window.NADBYTECNA_SUPABASE=" + JSON.stringify({ url: supaUrl, key: supaKey }) + ";\nwindow.NADBYTECNA_ADS=" + JSON.stringify(ads) + ";\n");
-  const { pages, robots, llms } = renderPhase1({ css, preload: PRELOAD, heart: HEART, logoAttrs: LOGO_ATTRS, draft: process.env.VERCEL_ENV !== "production", index: siteLive(process.env.SITE_LIVE) && process.env.VERCEL_ENV === "production" });
+  const { pages, robots, llms, llmsFull } = renderPhase1({ css, preload: PRELOAD, heart: HEART, logoAttrs: LOGO_ATTRS, draft: process.env.VERCEL_ENV !== "production", index: siteLive(process.env.SITE_LIVE) && process.env.VERCEL_ENV === "production" });
   for (const [p, html] of Object.entries(pages)) {
     const rel = p === "/" ? "index.html" : path.join(p.replace(/^\//, ""), "index.html");
     write(path.join(out, rel), html);
   }
   write(path.join(out, "robots.txt"), robots);
   write(path.join(out, "llms.txt"), llms);
-  const publicPaths = Object.keys(pages).filter((p) => p !== "/admin/" && p !== "/coming-soon/" && p !== "/kontakt/" && p !== "/potrebuji-pomoc/");
+  write(path.join(out, "llms-full.txt"), llmsFull);
+  const publicPaths = Object.keys(pages).filter((p) => p !== "/admin/" && p !== "/coming-soon/" && p !== "/kontakt/" && p !== "/potrebuji-pomoc/" && p !== "/zasady/");
   const urls = publicPaths.map((p) => `<url><loc>${SITE}${p === "/" ? "/" : p}</loc></url>`).join("\n");
   write(path.join(out, "sitemap.xml"), `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls}\n</urlset>\n`);
 }

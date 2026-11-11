@@ -11,7 +11,7 @@
       "headers": [
         {
           "key": "Content-Security-Policy",
-          "value": "default-src 'self'; script-src 'self' https://www.googletagmanager.com https://connect.facebook.net https://analytics.tiktok.com 'sha256-rbTaSdDD+Sd+K8IZ66VS79bdI78bN8AwXXyN0/lD5fY='; style-src 'self' 'sha256-0fpG19wW1i98QhIl1zp9JQSvs2xb+rPs6+sKa820/k4='; img-src 'self' data: https://www.facebook.com https://www.google-analytics.com https://www.googletagmanager.com https://googleads.g.doubleclick.net https://analytics.tiktok.com; font-src 'self'; media-src 'self' blob: https://gjzsifxldxaogcuqzivb.supabase.co; connect-src 'self' https://gjzsifxldxaogcuqzivb.supabase.co https://www.googletagmanager.com https://www.google-analytics.com https://www.google.com https://googleads.g.doubleclick.net https://www.googleadservices.com https://connect.facebook.net https://www.facebook.com https://analytics.tiktok.com; form-action 'self'; base-uri 'none'; frame-ancestors 'none'; frame-src 'self' https://www.googletagmanager.com https://www.facebook.com; object-src 'none'; manifest-src 'self'; upgrade-insecure-requests"
+          "value": "default-src 'self'; script-src 'self' https://www.googletagmanager.com https://connect.facebook.net https://analytics.tiktok.com 'sha256-rbTaSdDD+Sd+K8IZ66VS79bdI78bN8AwXXyN0/lD5fY='; style-src 'self' 'sha256-GM+PodxmwnslelwOowkYclbeKiuYdLkEG6P7hg2j8oM='; img-src 'self' data: https://www.facebook.com https://www.google-analytics.com https://www.googletagmanager.com https://googleads.g.doubleclick.net https://analytics.tiktok.com; font-src 'self'; media-src 'self' blob: https://gjzsifxldxaogcuqzivb.supabase.co; connect-src 'self' https://gjzsifxldxaogcuqzivb.supabase.co https://www.googletagmanager.com https://www.google-analytics.com https://www.google.com https://googleads.g.doubleclick.net https://www.googleadservices.com https://connect.facebook.net https://www.facebook.com https://analytics.tiktok.com; form-action 'self'; base-uri 'none'; frame-ancestors 'none'; frame-src 'self' https://www.googletagmanager.com https://www.facebook.com; object-src 'none'; manifest-src 'self'; upgrade-insecure-requests"
         },
         {
           "key": "Strict-Transport-Security",
@@ -224,6 +224,36 @@
       "permanent": false
     },
     {
+      "source": "/zasady",
+      "destination": "/ochrana-osobnich-udaju/",
+      "permanent": true
+    },
+    {
+      "source": "/zasady/",
+      "destination": "/ochrana-osobnich-udaju/",
+      "permanent": true
+    },
+    {
+      "source": "/zasady-ochrany-osobnich-udaju",
+      "destination": "/ochrana-osobnich-udaju/",
+      "permanent": true
+    },
+    {
+      "source": "/zasady-ochrany-osobnich-udaju/",
+      "destination": "/ochrana-osobnich-udaju/",
+      "permanent": true
+    },
+    {
+      "source": "/o-platforme",
+      "destination": "/o-nas/",
+      "permanent": true
+    },
+    {
+      "source": "/o-platforme/",
+      "destination": "/o-nas/",
+      "permanent": true
+    },
+    {
       "source": "/o-nasi-platforme",
       "destination": "/o-nas/",
       "permanent": true
@@ -231,6 +261,116 @@
     {
       "source": "/o-nasi-platforme/",
       "destination": "/o-nas/",
+      "permanent": true
+    },
+    {
+      "source": "/pribeh",
+      "destination": "/verin-pribeh/",
+      "permanent": true
+    },
+    {
+      "source": "/pribeh/",
+      "destination": "/verin-pribeh/",
+      "permanent": true
+    },
+    {
+      "source": "/dekujeme",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/dekujeme/",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/potvrzeno",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/potvrzeno/",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/potvrzeni",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/potvrzeni/",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/odhlaseni",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/odhlaseni/",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/sk",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/sk/",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/sk/zasady-ochrany-osobnych-udajov",
+      "destination": "/ochrana-osobnich-udaju/",
+      "permanent": true
+    },
+    {
+      "source": "/sk/zasady-ochrany-osobnych-udajov/",
+      "destination": "/ochrana-osobnich-udaju/",
+      "permanent": true
+    },
+    {
+      "source": "/sk/dakujeme",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/sk/dakujeme/",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/sk/potvrdene",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/sk/potvrdene/",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/sk/potvrdenie",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/sk/potvrdenie/",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/sk/odhlasenie",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/sk/odhlasenie/",
+      "destination": "/",
       "permanent": true
     }
   ],
@@ -258,7 +398,7 @@
   ],
   "functions": {
     "api/notify.js": {
-      "includeFiles": "emails/**"
+      "includeFiles": "emails/**/*"
     },
     "api/ai-worker.js": {
       "maxDuration": 120

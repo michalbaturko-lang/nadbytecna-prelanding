@@ -15,7 +15,10 @@ test("www jde na apex, vercel.app zůstává plný web", () => {
     type: "redirect", status: 301, url: "https://nadbytecna.cz/?a=1",
   });
   assert.deepEqual(hostGate({ host: "www.nadbytecna.cz", pathname: "/zasady/" }), {
-    type: "redirect", status: 301, url: "https://nadbytecna.cz/zasady/",
+    type: "redirect", status: 301, url: "https://nadbytecna.cz/ochrana-osobnich-udaju/",
+  });
+  assert.deepEqual(hostGate({ host: "nadbytecna.cz", pathname: "/zasady/", search: "?x=1" }), {
+    type: "redirect", status: 301, url: "https://nadbytecna.cz/ochrana-osobnich-udaju/?x=1",
   });
   assert.equal(hostGate({ host: "nadbytecna-prelanding.vercel.app", pathname: "/admin/" }).type, "next");
   assert.equal(hostGate({ host: "nadbytecna.cz", pathname: "/sdilet-pribeh/", live: true }).type, "next");
@@ -31,9 +34,9 @@ test("coming soon pustí jen úvod, zásady a soubory", () => {
     assert.equal(hostGate({ host, pathname: "/fluid.js" }).type, host === "www.nadbytecna.cz" ? "redirect" : "next");
   }
   assert.deepEqual(hostGate({ host: "nadbytecna.cz", pathname: "/" }), { type: "rewrite", url: "/coming-soon/" });
-  assert.equal(hostGate({ host: "nadbytecna.cz", pathname: "/zasady/" }).type, "next");
+  assert.equal(hostGate({ host: "nadbytecna.cz", pathname: "/ochrana-osobnich-udaju/" }).type, "next");
   assert.equal(hostGate({ host: "nadbytecna.cz", pathname: "/coming-soon/" }).type, "next");
-  for (const path of ["/pribeh", "/sdilet-pribeh/", "/mohu-pomoci/", "/ochrana-osobnich-udaju/", "/kontakt/"]) {
+  for (const path of ["/pribeh", "/sdilet-pribeh/", "/mohu-pomoci/", "/kontakt/"]) {
     assert.deepEqual(hostGate({ host: "nadbytecna.cz", pathname: path }), { type: "redirect", status: 302, url: "https://nadbytecna.cz/" }, path);
     assert.deepEqual(hostGate({ host: "www.nadbytecna.cz", pathname: path }), { type: "redirect", status: 302, url: "https://nadbytecna.cz/" }, path);
   }

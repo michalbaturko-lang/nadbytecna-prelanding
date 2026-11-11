@@ -5,6 +5,7 @@ import { fileURLToPath } from "node:url";
 
 const root = path.dirname(fileURLToPath(import.meta.url));
 const FROM_LINE = "veryvera@nadbytecna.cz";
+const CONTROLLER = "Správce osobních údajů: Very Vera s.r.o., IČO 30245354, se sídlem Dlouhá 713/34, Staré Město, 110 00 Praha 1.";
 // Značková magenta z :root --magenta ve src/site.css. Satén a papír jsou stejné tokeny.
 const MAGENTA = "#DB0B5F";
 const SATIN = "#F4CCD8";
@@ -39,14 +40,14 @@ ${inner}
 }
 
 function letter({ hello, paragraphs }) {
-  const text = [hello, "", ...paragraphs, "", "Věra", "nadbytečná", "VERY VERA", FROM_LINE, "", "Správce osobních údajů: Nadbytečná z. ú."].join("\n");
+  const text = [hello, "", ...paragraphs, "", "Věra", "nadbytečná", "VERY VERA", FROM_LINE, "", CONTROLLER].join("\n");
   const body = paragraphs.map((p) => `<p style="margin:0 0 16px;font-size:16px;line-height:1.55;color:${MAGENTA}">${esc(p)}</p>`).join("");
   const html = chrome(`<p style="margin:0 0 16px;font-size:16px;line-height:1.55;color:${MAGENTA}">${esc(hello)}</p>
 ${body}
 <p style="margin:24px 0 0;font-family:Arial,Helvetica,sans-serif;font-size:18px;line-height:1.4;color:${MAGENTA}">Věra</p>
 <p style="margin:8px 0 0;font-size:14px;line-height:1.5;color:${MAGENTA}">nadbytečná</p>
 <div style="margin:12px 0">${wordmark(160)}</div>
-<p style="margin:0;font-size:14px;line-height:1.5;color:${MAGENTA}"><a href="mailto:${FROM_LINE}" style="color:${MAGENTA};text-decoration:underline">${FROM_LINE}</a><br>Správce osobních údajů: Nadbytečná z. ú.</p>`);
+<p style="margin:0;font-size:14px;line-height:1.5;color:${MAGENTA}"><a href="mailto:${FROM_LINE}" style="color:${MAGENTA};text-decoration:underline">${FROM_LINE}</a><br>${esc(CONTROLLER)}</p>`);
   return { text, html };
 }
 
@@ -142,5 +143,12 @@ for (const job of jobs) {
     anonymous: job.anonymous,
   });
 }
-fs.writeFileSync(path.join(root, "catalog.json"), JSON.stringify({ from: "nadbytečná <veryvera@nadbytecna.cz>", reply_to: "veryvera@nadbytecna.cz", templates: catalog }, null, 2) + "\n");
+const catalogDoc = { from: "nadbytečná <veryvera@nadbytecna.cz>", reply_to: "veryvera@nadbytecna.cz", templates: catalog };
+fs.writeFileSync(path.join(root, "catalog.json"), JSON.stringify(catalogDoc, null, 2) + "\n");
+const files = {};
+for (const job of jobs) {
+  files[`${job.dir}/${job.file}.html`] = job.html;
+  files[`${job.dir}/${job.file}.txt`] = job.text;
+}
+fs.writeFileSync(path.join(root, "templates.mjs"), `// Vygenerováno pomocí emails/write.mjs. Obsah je v modulu, aby ho Vercel funkce měla i bez souborů na disku.\nexport const catalog = ${JSON.stringify(catalogDoc, null, 2)};\nexport const files = ${JSON.stringify(files, null, 2)};\n`);
 console.log(`emails: ${catalog.length}`);

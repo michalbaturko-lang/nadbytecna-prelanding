@@ -51,9 +51,10 @@ test("canonical a og:url míří na vlastní absolutní adresu stránky", () => 
     assert.doesNotMatch(html, /nadbytecna-prelanding\.vercel\.app/, rel);
     seen.add(route);
   }
-  for (const route of ["/", "/tiskova-zprava/", "/ochrana-osobnich-udaju/", "/zasady/", "/o-nas/", "/kontakt/", "/cookies/", "/coming-soon/", "/sdilet-pribeh/", "/mohu-pomoci/", "/verin-pribeh/", "/pravidla-zverejnovani/", "/potrebuji-pomoc/"]) {
+  for (const route of ["/", "/tiskova-zprava/", "/ochrana-osobnich-udaju/", "/o-nas/", "/kontakt/", "/cookies/", "/coming-soon/", "/sdilet-pribeh/", "/mohu-pomoci/", "/verin-pribeh/", "/pravidla-zverejnovani/", "/potrebuji-pomoc/"]) {
     assert.ok(seen.has(route), route);
   }
+  assert.equal(seen.has("/zasady/"), false);
   assert.equal(read("tiskova-zprava/index.html").match(/<a href="(https:\/\/nadbytecna\.cz\/)">www\.nadbytecna\.cz<\/a>/)[1], "https://nadbytecna.cz/");
 });
 
@@ -92,7 +93,8 @@ test("homepage má dvě volby, osm karet a formuláře nic neodesílají", () =>
   assert.match(home, /<footer[\s\S]*href="\/ochrana-osobnich-udaju\/">Ochrana osobních údajů<\/a>/);
   assert.match(home, /href="\/cookies\/"/);
   assert.match(read("sitemap.xml"), /<loc>https:\/\/nadbytecna\.cz\/verin-pribeh\/<\/loc>/);
-  assert.doesNotMatch(read("sitemap.xml"), /\/admin\/|\/coming-soon\/|proverene-kontakty/);
+  assert.match(read("sitemap.xml"), /<loc>https:\/\/nadbytecna\.cz\/ochrana-osobnich-udaju\/<\/loc>/);
+  assert.doesNotMatch(read("sitemap.xml"), /\/admin\/|\/coming-soon\/|proverene-kontakty|\/zasady\/|\/kontakt\//);
   assert.equal(fs.existsSync(path.join(OUT, "proverene-kontakty/index.html")), false);
   assert.match(read("robots.txt"), /Disallow: \//);
   const choices = [...home.matchAll(/<a class="choice"[^>]*>([\s\S]*?)<\/a>/g)].map((m) => m[1]);
@@ -100,13 +102,20 @@ test("homepage má dvě volby, osm karet a formuláře nic neodesílají", () =>
   assert.ok(choices.every((c) => !c.includes("Potřebuji pomoc")));
   const pribeh = home.slice(home.indexOf('id="pribeh"'), home.indexOf("</section>"));
   assert.doesNotMatch(pribeh, /Čekáme na její text/);
-  assert.match(pribeh, /<a class="vid" href="\/verin-pribeh\/" data-video-open /);
+  assert.match(pribeh, /data-vera-video controls autoplay playsinline preload="metadata"/);
+  assert.doesNotMatch(pribeh, /\smuted[\s>]/);
   assert.equal(pribeh.match(/<img /g).length, 1);
   assert.match(pribeh, /src="\/video\/vera-pribeh-poster-v16\.jpg"[^>]*alt="Věra Komárová na plese"/);
-  assert.doesNotMatch(pribeh, /<video/);
+  assert.match(pribeh, /class="vid-pp"/);
   assert.match(home, /<script src="\/video\.js" defer><\/script>/);
+  const videoJs = fs.readFileSync(path.join(ROOT, "src/video.js"), "utf8");
+  assert.match(videoJs, /video\.muted = false/);
+  assert.match(videoJs, /pointerdown/);
+  assert.match(videoJs, /prefers-reduced-motion/);
+  assert.doesNotMatch(videoJs, /addEventListener\("click",[^)]*video/);
+  assert.match(videoJs, /controls = false/);
   assert.doesNotMatch(visible(home), /Spouštíme|Pracovní náhled|neběží|zatím není/);
-  assert.match(home, /Žádná žena není nadbytečná\./);
+  assert.match(home, /<h1><span>Pro všechny ženy, které poznaly zradu\.<\/span> <span>Společně najdeme sílu znovu vzlétnout\.<\/span><\/h1>/);
   assert.doesNotMatch(home, /class="lead"/)  // úvod bez doplňujícího textu, Příběh Věry navazuje hned
   assert.match(home, /<a class="choice choice-shop" id="cil" href="#parfem"><span class="choice-title">Předprodej parfému</);
   assert.match(home, /Podpořte platformu nadbytečná předobjednáním parfému!/);
@@ -197,8 +206,8 @@ test("homepage má dvě volby, osm karet a formuláře nic neodesílají", () =>
   assert.match(soon, /id="brzy-gdpr" type="checkbox"/);
   assert.doesNotMatch(soon, /id="brzy-gdpr"[^>]*checked/);
   assert.match(soon, /href="\/zasady\/"/);
+  assert.equal(fs.existsSync(path.join(OUT, "zasady/index.html")), false);
   assert.doesNotMatch(soon, /Správce osobních údajů|Věra Komárová|Nech e-mail/);
-  assert.match(read("zasady/index.html"), /<h1>Ochrana osobních údajů<\/h1>/);
   assert.match(soon, /mailto:veryvera@nadbytecna\.cz/);
   assert.match(soon, /noindex, nofollow, noarchive/);
   assert.match(soon, /src="\/cookies\.js"/);
@@ -229,12 +238,13 @@ test("právní stránky mluví o souhlasu a kontakt není krizová linka", () =>
   assert.match(read("cookies/index.html"), /jen po souhlasu/);
   const verin = read("verin-pribeh/index.html");
   assert.doesNotMatch(verin, /Čekáme na její text/);
-  assert.match(verin, /<video controls playsinline preload="none"[^>]*poster="\/video\/vera-pribeh-poster-v16\.jpg"/);
+  assert.match(verin, /data-vera-video controls autoplay playsinline preload="metadata"[^>]*poster="\/video\/vera-pribeh-poster-v16\.jpg"/);
+  assert.doesNotMatch(verin, /<video[^>]*\smuted[\s>]/);
   assert.match(verin, /<source src="\/video\/vera-pribeh-v16\.mp4" type="video\/mp4">/);
+  assert.match(verin, /<script src="\/video\.js" defer><\/script>/);
   assert.equal(verin.match(/class="choice"/g).length, 2);
   const policy = read("ochrana-osobnich-udaju/index.html");
   const rules = read("pravidla-zverejnovani/index.html");
-  assert.equal(read("zasady/index.html"), policy);
   assert.match(policy, /<p class="draft">Návrh<\/p>/);
   assert.doesNotMatch(policy + rules, /\[(DOPLNIT|ROZHODNOUT|OVĚŘIT)[^\]]*\]/);
   assert.doesNotMatch(policy + rules, /30254442|Lázeňská|Nadbytečná z\. ú\.|OpenAI/);
@@ -277,8 +287,9 @@ test("právní stránky mluví o souhlasu a kontakt není krizová linka", () =>
   }
   assert.match(home, /src="\/cookies.js"/);
   const homeDesc = home.match(/<meta name="description" content="([^"]*)"/)[1];
-  assert.equal(homeDesc, "Žádná žena není nadbytečná. Místo pro ženy v nerovném postavení a pro ty, kdo jim chtějí pomoci. Sdílejte příběh, nebo nabídněte pomoc.");
-  assert.equal(homeDesc.length, 135);
+  assert.equal(homeDesc, "Pro všechny ženy, které poznaly zradu. Společně najdeme sílu znovu vzlétnout.");
+  assert.match(home, /<title>nadbytečná — Pro všechny ženy, které poznaly zradu\.<\/title>/);
+  assert.doesNotMatch(home, /nerovném postavení/);
   assert.match(home, /property="og:image" content="https:\/\/nadbytecna\.cz\/og-v4\.jpg"/);
   assert.match(home, /og:image:width" content="1200"/);
   assert.match(home, /og:image:height" content="630"/);
@@ -328,7 +339,11 @@ test("indexace se zapne jen při ostrém buildu (index: true)", async () => {
   const args = { css: "", preload: "", heart: "", logoAttrs: "" };
   const off = renderPhase1({ ...args, draft: false });
   assert.match(off.pages["/"], /content="noindex, nofollow, noarchive"/);
-  assert.equal(off.pages["/zasady/"], off.pages["/ochrana-osobnich-udaju/"]);
+  assert.equal(off.pages["/zasady/"], undefined);
+  assert.match(off.pages["/"], /href="\/ochrana-osobnich-udaju\/"/);
+  assert.match(off.pages["/"], /href="\/cookies\/"/);
+  assert.match(off.pages["/"], /href="\/pravidla-zverejnovani\/"/);
+  assert.doesNotMatch(off.pages["/"], /href="\/zasady\/"/);
   assert.doesNotMatch(off.pages["/ochrana-osobnich-udaju/"] + off.pages["/pravidla-zverejnovani/"], /\[(DOPLNIT|ROZHODNOUT|OVĚŘIT)|class="draft"|30254442|Lázeňská/);
   assert.match(off.pages["/ochrana-osobnich-udaju/"], /Very Vera s\.r\.o\., IČO 30245354/);
   assert.match(off.pages["/"], /IČO: 30245354/);
@@ -398,4 +413,99 @@ test("Věřin příběh je na úvodu vedle videa, text doslova, na mobilu pod vi
   const css = fs.readFileSync(path.join(ROOT, "src", "scroll.css"), "utf8");
   assert.match(css, /grid-template-areas:"h v" "t v"/);
   assert.match(css, /grid-template-areas:"h" "v" "t"/);
+  assert.match(css, /#pribeh \.vid-frame/);
+});
+
+test("title, popis, Open Graph a Twitter jsou stejné a berou text stránky", () => {
+  const files = ["index.html", "o-nas/index.html", "tiskova-zprava/index.html", "verin-pribeh/index.html", "sdilet-pribeh/index.html", "mohu-pomoci/index.html", "cookies/index.html", "ochrana-osobnich-udaju/index.html", "pravidla-zverejnovani/index.html", "coming-soon/index.html"];
+  for (const file of files) {
+    const html = read(file);
+    const title = html.match(/<title>([^<]*)<\/title>/)[1];
+    const desc = html.match(/<meta name="description" content="([^"]*)"/)[1];
+    assert.equal(html.match(/property="og:title" content="([^"]*)"/)[1], title, file);
+    assert.equal(html.match(/property="og:description" content="([^"]*)"/)[1], desc, file);
+    assert.equal(html.match(/name="twitter:title" content="([^"]*)"/)[1], title, file);
+    assert.equal(html.match(/name="twitter:description" content="([^"]*)"/)[1], desc, file);
+  }
+  assert.equal(read("o-nas/index.html").match(/<meta name="description" content="([^"]*)"/)[1], "nadbytečná je místo Věry Komárové pro ženy v nerovném postavení a pro ty, kdo jim chtějí pomoci.");
+  assert.equal(read("tiskova-zprava/index.html").match(/<meta name="description" content="([^"]*)"/)[1], "Věra Komárová zakládá neziskovou organizaci Nadbytečná a uvádí také stejnojmenný parfém v rámci nové značky Very Vera");
+  assert.equal(read("sdilet-pribeh/index.html").match(/<meta name="description" content="([^"]*)"/)[1], "Napiš ho, nahraj hlasovou zprávu, nebo přilož audio.");
+  assert.equal(read("mohu-pomoci/index.html").match(/<meta name="description" content="([^"]*)"/)[1], "Vyber jednu možnost. Podle ní tě dokážeme zařadit.");
+  assert.equal(read("pravidla-zverejnovani/index.html").match(/<meta name="description" content="([^"]*)"/)[1], "Příběh zveřejníme jen tehdy, když k tomu dáš souhlas zvlášť.");
+  assert.match(read("tiskova-zprava/index.html"), /property="og:type" content="article"/);
+});
+
+test("JSON-LD na úvodu, v tiskové zprávě a u videa", () => {
+  const blocks = (file) => [...read(file).matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)].map((m) => JSON.parse(m[1]));
+  const homeLd = blocks("index.html");
+  assert.equal(homeLd.length, 1);
+  const types = homeLd[0]["@graph"].map((item) => item["@type"]);
+  assert.deepEqual(types, ["Organization", "WebSite"]);
+  const org = homeLd[0]["@graph"][0];
+  assert.equal(org.name, "Very Vera s.r.o.");
+  assert.equal(org.email, "veryvera@nadbytecna.cz");
+  assert.equal(org.identifier.value, "30245354");
+  assert.equal(org.address.streetAddress, "Dlouhá 713/34, Staré Město");
+  assert.equal(org.address.postalCode, "110 00");
+  assert.equal(org.address.addressLocality, "Praha 1");
+  assert.deepEqual(org.sameAs, ["https://veryvera22.cz"]);
+  assert.equal(org.telephone, undefined);
+  const article = blocks("tiskova-zprava/index.html")[0];
+  assert.equal(article["@type"], "Article");
+  assert.match(article.headline, /zakládá neziskovou organizaci Nadbytečná/);
+  assert.equal(article.datePublished, "2026-11-11");
+  const video = blocks("verin-pribeh/index.html")[0];
+  assert.equal(video["@type"], "VideoObject");
+  assert.equal(video.duration, "PT54S");
+  assert.equal(video.contentUrl, "https://nadbytecna.cz/video/vera-pribeh-v16.mp4");
+  const joined = JSON.stringify(homeLd) + JSON.stringify(article) + JSON.stringify(video);
+  assert.doesNotMatch(joined, /30254442|Lázeňská|Nadbytečná z\. ú\./);
+});
+
+test("veřejné llms soubory jsou ty, které build zapíše", async () => {
+  const { renderPhase1 } = await import("../lib/phase1-html.js");
+  const { llms, llmsFull } = renderPhase1({ css: "", preload: "", heart: "", logoAttrs: "", draft: false, index: true });
+  assert.equal(fs.readFileSync(path.join(ROOT, "public/llms.txt"), "utf8"), llms);
+  assert.equal(fs.readFileSync(path.join(ROOT, "public/llms-full.txt"), "utf8"), llmsFull);
+  assert.equal(read("llms.txt"), llms);
+  assert.equal(read("llms-full.txt"), llmsFull);
+});
+
+test("llms.txt a llms-full.txt citují aktuální web a ne alias /zasady/", () => {
+  const llms = read("llms.txt");
+  const full = read("llms-full.txt");
+  assert.match(llms, /https:\/\/nadbytecna\.cz\/ochrana-osobnich-udaju\//);
+  assert.match(llms, /https:\/\/nadbytecna\.cz\/llms-full\.txt/);
+  assert.match(llms, /https:\/\/veryvera22\.cz/);
+  assert.match(llms, /1 111 Kč/);
+  assert.match(llms, /1 889 Kč/);
+  assert.match(llms, /14\. 12\. 2026/);
+  assert.match(llms, /Expedujeme v týdnu od 14\. 12/);
+  assert.doesNotMatch(llms, /\/zasady\/|30254442|Lázeňská|Nadbytečná z\. ú\./);
+  assert.match(full, /Pouze 11 minut stačilo mému manželovi/);
+  assert.match(full, /Proč jsme vznikli\?/);
+  assert.match(full, /Pojďme si pomoct\./);
+  assert.match(full, /Věra Komárová zakládá neziskovou organizaci Nadbytečná a uvádí také stejnojmenný parfém/);
+  assert.match(full, /Na trh by měl vstoupit 14\. prosince letošního roku\./);
+  assert.match(full, /603 939 285/);
+});
+
+test("robots.txt v ostrém buildu boty nezakazuje a staré cesty mají přesměrování", async () => {
+  const { renderPhase1 } = await import("../lib/phase1-html.js");
+  const on = renderPhase1({ css: "", preload: "", heart: "", logoAttrs: "", draft: false, index: true });
+  assert.equal(on.robots, "User-agent: *\nAllow: /\nDisallow: /api/\nDisallow: /admin/\n\nSitemap: https://nadbytecna.cz/sitemap.xml\n");
+  for (const bot of ["GPTBot", "OAI-SearchBot", "ChatGPT-User", "ClaudeBot"]) {
+    assert.doesNotMatch(on.robots, new RegExp(`User-agent:\\s*${bot}[\\s\\S]*Disallow:\\s*/\\s*(?:\\n|$)`));
+  }
+  const redirects = JSON.parse(fs.readFileSync(path.join(ROOT, "vercel.json"), "utf8")).redirects;
+  const rule = (source) => redirects.find((item) => item.source === source);
+  assert.equal(rule("/zasady/").destination, "/ochrana-osobnich-udaju/");
+  assert.equal(rule("/zasady/").permanent, true);
+  assert.equal(rule("/o-platforme/").destination, "/o-nas/");
+  assert.equal(rule("/o-nasi-platforme/").destination, "/o-nas/");
+  assert.equal(rule("/zasady-ochrany-osobnich-udaju/").destination, "/ochrana-osobnich-udaju/");
+  assert.equal(rule("/pribeh/").destination, "/verin-pribeh/");
+  assert.equal(rule("/kontakt/").destination, "/o-nas/");
+  assert.equal(rule("/kontakt/").permanent, false);
+  assert.equal(rule("/sk/zasady-ochrany-osobnych-udajov/").destination, "/ochrana-osobnich-udaju/");
 });
