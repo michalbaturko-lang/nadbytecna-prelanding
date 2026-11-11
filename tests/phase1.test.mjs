@@ -102,7 +102,7 @@ test("homepage má dvě volby, osm karet a formuláře nic neodesílají", () =>
   assert.ok(choices.every((c) => !c.includes("Potřebuji pomoc")));
   const pribeh = home.slice(home.indexOf('id="pribeh"'), home.indexOf("</section>"));
   assert.doesNotMatch(pribeh, /Čekáme na její text/);
-  assert.match(pribeh, /data-vera-video controls autoplay playsinline preload="metadata"/);
+  assert.match(pribeh, /data-vera-video controls autoplay playsinline preload="auto"/);
   assert.doesNotMatch(pribeh, /\smuted[\s>]/);
   assert.equal(pribeh.match(/<img /g).length, 1);
   assert.match(pribeh, /src="\/video\/vera-pribeh-poster-v16\.jpg"[^>]*alt="Věra Komárová na plese"/);
@@ -110,6 +110,10 @@ test("homepage má dvě volby, osm karet a formuláře nic neodesílají", () =>
   assert.match(home, /<script src="\/video\.js" defer><\/script>/);
   const videoJs = fs.readFileSync(path.join(ROOT, "src/video.js"), "utf8");
   assert.match(videoJs, /video\.muted = false/);
+  assert.match(videoJs, /video\.preload = "auto"/);
+  assert.match(videoJs, /NotAllowedError/);
+  assert.match(videoJs, /addEventListener\("canplay"/);
+  assert.match(videoJs, /addEventListener\("loadeddata"/);
   assert.match(videoJs, /pointerdown/);
   assert.match(videoJs, /prefers-reduced-motion/);
   assert.doesNotMatch(videoJs, /addEventListener\("click",[^)]*video/);
@@ -238,7 +242,7 @@ test("právní stránky mluví o souhlasu a kontakt není krizová linka", () =>
   assert.match(read("cookies/index.html"), /jen po souhlasu/);
   const verin = read("verin-pribeh/index.html");
   assert.doesNotMatch(verin, /Čekáme na její text/);
-  assert.match(verin, /data-vera-video controls autoplay playsinline preload="metadata"[^>]*poster="\/video\/vera-pribeh-poster-v16\.jpg"/);
+  assert.match(verin, /data-vera-video controls autoplay playsinline preload="auto"[^>]*poster="\/video\/vera-pribeh-poster-v16\.jpg"/);
   assert.doesNotMatch(verin, /<video[^>]*\smuted[\s>]/);
   assert.match(verin, /<source src="\/video\/vera-pribeh-v16\.mp4" type="video\/mp4">/);
   assert.match(verin, /<script src="\/video\.js" defer><\/script>/);
