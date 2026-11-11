@@ -376,6 +376,10 @@
   ],
   "crons": [
     {
+      "path": "/api/shop-reconcile/",
+      "schedule": "17 * * * *"
+    },
+    {
       "path": "/api/retention/",
       "schedule": "0 3 * * *"
     },
@@ -406,6 +410,15 @@
     "api/admin.js": {
       "maxDuration": 60,
       "includeFiles": "assets/pdf/**"
+    },
+    "api/admin-shop.js": {
+      "maxDuration": 45
+    },
+    "api/shop-reconcile.js": {
+      "maxDuration": 60
+    },
+    "api/shopify-webhooks.js": {
+      "maxDuration": 10
     },
     "api/mail-sync.js": {
       "maxDuration": 180
