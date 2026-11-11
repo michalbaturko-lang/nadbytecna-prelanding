@@ -4,7 +4,7 @@ import { chromium } from "playwright";
 
 const base = (process.argv[2] || "https://nadbytecna.cz").replace(/\/$/, "");
 const apex = /^https:\/\/(www\.)?nadbytecna\.cz$/.test(base);
-const pages = ["/", "/o-nas/", "/tiskova-zprava/", "/verin-pribeh/", "/sdilet-pribeh/", "/mohu-pomoci/", "/cookies/", "/ochrana-osobnich-udaju/", "/pravidla-zverejnovani/"];
+const pages = ["/", "/o-nas/", "/tiskova-zprava/", "/napsali-o-nas/", "/verin-pribeh/", "/sdilet-pribeh/", "/mohu-pomoci/", "/cookies/", "/ochrana-osobnich-udaju/", "/pravidla-zverejnovani/"];
 const widths = [320, 360, 390, 430, 768, 1024, 1280, 1440];
 const results = [];
 const ok = (name, pass, detail = "") => { results.push({ name, pass, detail }); console.log(`${pass ? "OK  " : "FAIL"} ${name}${detail ? " — " + detail : ""}`); };

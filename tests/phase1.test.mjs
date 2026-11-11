@@ -51,7 +51,7 @@ test("canonical a og:url míří na vlastní absolutní adresu stránky", () => 
     assert.doesNotMatch(html, /nadbytecna-prelanding\.vercel\.app/, rel);
     seen.add(route);
   }
-  for (const route of ["/", "/tiskova-zprava/", "/ochrana-osobnich-udaju/", "/o-nas/", "/kontakt/", "/cookies/", "/coming-soon/", "/sdilet-pribeh/", "/mohu-pomoci/", "/verin-pribeh/", "/pravidla-zverejnovani/", "/potrebuji-pomoc/"]) {
+  for (const route of ["/", "/tiskova-zprava/", "/napsali-o-nas/", "/ochrana-osobnich-udaju/", "/o-nas/", "/kontakt/", "/cookies/", "/coming-soon/", "/sdilet-pribeh/", "/mohu-pomoci/", "/verin-pribeh/", "/pravidla-zverejnovani/", "/potrebuji-pomoc/"]) {
     assert.ok(seen.has(route), route);
   }
   assert.equal(seen.has("/zasady/"), false);
@@ -512,4 +512,18 @@ test("robots.txt v ostrém buildu boty nezakazuje a staré cesty mají přesměr
   assert.equal(rule("/kontakt/").destination, "/o-nas/");
   assert.equal(rule("/kontakt/").permanent, false);
   assert.equal(rule("/sk/zasady-ochrany-osobnych-udajov/").destination, "/ochrana-osobnich-udaju/");
+});
+
+test("Napsali o nás: karty s citací, odkazy na originály, v hlavičce, patičce i sitemapě", () => {
+  const h = read("napsali-o-nas/index.html");
+  assert.equal((h.match(/class="media-card"/g) || []).length, 2);
+  assert.match(h, /href="https:\/\/www\.e15\.cz\/byznys\/[^"]+" target="_blank" rel="noopener"/);
+  assert.match(h, /href="https:\/\/www\.newstream\.cz\/[^"]+" target="_blank" rel="noopener"/);
+  for (const q of h.match(/<blockquote class="media-quote"><p>„([^“]+)“/g)) assert.ok(q.split(/\s+/).length < 16, q);
+  for (const f of ["index.html", "o-nas/index.html", "napsali-o-nas/index.html"]) {
+    const x = read(f);
+    assert.match(x, /<nav class="site-nav"[\s\S]*?<a href="\/napsali-o-nas\/">Napsali o nás<\/a>[\s\S]*?<\/nav>/, f + ": hlavička");
+    assert.match(x, /<ul class="foot-links">[\s\S]*?<a href="\/napsali-o-nas\/">Napsali o nás<\/a>[\s\S]*?<\/ul>/, f + ": patička");
+  }
+  assert.match(read("sitemap.xml"), /\/napsali-o-nas\//);
 });
