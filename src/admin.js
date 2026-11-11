@@ -1,4 +1,4 @@
-// Citlivá data se neukládají mimo paměť stránky. Přihlašovací token je pouze v sessionStorage.
+// Obsah zpráv zůstává v paměti stránky; přihlášení má pevný limit 30 dní.
 (function (global) {
   "use strict";
   var sessionKey = "nadbytecna-admin";
@@ -50,15 +50,10 @@
     return { verifier: verifier, challenge: b64url(new Uint8Array(digest)) };
   }
   function loadSession() {
-    try {
-      return JSON.parse(sessionStorage.getItem(sessionKey) || "null");
-    } catch (e) {
-      return null;
-    }
+    return global.NadbytecnaAdminSession.load();
   }
   function saveSession(s) {
-    if (!s) sessionStorage.removeItem(sessionKey);
-    else sessionStorage.setItem(sessionKey, JSON.stringify(s));
+    global.NadbytecnaAdminSession.save(s);
   }
   async function authFetch(path, opt) {
     var c = cfg();
@@ -101,23 +96,33 @@
     if (!res.ok) throw new Error("refresh");
     return res.json();
   }
-  function asSession(data) {
+  function asSession(data, previous) {
     return {
       access_token: data.access_token,
       refresh_token: data.refresh_token,
       expires_at: Date.now() + (Number(data.expires_in) || 3600) * 1000 - 15000,
+      remember_until: previous && previous.remember_until || Date.now() + 30 * 24 * 3600e3,
     };
   }
-  async function current() {
+  var refreshing = null;
+  async function currentUnlocked() {
     var epoch = S.authEpoch;
     var s = loadSession();
     if (!s || !s.access_token) return null;
     if (s.expires_at && s.expires_at < Date.now() && s.refresh_token) {
-      s = asSession(await refresh(s));
+      s = asSession(await refresh(s), s);
       if (epoch !== S.authEpoch || !loadSession()) return null;
       saveSession(s);
     }
     return s;
+  }
+  function current() {
+    if (refreshing) return refreshing;
+    var run = function () { return currentUnlocked(); };
+    var locks = global.navigator && global.navigator.locks;
+    refreshing = (locks ? locks.request("nadbytecna-admin-refresh", run) : run())
+      .finally(function () { refreshing = null; });
+    return refreshing;
   }
   var S = {
     rows: [],
@@ -369,7 +374,7 @@
       audio.load();
     });
   }
-  async function logout() {
+  async function logout(remote) {
     var s = loadSession();
     S.authEpoch++;
     S.serial++;
@@ -408,7 +413,7 @@
     $("admin-detail").hidden = true;
     $("admin-app").classList.remove("detail-open");
     showLogin();
-    if (s) {
+    if (s && remote !== true) {
       fetch("/api/admin/", {
         method: "POST",
         headers: {
@@ -434,11 +439,17 @@
     );
   });
   setInterval(function () {
-    if (loadSession() && Date.now() - lastActivity >= 12 * 3600e3) {
+    if (S.user && !loadSession()) {
       logout();
-      say("Po 12 hodinách nečinnosti jste odhlášeni.");
+      say("Platnost přihlášení skončila. Přihlaste se znovu.");
     }
   }, 30000);
+  global.addEventListener("storage", function (event) {
+    if ((event.key === sessionKey || event.key === null) && !loadSession()) {
+      logout(true);
+      say("Jste odhlášeni.");
+    }
+  });
   function syncUrl() {
     var p = new URLSearchParams();
     Object.keys(S.filters).forEach(function (k) {

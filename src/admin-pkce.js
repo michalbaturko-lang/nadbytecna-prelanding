@@ -1,4 +1,4 @@
-// Only a short-lived PKCE verifier is shared across tabs; login tokens stay in sessionStorage.
+// A short-lived PKCE proof is shared across tabs independently of the remembered login.
 (function (global) {
   "use strict";
   var key = "nadbytecna-admin-pkce";
