@@ -121,7 +121,7 @@ ${LANGS.filter((l) => l !== lang).map((l) => `<meta property="og:locale:alternat
 <meta property="og:title" content="${esc(og.title)}">
 <meta property="og:description" content="${esc(og.desc)}">
 <meta property="og:url" content="${url}">
-<meta property="og:image" content="${SITE}/og-v3.jpg">
+<meta property="og:image" content="${SITE}/og-v4.jpg">
 <meta property="og:image:type" content="image/jpeg">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
@@ -129,7 +129,7 @@ ${LANGS.filter((l) => l !== lang).map((l) => `<meta property="og:locale:alternat
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="${esc(og.title)}">
 <meta name="twitter:description" content="${esc(og.desc)}">
-<meta name="twitter:image" content="${SITE}/og-v3.jpg">` : ""}
+<meta name="twitter:image" content="${SITE}/og-v4.jpg">` : ""}
 ${PRELOAD}
 <style>${css}</style>
 ${ld}
@@ -401,7 +401,7 @@ function build(out, variant) {
   const urls = LANGS.flatMap((l) => [PATHS[l].home].concat(C.complete ? [PATHS[l].policy] : []));
   const altOf = (u) => { const l = LANGS.find((x) => PATHS[x].home === u || PATHS[x].policy === u); const key = PATHS[l].home === u ? "home" : "policy"; return LANGS.map((x) => `<xhtml:link rel="alternate" hreflang="${x}" href="${SITE}${PATHS[x][key]}"/>`).join(""); };
   write(path.join(out, "sitemap.xml"), `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">\n${urls.map((u) => `<url><loc>${SITE}${u}</loc>${altOf(u)}</url>`).join("\n")}\n</urlset>\n`);
-  write(path.join(out, "robots.txt"), LIVE ? `User-agent: *\nAllow: /\nDisallow: /api/\n\nSitemap: ${SITE}/sitemap.xml\n` : `User-agent: *\nAllow: /og-v3.jpg\nDisallow: /\n`);
+  write(path.join(out, "robots.txt"), LIVE ? `User-agent: *\nAllow: /\nDisallow: /api/\n\nSitemap: ${SITE}/sitemap.xml\n` : `User-agent: *\nAllow: /og-v4.jpg\nDisallow: /\n`);
 }
 
 function buildPhase1(out) {

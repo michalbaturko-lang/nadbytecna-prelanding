@@ -40,9 +40,9 @@ test("coming soon pustí jen úvod, zásady a soubory", () => {
 });
 
 test("og adresa se přepíše podle hostitele", () => {
-  const html = '<meta property="og:image" content="https://nadbytecna.cz/og-v3.jpg"><link rel="canonical" href="https://nadbytecna.cz/">';
+  const html = '<meta property="og:image" content="https://nadbytecna.cz/og-v4.jpg"><link rel="canonical" href="https://nadbytecna.cz/">';
   const out = withOrigin(html, "https://nadbytecna-prelanding.vercel.app");
-  assert.match(out, /https:\/\/nadbytecna-prelanding\.vercel\.app\/og-v3\.jpg/);
+  assert.match(out, /https:\/\/nadbytecna-prelanding\.vercel\.app\/og-v4\.jpg/);
   assert.match(out, /href="https:\/\/nadbytecna-prelanding\.vercel\.app\/"/);
 });
 
