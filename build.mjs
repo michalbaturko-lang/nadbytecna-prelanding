@@ -140,21 +140,21 @@ ${webAnalyticsHtml}
 const footer = (lang, switcher = null) => {
   const t = TXT[lang];
   const sw = switcher ? `<br><a class="lang" href="${switcher}" hreflang="${t.otherLang.code}" lang="${t.otherLang.code}">${t.otherLang.label}</a>` : "";
-  return `<footer class="foot"><img class="dom" src="/img/nadbytecna-script.svg" width="1802" height="517" alt="nadbytečná"><a class="mail" href="mailto:veryvera@nadbytecna.cz">veryvera@nadbytecna.cz</a><br><a href="${PATHS[lang].policy}">${t.policyLink}</a>${C.complete ? `<br>${esc(C.name)}, IČO ${esc(C.ico)}` : ""}${sw}</footer>`;
+  return `<footer class="foot"><img class="dom" src="/img/nadbytecna-script-v2.svg" width="1802" height="517" alt="nadbytečná"><a class="mail" href="mailto:veryvera@nadbytecna.cz">veryvera@nadbytecna.cz</a><br><a href="${PATHS[lang].policy}">${t.policyLink}</a>${C.complete ? `<br>${esc(C.name)}, IČO ${esc(C.ico)}` : ""}${sw}</footer>`;
 };
 const LOGO_ATTRS = 'width="1802" height="517" data-split="0" data-base="0.6333" alt="nadbytečná"';
 
 function home(lang, variant) {
   const t = TXT[lang], P = PATHS[lang], cl = CLAIMS[lang][variant];
   const jsonld = [{ "@context": "https://schema.org", "@type": "WebSite", name: t.brand, url: SITE + P.home, inLanguage: lang }];
-  if (C.complete) jsonld.push({ "@context": "https://schema.org", "@type": "Organization", name: C.name, url: SITE + "/", identifier: C.ico, email: C.email, logo: SITE + "/img/nadbytecna-script.svg" });
+  if (C.complete) jsonld.push({ "@context": "https://schema.org", "@type": "Organization", name: C.name, url: SITE + "/", identifier: C.ico, email: C.email, logo: SITE + "/img/nadbytecna-script-v2.svg" });
   const ld = jsonld.map((o) => `<script type="application/ld+json">${JSON.stringify(o)}</script>`).join("\n");
   return `${head({ lang, title: t.title, desc: t.sub, path: P.home, og: { title: `${cl.h1} ${cl.lead}`, desc: t.sub }, ld, alt: HOME_ALT })}
 <body data-page="home">
 <div class="page">
 <main class="main">
 <div class="brand">
-<img class="logo" src="/img/nadbytecna-script.svg" ${LOGO_ATTRS} fetchpriority="high" decoding="async">
+<img class="logo" src="/img/nadbytecna-script-v2.svg" ${LOGO_ATTRS} fetchpriority="high" decoding="async">
 <div class="rule" aria-hidden="true">${HEART}</div>
 </div>
 <div class="content">
@@ -193,7 +193,7 @@ function simplePage(lang, { page, c }) {
 <div class="page">
 <main class="main main-one">
 <div class="card">
-<a href="${P.home}"><img class="logo" src="/img/nadbytecna-script.svg" ${LOGO_ATTRS}></a>
+<a href="${P.home}"><img class="logo" src="/img/nadbytecna-script-v2.svg" ${LOGO_ATTRS}></a>
 <div id="state" hidden>
 <div id="live" tabindex="-1" aria-live="polite"><h1 id="h">${esc(c.h1)}</h1><p id="p">${esc(c.p)}</p></div>
 ${c.button ? `<button class="cta" id="action" type="button">${esc(c.button)}</button>` : ""}
@@ -308,7 +308,7 @@ ${C.complete ? `<p><a href="mailto:${esc(C.email)}">${esc(C.email)}</a></p>` : T
 <div class="page">
 <main class="main main-one main-top">
 <article class="doc">
-<a class="back" href="${P.home}"><img src="/img/nadbytecna-script.svg" width="1802" height="517" alt="${t.backAlt}"></a>
+<a class="back" href="${P.home}"><img src="/img/nadbytecna-script-v2.svg" width="1802" height="517" alt="${t.backAlt}"></a>
 ${sk ? skBody : cs}
 <p><a class="lang" href="${PATHS[t.otherLang.code].policy}" hreflang="${t.otherLang.code}" lang="${t.otherLang.code}">${t.otherLang.label}</a></p>
 </article>
@@ -331,7 +331,7 @@ function thanksPage(lang, { slug, c, extra = "", vote = false }) {
 <div class="page">
 <main class="main">
 <div class="brand">
-<a href="${P.home}" aria-label="${t.brand}"><img class="logo" src="/img/nadbytecna-script.svg" ${LOGO_ATTRS} fetchpriority="high" decoding="async"></a>
+<a href="${P.home}" aria-label="${t.brand}"><img class="logo" src="/img/nadbytecna-script-v2.svg" ${LOGO_ATTRS} fetchpriority="high" decoding="async"></a>
 <div class="rule" aria-hidden="true">${HEART}</div>
 </div>
 <div class="content" role="status">

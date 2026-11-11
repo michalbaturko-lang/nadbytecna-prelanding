@@ -16,7 +16,7 @@
   var SPLIT = parseFloat(img.getAttribute("data-split"));        // kde v obrázku začíná rukopis (0 = celý obrázek je nápis)
   var PHRASE = document.documentElement.lang === "sk" ? "Zlomil mi srdce. Nie krídla." : "Zlomil mi srdce. Ne křídla.";
   var PINK = [0xDB, 0x0B, 0x5F], GOLD = [0xA9, 0x80, 0x2F];
-  var SCRIPT = /nadbytecna-script\.svg/.test(img.getAttribute("src") || "");
+  var SCRIPT = /nadbytecna-script(-v\d+)?\.svg/.test(img.getAttribute("src") || "");
   var DRAW_SY = SCRIPT ? 0 : 688;                                 // lockup má rukopis níž; samotný nápis už začíná nahoře
   var DRAW_OX = 0;                                                // souřadnice písmen sedí na levý okraj zobrazeného nápisu
   var CHAIN = true;                                               // po 2. přiblížení hned padá i zbytek
