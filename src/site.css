@@ -424,6 +424,11 @@ body[data-page="phase1"] .hero .lead{margin:0}
   .site-nav{order:4;display:none;flex-basis:100%;flex-direction:column;padding:.2rem 0 .4rem}
   .nav-toggle:checked~.site-nav{display:flex}
 }
+@media (min-width:768px) and (max-width:1099px){
+  .nav-burger{display:inline-flex}
+  .site-nav{order:4;display:none;flex-basis:100%;flex-direction:column;padding:.2rem 0 .4rem}
+  .nav-toggle:checked~.site-nav{display:flex}
+}
 .split{display:grid;gap:1.25rem;padding-top:2.4rem}
 .split > .block{padding-top:0}
 .claims{min-width:0}
