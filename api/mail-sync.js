@@ -6,9 +6,11 @@ import { readM365DeltaPage } from "../lib/m365-readonly.mjs";
 import { delegatedMode, getDelegatedMailToken, oauthRpc } from "../lib/mail-oauth-service.mjs";
 import { readM365OAuthConfig } from "../lib/m365-oauth-client.mjs";
 import { runMailSync, MAIL_SYNC_ERROR_CODES } from "../lib/mail-sync-worker.mjs";
+import { runMailRules } from "../lib/mail-rules-worker.mjs";
 
 export function createMailSyncHandler({
   authorized = cronAuthorized,
+  runRules,
   run = () => runMailSync({
     rpc,
     prepare: (env) => {
@@ -34,12 +36,24 @@ export function createMailSyncHandler({
       return json(res, 405, { error: "method" });
     }
     if (!authorized(req)) return json(res, 401, { error: "auth" });
-    try {
-      return json(res, 200, await run());
-    } catch (error) {
+    let result, status = 200;
+    try { result = await run(); }
+    catch (error) {
       const code = MAIL_SYNC_ERROR_CODES.has(error?.code) ? error.code : "mail_sync_failed";
-      return json(res, 503, { error: code });
+      result = { error: code }; status = 503;
     }
+    // Local backfill is independent of provider throttling or a temporarily expired connection.
+    if (runRules) {
+      try {
+        const rules = await runRules();
+        if (!rules?.skipped) result = { ...result, rules };
+      } catch {
+        // Labeling must never make a committed import appear failed or log source content.
+        console.warn(JSON.stringify({ event: "mail_rules_failed", code: "mail_rules_unavailable" }));
+        result = { ...result, rules: { failed: true } };
+      }
+    }
+    return json(res, status, result);
   };
 }
-export default createMailSyncHandler();
+export default createMailSyncHandler({ runRules: () => runMailRules({ rpc }) });

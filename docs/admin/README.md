@@ -91,3 +91,17 @@ U hlasovky bez přepisu PDF výslovně uvádí, že je k dispozici jen zvuk v p�
 Export používá existující oprávnění administrátora a uložený záznam, není veřejně dostupný, neukládá další kopii textu do databáze ani nespouští AI. Audit obsahuje pouze typ exportu, ID záznamu a počet stran. Není potřeba migrace databáze ani další služba.
 
 Ověření doplnění: 355 testů, 34 obecných browser kontrol, skutečné stažení přes lokální API/databázi při šesti šířkách 320–1920 px, nulové nálezy přístupnosti a ochrana proti opožděnému stažení po odhlášení. Kontrola výsledného PDF ověřila českou diakritiku a úplnou shodu všech odstavců se zdrojovým textem.
+
+## Místní štítky a Podezřelé — první fáze
+
+Příchozí i historické místní kopie e-mailů dostávají více orientačních štítků podle pevných pravidel. Zpracování běží v existujícím minutovém načítání, po dávkách 25 vláken; nové a změněné zprávy mají přednost před opakováním historické klasifikace. Lokální třídění pokračuje i při výpadku Microsoftu. AI se tím nezapíná a Microsoft zůstává pouze pro čtení.
+
+V Poště je výchozí pohled Doručené, samostatný pohled Podezřelé a filtr podle štítku. Tlačítko Štítky otevře důvod pravidla a ruční úpravy. Ruční odebrání automatického štítku se pamatuje; obnovení normální pošty potlačí štítky Spam / Podezření na podvod. Změna obsahu mezitím vyžaduje nové potvrzení. Zprávy, workflow stavy a originály se tříděním nemažou ani nemění.
+
+Pravidla jsou orientační. Žádosti o pomoc, smíšená vlákna, neúplný kontext a přihlašovací či platební výzvy zůstávají viditelné k ověření. Signály Microsoft antispamu zatím nejsou součástí rozhodování; svévolné hlavičky ze zprávy se ignorují. Bez výslovně nastaveného seznamu blokovaných odesílatelů se žádná zpráva automaticky neschová.
+
+Přepínač `MAIL_RULES_ENABLED=false` zastaví automatické vyhodnocování; výchozí stav je zapnuto. Volitelné `MAIL_RULES_BLOCKED_SENDERS` obsahuje JSON pole maximálně 200 přesných e-mailových adres, nikoli domén nebo vzorů. Shoda se seznamem může odložit pouze úplné jediné vlákno bez chráněného/nejasného obsahu. Změna seznamu vyvolá přehodnocení; ruční rozhodnutí zůstávají nad pravidly.
+
+Migrační verze `20261111202111` ukládá soukromé štítky, původ a verzi pravidel. Běžné nové odpovědi zachovávají ruční úpravy; skutečné odstranění zdrojové zprávy vyčistí nové závěry i související audit a zneplatní staré rozpracované výsledky. GDPR a JSON exporty zahrnují štítky a jejich původ.
+
+Ověřeno: 384 testů, 8 databázových scénářů včetně soukromých oprávnění, revizí, exportů a částečného výmazu; 11 nezávislých rizikových scénářů. Skutečný lokální průchod API/databáze/prohlížeče ověřil přidání a odebrání štítku, odložení a návrat pošty na šesti šířkách 320–1920 px bez přetékání či nálezů přístupnosti. Produkční zkouška migrace proběhla nejprve s ROLLBACK a beze změny počtu zdrojových zpráv.
