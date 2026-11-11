@@ -1,0 +1,12 @@
+{
+  "checks": 6,
+  "results": [
+    "concurrent tabs share one token refresh and keep the original deadline",
+    "closing all tabs and recreating browser context restores the existing login without email",
+    "return after 29 days refreshes access without extending the remembered-login deadline",
+    "after 30 days credentials are removed and protected content is not rendered",
+    "logout clears both tabs and a late refresh cannot restore credentials or private content",
+    "reopening after explicit logout stays logged out"
+  ],
+  "environment": "offline browser with real local API/database and simulated Auth refresh; no real credentials or emails"
+}

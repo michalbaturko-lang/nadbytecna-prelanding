@@ -39,9 +39,9 @@ try {
  checks.push('public homepage and both forms render visible text and controls in Jost');
  const callback=await ctx.newPage();await callback.goto(s.url+'/admin/?code=synthetic-code');await callback.locator('.story-card').first().waitFor();
  assert.equal(exchanges,1);assert.equal(new URL(callback.url()).search,'');checks.push('new-tab callback exchanges matching PKCE proof and loads local authenticated API');
- const stored=await callback.evaluate(()=>({pending:localStorage.getItem('nadbytecna-admin-pkce'),keys:Object.keys(localStorage),session:JSON.parse(sessionStorage.getItem('nadbytecna-admin'))}));
- assert.equal(stored.pending,null);assert.equal(stored.keys.includes('nadbytecna-admin'),false);assert.equal(stored.session.access_token,token);checks.push('pending proof removed; access and refresh tokens stay out of persistent storage');
- const replay=await ctx.newPage();await replay.goto(s.url+'/admin/?code=synthetic-code');await replay.getByText(/Požádejte zde o nový odkaz/).waitFor();assert.equal(exchanges,1);checks.push('callback without proof does not exchange a code or sign in');
+ const stored=await callback.evaluate(()=>({pending:localStorage.getItem('nadbytecna-admin-pkce'),keys:Object.keys(localStorage),session:JSON.parse(localStorage.getItem('nadbytecna-admin'))}));
+ assert.equal(stored.pending,null);assert.equal(stored.keys.includes('nadbytecna-admin'),true);assert.equal(stored.session.access_token,token);assert.ok(stored.session.remember_until>Date.now());checks.push('pending proof removed; login is remembered with a fixed 30-day deadline');
+ const replay=await ctx.newPage();await replay.goto(s.url+'/admin/?code=synthetic-code');await replay.locator('.story-card').first().waitFor();assert.equal(exchanges,1);checks.push('replayed callback does not exchange a code again; existing remembered login stays valid');
  await ctx.close();
  const failed=await browser.newContext();await failed.route('https://**/*',route=>route.fulfill({status:429,contentType:'application/json',body:JSON.stringify({code:'over_email_send_rate_limit'})}));
  const failedPage=await failed.newPage();await failedPage.goto(s.url+'/admin/');await failedPage.locator('#admin-email').fill('admin@example.invalid');await failedPage.locator('#admin-send').click();await failedPage.getByText(/Odesílání přihlašovacích e-mailů je dočasně omezené/).waitFor();
