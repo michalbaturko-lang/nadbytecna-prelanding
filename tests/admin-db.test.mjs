@@ -171,7 +171,7 @@ test("allowlist enrollment and session idle expiry; RLS outsiders see no rows", 
   );
   await db.exec("reset role");
   await db.exec(
-    `UPDATE private.admin_sessions SET last_seen=now()-interval '13 hours'`,
+    `UPDATE private.admin_sessions SET last_seen=now()-interval '31 days'`,
   );
   await db.exec("set role authenticated");
   assert.equal(
