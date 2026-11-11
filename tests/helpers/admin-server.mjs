@@ -65,6 +65,7 @@ export async function startAdminServer({
     "20261110224500_mail_triage_review.sql",
     "20261110224600_mail_message_metadata.sql",
     "20261110230000_mail_ai_scope.sql",
+    "20261111153428_admin_inbox_previews.sql",
   ]) await db.exec(fs.readFileSync(new URL("../../supabase/migrations/" + filename, import.meta.url), "utf8"));
   const mailLease = (
     await db.query(
