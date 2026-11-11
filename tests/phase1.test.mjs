@@ -38,7 +38,8 @@ test("hero má psací nápis a stejné fluid.js, app.js se nenačítá", () => {
   assert.match(logo, /data-split="0"/);
   assert.match(logo, /data-base="0\.6333"/);
   assert.match(logo, /alt="nadbytečná"/);
-  assert.doesNotMatch(home, /nadbytecna-lockup|VERY VERA|very-vera\.cz/);
+  // Věřin schválený příběh (blok .pribeh-text) smí zmiňovat VERY VERA; jinde na úvodu ne.
+  assert.doesNotMatch(home.replace(/<div class="pribeh-text">[\s\S]*?<\/div>/, ""), /nadbytecna-lockup|VERY VERA|very-vera\.cz/);
   assert.equal(home.match(/data-split="/g).length, 1);
   assert.match(home, /<script src="\/fluid\.js" defer><\/script>/);
   assert.doesNotMatch(home, /app\.js/);
@@ -155,7 +156,7 @@ test("homepage má dvě volby, osm karet a formuláře nic neodesílají", () =>
   assert.match(helpJs, /greeting:/);
   assert.doesNotMatch(help, /Už jsem si tím prošla/);
   assert.doesNotMatch(read("potrebuji-pomoc/index.html"), /Instagram|Facebook|e-shop|Odkaz na web/);
-  assert.doesNotMatch(visible(home), /50 %|Dermacol|Kateřina|Maruška|Miklíková|Golden Line|Malé nám|Dlouhá 34|Supabase|Resend/i);
+  assert.doesNotMatch(visible(home.replace(/<div class="pribeh-text">[\s\S]*?<\/div>/, "")), /50 %|Dermacol|Kateřina|Maruška|Miklíková|Golden Line|Malé nám|Dlouhá 34|Supabase|Resend/i);
   const soon = read("coming-soon/index.html");
   assert.match(soon, /<img class="logo"[^>]*src="\/img\/nadbytecna-script-v2\.svg"[^>]*data-split="0"/);
   assert.match(soon, /src="\/fluid\.js"/);
@@ -324,4 +325,17 @@ test("tisková zpráva: podstránka s logem, odkaz v hlavičce i patičce, text 
     assert.match(h, /<ul class="foot-links">[\s\S]*?<a href="\/tiskova-zprava\/">Tisková zpráva<\/a>[\s\S]*?<\/ul>/, `${f}: patička`);
   }
   assert.match(read("sitemap.xml"), /\/tiskova-zprava\//);
+});
+
+test("Věřin příběh je na úvodu vedle videa, text doslova, na mobilu pod videem", () => {
+  const home = read("index.html");
+  const block = home.match(/<div class="pribeh-text">([\s\S]*?)<\/div>/)[1];
+  assert.equal((block.match(/<p>/g) || []).length, 5);
+  assert.match(block, /^\s*<p>Pouze 11 minut stačilo mému manželovi, aby mě označil za nadbytečnou ve firmě, kterou jsme spolu 24 let budovali\./);
+  assert.match(block, /Proto uvádím na trh novou vůně VERY VERA nadbytečná\. Vzdor\? Možná\./);
+  assert.match(block, /označit ženu za pár minut za nadbytečnou\.<\/p>\s*$/);
+  assert.doesNotMatch(block, /Vaše Věra Komárová|tvář/);
+  const css = fs.readFileSync(path.join(ROOT, "src", "scroll.css"), "utf8");
+  assert.match(css, /grid-template-areas:"h v" "t v"/);
+  assert.match(css, /grid-template-areas:"h" "v" "t"/);
 });
