@@ -1080,6 +1080,10 @@
           "Anonymita se týká zveřejnění. Kontakty jsou přístupné pouze administrátorům.",
         ),
       );
+    if (row.greeting) {
+      contact.append(node("p", "hint", "Anonymní oslovení"));
+      contact.append(node("p", "", row.greeting));
+    }
     contact.append(node("p", "", row.email));
     if (row.phone) contact.append(node("p", "", row.phone));
     contact.append(

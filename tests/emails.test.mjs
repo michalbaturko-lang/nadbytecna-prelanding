@@ -24,6 +24,12 @@ test("šablony pro Resend jsou v repu a nic neposílají", () => {
   for (const t of templates) {
     const text = fs.readFileSync(path.join(root, "emails", t.text), "utf8");
     const html = fs.readFileSync(path.join(root, "emails", t.html), "utf8");
+    assert.match(html, /#DB0B5F/);
+    assert.match(html, /https:\/\/nadbytecna\.cz\/img\/very-vera-wordmark\.png/);
+    assert.match(html, /alt="VERY VERA"/);
+    assert.doesNotMatch(html, /#3A0B22|#5E2A41|Georgia/);
+    assert.match(text, /nadbytečná/);
+    assert.doesNotMatch(text, /Nadbytečná/);
     if (t.id === "launch-signup") {
       assert.equal(t.subject, "Děkujeme, že chcete být u toho");
       assert.match(text, /děkujeme, že chcete být u otevření platformy nadbytečná\. Spouštíme ji 11\. 11\. 2026 a vám dáme vědět jako prvním\./);
@@ -32,7 +38,7 @@ test("šablony pro Resend jsou v repu a nic neposílají", () => {
     } else {
       assert.match(text, /veryvera@nadbytecna\.cz/);
       assert.match(text, /nadbytečná\nVERY VERA/);
-      assert.match(html, /nadbytečná<br>VERY VERA/);
+      assert.match(html, /alt="VERY VERA"/);
       assert.match(text, /Věra Komárová/);
       if (t.anonymous) assert.doesNotMatch(text + html, /\{\{jmeno\}\}/);
       else assert.match(text, /\{\{jmeno\}\}/);
