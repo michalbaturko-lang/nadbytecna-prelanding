@@ -66,6 +66,7 @@ export async function startAdminServer({
     "20261110224600_mail_message_metadata.sql",
     "20261110230000_mail_ai_scope.sql",
     "20261111153428_admin_inbox_previews.sql",
+    "20261111202111_mail_rule_labels.sql",
   ]) await db.exec(fs.readFileSync(new URL("../../supabase/migrations/" + filename, import.meta.url), "utf8"));
   const mailLease = (
     await db.query(
@@ -265,7 +266,9 @@ export async function startAdminServer({
           const r = await tx.query(
             "SELECT public." + ident(name) + "(" + args.join(",") + ") result",
             keys.map((k) =>
-              typeof body[k] === "object" && body[k] !== null
+              name === "mail_labels_manual" && ["p_add", "p_remove"].includes(k) && Array.isArray(body[k])
+                ? body[k]
+                : typeof body[k] === "object" && body[k] !== null
                 ? JSON.stringify(body[k])
                 : body[k],
             ),

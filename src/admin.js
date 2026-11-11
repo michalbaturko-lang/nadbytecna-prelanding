@@ -142,7 +142,7 @@
   };
   var M = {
     rows: [],
-    filters: {},
+    filters: {disposition:"normal"},
     page: 0,
     total: 0,
     serial: 0,
@@ -1414,7 +1414,7 @@
     M.total = 0;
     M.detail = null;
     M.status = null;
-    M.filters = {};
+    M.filters = {disposition:"normal"};
     M.page = 0;
     clear($("mail-cards"));
     clear($("mail-detail"));
@@ -2094,6 +2094,8 @@
       }, 300);
     });
     [
+      ["label", "Štítek", global.NadbytecnaMailLabels.catalog(M.status).map(x=>[x.code,x.name])],
+      ["disposition", "Pošta", [["normal","Doručené"],["suspect","Podezřelé"],["review","Doporučené ověření"],["all","Všechna pošta"]]],
       ["status", "Stav", Object.entries(MAIL_STATUSES)],
       ["email_type", "Druh e-mailu", Object.entries(MAIL_TYPES)],
       ["subtype", "Podtyp návrhu AI", Object.entries(MAIL_SUBTYPES)],
@@ -2126,7 +2128,7 @@
       var empty = node("div", "panel");
       empty.append(node("p", "", M.page > 0
         ? "Na této stránce už nejsou žádná e-mailová vlákna."
-        : hasFilters(M.filters)
+        : hasFilters(Object.assign({},M.filters,{disposition:M.filters.disposition === "normal" ? "" : M.filters.disposition}))
           ? "Žádné místní e-mailové vlákno neodpovídá filtrům."
           : "Zatím tu nejsou žádné místní kopie e-mailů. Stav připojení schránky najdete výše."));
       if (M.page > 0)
@@ -2134,7 +2136,7 @@
           M.page = 0;
           loadMailList().catch(mailError);
         }));
-      else if (hasFilters(M.filters))
+      else if (hasFilters(Object.assign({},M.filters,{disposition:M.filters.disposition === "normal" ? "" : M.filters.disposition})))
         empty.append(button("Zrušit filtry e-mailů", function () { $("mail-reset").click(); }));
       cards.append(empty);
     }
@@ -2144,10 +2146,11 @@
         acute:mailUrgency(row) === "acute",warning:mailUrgency(row) === "acute" ? "Akutní" : mailReviewed(row) ? "Zkontrolováno" : "Ke kontrole",
         media:row.has_attachments ? "Přílohy" : row.message_count > 1 ? row.message_count+" zpráv" : ""
       },button("Otevřít e-mailové vlákno",function(){return openMailDetail(row.id);},"card-open"));
+      if(row.labels?.length || row.disposition === "suspect" || row.disposition === "review")art.append(global.NadbytecnaMailLabels.badges(row,M.status,2));
       cards.append(art);
     });
     global.NadbytecnaAdminLayout.selected(cards,M.detail?.id);
-    document.querySelectorAll("[data-mail-queue]").forEach(function(b){var k=b.dataset.mailQueue;var active=k === "review" ? M.filters.review === "pending" && !M.filters.status : k === "progress" ? M.filters.status === "in_progress" : k === "archived" ? M.filters.status === "archived" : !M.filters.status && !M.filters.review;b.setAttribute("aria-pressed",String(active));});
+    document.querySelectorAll("[data-mail-queue]").forEach(function(b){var k=b.dataset.mailQueue;var active=k === "suspect" ? M.filters.disposition === "suspect" : M.filters.disposition !== "suspect" && (k === "review" ? M.filters.review === "pending" && !M.filters.status : k === "progress" ? M.filters.status === "in_progress" : k === "archived" ? M.filters.status === "archived" : !M.filters.status && !M.filters.review && (M.filters.disposition || "normal") === "normal");b.setAttribute("aria-pressed",String(active));});
     $("mail-prev").disabled = M.page === 0;
     $("mail-next").disabled = (M.page + 1) * 25 >= M.total;
     $("mail-page").textContent = "Strana " + (M.page + 1);
@@ -2301,6 +2304,23 @@
       mailTags(row),
       mailAiBlock(row),
     );
+    if (M.status?.labelCatalog) {
+      var labelsSection = global.NadbytecnaMailLabels.editor(row,M.status,async function(patch){
+        var epoch=S.authEpoch;
+        var result;
+        try{result=await mailApi(Object.assign({action:"labels",id:row.id,revision:row.revision},patch));}
+        catch(error){if(epoch===S.authEpoch && serial===M.detailSerial && S.view==="mail" && error.message==="mail_changed"){await openMailDetail(row.id);mailSay("Mezitím přišla změna vlákna. Zkontrolujte nový obsah a třídění potvrďte znovu.");return;}if(epoch===S.authEpoch && serial===M.detailSerial && S.view==="mail" && error.message==="mail_missing"){closeMailDetail();await loadMailList();mailSay("Vlákno už není dostupné.");return;}throw error;}
+        if(epoch!==S.authEpoch || serial!==M.detailSerial || S.view!=="mail")return;
+        if(result.saved===false){await openMailDetail(row.id);mailSay("Mezitím přišla změna vlákna. Zkontrolujte nový obsah a třídění potvrďte znovu.");return;}
+        if(patch.disposition){closeMailDetail();await loadMailList();}
+        else{await openMailDetail(row.id);await loadMailList();}
+        mailSay(patch.disposition==="suspect"?"Vlákno je v Podezřelých. Nic nebylo smazáno.":patch.disposition==="normal"?"Vlákno je zpět v běžné poště.":"Štítky a třídění jsou uložené.");
+      },mailError);
+      box.append(labelsSection);
+      var manage=button("Štítky",function(){var group=labelsSection.closest("details");if(group)group.open=true;labelsSection.scrollIntoView({block:"nearest"});labelsSection.querySelector("select,button")?.focus({preventScroll:true});},"mail-labels-manage");
+      head.append(manage);
+      if(row.labels?.length || row.disposition==="suspect" || row.disposition==="review")box.querySelector(".tag-row").after(global.NadbytecnaMailLabels.badges(row,M.status));
+    }
     var checked = mailReviewed(row);
     var reviewBox = section("Lidská kontrola"),
       reviewText = checked
@@ -2854,10 +2874,11 @@
     catch(error) {mailError(error);}finally{btn.disabled=false;}
   });
   $("stories-refresh").addEventListener("click",function(){closeDetail();loadList().catch(error);});
-  document.querySelectorAll("[data-mail-queue]").forEach(function(b){b.addEventListener("click",function(){var key=b.dataset.mailQueue;M.filters.status=key === "progress" ? "in_progress" : key === "archived" ? "archived" : "";M.filters.review=key === "review" ? "pending" : "";M.page=0;closeMailDetail();renderMailFilters();loadMailList().catch(mailError);});});
+  document.querySelectorAll("[data-mail-queue]").forEach(function(b){b.addEventListener("click",function(){var key=b.dataset.mailQueue;M.filters.disposition=key === "suspect" ? "suspect" : "normal";M.filters.status=key === "progress" ? "in_progress" : key === "archived" ? "archived" : "";M.filters.review=key === "review" ? "pending" : "";M.page=0;closeMailDetail();renderMailFilters();loadMailList().catch(mailError);});});
   $("shop-refresh").addEventListener("click", function () {
     Promise.resolve().then(function () { return loadShop(false); }).catch(error);
   });
+
   $("mail-refresh").addEventListener("click", function () {
     closeMailDetail();
     loadMail().catch(mailError);
@@ -2870,7 +2891,7 @@
   });
   $("mail-reset").addEventListener("click", function () {
     $("mail-filters").open=false;
-    M.filters = {};
+    M.filters = {disposition:"normal"};
     M.page = 0;
     closeMailDetail();
     renderMailFilters();

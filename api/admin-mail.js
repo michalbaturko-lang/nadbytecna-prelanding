@@ -13,6 +13,7 @@ import { MAILBOX, mailRpc, mailHashSecret } from "../lib/mail-service.mjs";
 import { mailAiEnabled, classifyMail } from "../lib/mail-ai.mjs";
 import { mailAiAutomationEnabled } from "../lib/mail-ai-worker.mjs";
 import { mailAiScopeAllows,mailAiAllowUnmarked } from "../lib/mail-ai-scope.mjs";
+import { MAIL_LABEL_CATALOG, MAIL_LABEL_CODES, mailRulesEnabled } from "../lib/mail-rules.mjs";
 import { checkArchiveStorage } from "../lib/mail-archive-probe.mjs";
 import { archiveStatus,archiveThread,archiveDownload,archiveExport,prepareArchiveErase,finishArchiveErase,retryArchive } from "../lib/mail-archive.mjs";
 import { validateM365AuthConfig,getM365AccessToken } from "../lib/m365-auth.mjs";
@@ -64,6 +65,8 @@ export default async function handler(req, res) {
         aiEnabled: mailAiEnabled(),
         aiScopeMode: mailAiAllowUnmarked() ? "all" : "marked",
         aiAutomationEnabled: mailAiAutomationEnabled(),
+        rulesEnabled: mailRulesEnabled(),
+        labelCatalog: MAIL_LABEL_CATALOG,
         aiQueue,
         triageStats,
         originals,
@@ -101,8 +104,10 @@ export default async function handler(req, res) {
         urgency: Object.keys(URGENCIES),
         review: ["pending", "reviewed"],
         subtype: ["personal_story", "request_help", "offer_help", "press", "partnership", "operational", "automated", "spam", "other"],
+        disposition: ["all", "normal", "suspect", "review"],
       }))
         if (f[k] && !values.includes(f[k])) throw fail(400, "filter");
+      if (f.label && !MAIL_LABEL_CODES.has(f.label)) throw fail(400, "filter");
       if (f.category && !/^[a-z_]{1,40}$/.test(f.category))
         throw fail(400, "filter");
       if (f.sort && !["urgency", "newest", "oldest"].includes(f.sort))
@@ -120,6 +125,20 @@ export default async function handler(req, res) {
       );
     }
     const id = idOf(b);
+    if (b.action === "labels") {
+      if (!Number.isSafeInteger(b.revision) || b.revision < 1 || b.revision > 2147483647) throw fail(400, "labels");
+      const add = b.add === undefined ? [] : b.add, remove = b.remove === undefined ? [] : b.remove;
+      if (![add, remove].every(values => Array.isArray(values) && values.length <= 24 && values.every(value => MAIL_LABEL_CODES.has(value))) ||
+          add.some(value => remove.includes(value)) ||
+          !(b.disposition == null || ["normal", "suspect", "review", "auto"].includes(b.disposition)))
+        throw fail(400, "labels");
+      const result = await rpc("mail_labels_manual", { p_id: id, p_revision: b.revision,
+        p_add: [...new Set(add)], p_remove: [...new Set(remove)], p_disposition: b.disposition ?? null,
+        p_actor: user.id, p_email: user.email });
+      if (!result || typeof result.saved !== "boolean") throw fail(503, "mail_unavailable");
+      if (result?.saved === false) throw fail(result.reason === "missing" ? 404 : 409, result.reason === "missing" ? "mail_missing" : "mail_changed");
+      return json(res, 200, result);
+    }
     if (b.action === "ai_scope") {
       if (!Number.isSafeInteger(b.revision) || b.revision < 1 || typeof b.approved !== "boolean") throw fail(400,"scope");
       return json(res,200,await rpc("mail_set_ai_scope",{p_id:id,p_revision:b.revision,p_approved:b.approved,p_actor:user.id,p_email:user.email}));
