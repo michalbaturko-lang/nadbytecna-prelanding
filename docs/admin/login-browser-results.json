@@ -7,7 +7,7 @@
     "admin main heading uses the Jost sans-serif font",
     "public homepage and both forms render visible text and controls in Jost",
     "new-tab callback exchanges matching PKCE proof and loads local authenticated API",
-    "pending proof removed; access and refresh tokens stay out of persistent storage",
+    "pending proof removed; login is remembered with a fixed 30-day deadline",
     "callback without proof does not exchange a code or sign in",
     "a rejected first send clears its unused proof"
   ],

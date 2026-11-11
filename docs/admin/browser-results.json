@@ -1,5 +1,5 @@
 {
-  "date": "2026-11-10",
+  "date": "2026-11-11",
   "environment": "offline synthetic PostgreSQL fixture; not Supabase production",
   "results": [
     {
@@ -153,7 +153,7 @@
       "pass": true
     },
     {
-      "label": "long audio survives signing TTL and closes safely; idle logout removes private dialogs",
+      "label": "long audio survives signing TTL and closes safely; 30-day expiry removes private dialogs",
       "pass": true
     },
     {
