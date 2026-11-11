@@ -1,10 +1,5 @@
-// Tvar zprávy pro pozdější odeslání přes Resend. Odsud se nic neposílá.
-import fs from "node:fs";
-import path from "node:path";
-import { fileURLToPath } from "node:url";
-
-const root = path.dirname(fileURLToPath(import.meta.url));
-const catalog = JSON.parse(fs.readFileSync(path.join(root, "catalog.json"), "utf8"));
+// Tvar zprávy pro pozdější odeslání přes Resend. Odsud se nic neposílá a nic se nečte z disku.
+import { catalog, files } from "./templates.mjs";
 
 export const from = catalog.from;
 export const replyTo = catalog.reply_to;
@@ -17,13 +12,16 @@ function fill(s, vars) {
 export function resendPayload(id, { to, jmeno } = {}) {
   const template = templates.find((t) => t.id === id);
   if (!template) throw new Error("neznámá šablona");
+  const html = files[template.html];
+  const text = files[template.text];
+  if (html == null || text == null) throw new Error("chybí šablona");
   const vars = { jmeno: jmeno || "" };
   return {
     from,
     to: [to],
     reply_to: replyTo,
     subject: fill(template.subject, vars),
-    html: fill(fs.readFileSync(path.join(root, template.html), "utf8"), vars),
-    text: fill(fs.readFileSync(path.join(root, template.text), "utf8"), vars),
+    html: fill(html, vars),
+    text: fill(text, vars),
   };
 }

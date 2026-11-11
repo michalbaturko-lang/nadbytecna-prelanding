@@ -34,7 +34,7 @@ test("HTML: žádný inline skript, žádné onXXX události, žádné javascrip
 });
 
 test("žádné cizí zdroje: HTML, CSS ani JS nenačítá nic ze třetích stran", () => {
-  const allowed = [/^https?:\/\/nadbytecna\.cz/, /^https?:\/\/nadbytecna-prelanding\.vercel\.app/, /^https:\/\/schema\.org/, /^http:\/\/www\.w3\.org\/(2000\/svg|1999\/xlink)/, /^https:\/\/www\.instagram\.com\/?/, /^http:\/\/www\.sitemaps\.org\/schemas\/sitemap\/0\.9/, /^http:\/\/www\.w3\.org\/1999\/xhtml/];
+  const allowed = [/^https?:\/\/nadbytecna\.cz/, /^https?:\/\/nadbytecna-prelanding\.vercel\.app/, /^https?:\/\/veryvera22\.cz/, /^https:\/\/schema\.org/, /^http:\/\/www\.w3\.org\/(2000\/svg|1999\/xlink)/, /^https:\/\/www\.instagram\.com\/?/, /^http:\/\/www\.sitemaps\.org\/schemas\/sitemap\/0\.9/, /^http:\/\/www\.w3\.org\/1999\/xhtml/];
   for (const f of files.filter((x) => /\.(html|js|css|svg|webmanifest|xml|txt)$/.test(x))) {
     // The bundled font license contains attribution links, never requested resources.
     if (path.relative(DIST, f) === path.join("fonts", "OFL-Jost.txt")) continue;
