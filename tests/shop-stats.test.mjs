@@ -4,6 +4,7 @@ import crypto from "node:crypto";
 import fs from "node:fs";
 import { PGlite } from "@electric-sql/pglite";
 import { shopConfig, fetchOrderRows, fetchTraffic } from "../lib/shop-stats.mjs";
+import { dropShopifyTokenCache, getShopifyAdminToken } from "../lib/shop-token.mjs";
 import { verifyHmac, fromWebhook, fromGraphql, summarize } from "../lib/shop-orders.mjs";
 import webhook from "../api/shopify-webhooks.js";
 import adminShop from "../api/admin-shop.js";
@@ -19,10 +20,188 @@ const hook = (over = {}) => ({
   referring_site: "https://www.instagram.com/", landing_site: "/?utm_source=ig", test: false, ...over,
 });
 
-test("konfigurace vyžaduje doménu myshopify a token", () => {
+test("konfigurace vyžaduje doménu myshopify a token nebo client credentials", () => {
   assert.throws(() => shopConfig({}), (e) => e.status === 503 && e.code === "shop_not_configured");
   assert.throws(() => shopConfig({ SHOPIFY_STORE_DOMAIN: "evil.example.com", SHOPIFY_ADMIN_TOKEN: "x" }));
-  assert.equal(shopConfig({ SHOPIFY_STORE_DOMAIN: "qhq4hi-z0.myshopify.com", SHOPIFY_ADMIN_TOKEN: "x" }).version, "2025-10");
+  assert.throws(() => shopConfig({ SHOPIFY_STORE_DOMAIN: "evil.example.com", SHOPIFY_CLIENT_ID: "id", SHOPIFY_CLIENT_SECRET: "sec" }));
+  assert.throws(() => shopConfig({ SHOPIFY_STORE_DOMAIN: "qhq4hi-z0.myshopify.com", SHOPIFY_CLIENT_ID: "id" }));
+  const staticCfg = shopConfig({ SHOPIFY_STORE_DOMAIN: "qhq4hi-z0.myshopify.com", SHOPIFY_ADMIN_TOKEN: "x" });
+  assert.equal(staticCfg.version, "2025-10");
+  assert.equal(staticCfg.token, "x");
+  const dynamicCfg = shopConfig({ SHOPIFY_STORE_DOMAIN: "qhq4hi-z0.myshopify.com", SHOPIFY_CLIENT_ID: "id", SHOPIFY_CLIENT_SECRET: "sec", SHOPIFY_ADMIN_TOKEN: "x" });
+  assert.equal(dynamicCfg.version, "2025-10");
+  assert.equal(dynamicCfg.dynamic, true);
+  assert.equal(JSON.stringify(dynamicCfg).includes("sec"), false);
+});
+
+const ordersPage = () => ({ ok: true, status: 200, json: async () => ({ data: { orders: { pageInfo: { hasNextPage: false }, nodes: [] } } }) });
+const tokenResponse = (accessToken, expiresIn) => ({ ok: true, status: 200, json: async () => ({ access_token: accessToken, scope: "read_orders", expires_in: expiresIn }) });
+
+test("client credentials: form body, cache mezi dotazy, secret se neloguje", async () => {
+  dropShopifyTokenCache();
+  const secret = "s/ecret+1";
+  const env = {
+    SHOPIFY_STORE_DOMAIN: "QHQ4HI-Z0.myshopify.com",
+    SHOPIFY_CLIENT_ID: "cid",
+    SHOPIFY_CLIENT_SECRET: secret,
+    SHOPIFY_ADMIN_TOKEN: "static-should-not-be-used",
+  };
+  const cfg = shopConfig(env);
+  assert.equal(JSON.stringify(cfg).includes(secret), false);
+  const seen = [];
+  const logs = [];
+  const methods = ["log", "debug", "info", "warn", "error"];
+  const originals = methods.map((m) => console[m]);
+  for (const m of methods) console[m] = (...args) => { logs.push(args.map((a) => String(a)).join(" ")); };
+  let issued = 0;
+  try {
+    const fetchImpl = async (url, init) => {
+      const u = String(url);
+      seen.push({ url: u, init });
+      if (u.endsWith("/admin/oauth/access_token")) {
+        issued += 1;
+        assert.equal(init.method, "POST");
+        assert.equal(init.headers["Content-Type"], "application/x-www-form-urlencoded");
+        assert.equal(init.redirect, "error");
+        assert.equal(init.body, new URLSearchParams({ grant_type: "client_credentials", client_id: "cid", client_secret: secret }).toString());
+        assert.ok(!u.includes("?") && !u.includes(secret));
+        assert.equal(u, "https://qhq4hi-z0.myshopify.com/admin/oauth/access_token");
+        return tokenResponse("shpat_" + issued, 86400);
+      }
+      assert.equal(u, "https://qhq4hi-z0.myshopify.com/admin/api/2025-10/graphql.json");
+      assert.equal(init.headers["X-Shopify-Access-Token"], "shpat_1");
+      assert.ok(!init.body.includes(secret) && !init.body.includes("static-should-not-be-used"));
+      return ordersPage();
+    };
+    await fetchOrderRows(cfg, "2026-11-11T00:00:00Z", fetchImpl);
+    await fetchOrderRows(cfg, "2026-11-11T00:00:00Z", fetchImpl);
+  } finally {
+    methods.forEach((m, i) => { console[m] = originals[i]; });
+    dropShopifyTokenCache();
+  }
+  assert.equal(seen.filter((s) => s.url.endsWith("/admin/oauth/access_token")).length, 1);
+  assert.equal(seen.filter((s) => s.url.includes("/graphql.json")).length, 2);
+  assert.ok(logs.every((line) => !line.includes(secret) && !line.includes("shpat_1")));
+});
+
+test("cache client credentials tokenu končí 5 minut před expires_in", async () => {
+  dropShopifyTokenCache();
+  const env = { SHOPIFY_STORE_DOMAIN: "qhq4hi-z0.myshopify.com", SHOPIFY_CLIENT_ID: "cid", SHOPIFY_CLIENT_SECRET: "sec" };
+  let n = 0;
+  const fetchImpl = async () => {
+    n += 1;
+    return tokenResponse("long-" + n, 3600);
+  };
+  try {
+    const t0 = 10_000;
+    const exp = t0 + 3600 * 1000 - 5 * 60 * 1000;
+    assert.equal(await getShopifyAdminToken(env, fetchImpl, { now: t0 }), "long-1");
+    assert.equal(await getShopifyAdminToken(env, fetchImpl, { now: exp - 1 }), "long-1");
+    assert.equal(n, 1);
+    assert.equal(await getShopifyAdminToken(env, fetchImpl, { now: exp }), "long-2");
+    assert.equal(n, 2);
+    assert.equal(await getShopifyAdminToken({ ...env, SHOPIFY_CLIENT_ID: "other" }, fetchImpl, { now: t0 }), "long-3");
+    assert.equal(n, 3);
+    dropShopifyTokenCache();
+    n = 0;
+    const short = async () => { n += 1; return tokenResponse("short-" + n, 300); };
+    assert.equal(await getShopifyAdminToken(env, short, { now: 0 }), "short-1");
+    assert.equal(await getShopifyAdminToken(env, short, { now: 0 }), "short-2");
+    assert.equal(n, 2);
+    dropShopifyTokenCache();
+    n = 0;
+    const missing = async () => { n += 1; return { ok: true, status: 200, json: async () => ({ access_token: "bare-" + n, scope: "read_orders" }) }; };
+    assert.equal(await getShopifyAdminToken(env, missing, { now: 1 }), "bare-1");
+    assert.equal(await getShopifyAdminToken(env, missing, { now: 2 }), "bare-2");
+    await assert.rejects(
+      () => getShopifyAdminToken(env, async () => { throw new Error("down"); }),
+      (e) => e.status === 502 && e.code === "shop_unavailable" && e.message === "shop_unavailable" && !String(e.message).includes("sec"),
+    );
+    await assert.rejects(
+      () => getShopifyAdminToken(env, async () => ({ ok: false, status: 401, json: async () => ({ error: "invalid_client" }) })),
+      (e) => e.code === "shop_unavailable",
+    );
+    let called = false;
+    await assert.rejects(
+      () => getShopifyAdminToken({ SHOPIFY_STORE_DOMAIN: "https://evil.example", SHOPIFY_CLIENT_ID: "cid", SHOPIFY_CLIENT_SECRET: "sec" }, async () => { called = true; }),
+      (e) => e.status === 503 && e.code === "shop_not_configured",
+    );
+    assert.equal(called, false);
+  } finally {
+    dropShopifyTokenCache();
+  }
+});
+
+test("401 z Admin GraphQL zahodí cache a zopakuje požadavek jen jednou", async () => {
+  dropShopifyTokenCache();
+  const env = { SHOPIFY_STORE_DOMAIN: "qhq4hi-z0.myshopify.com", SHOPIFY_CLIENT_ID: "cid", SHOPIFY_CLIENT_SECRET: "sec", SHOPIFY_ADMIN_TOKEN: "static-should-not-be-used" };
+  const cfg = shopConfig(env);
+  let tokens = 0;
+  let gql = 0;
+  const headers = [];
+  const fetchImpl = async (url, init) => {
+    if (String(url).endsWith("/admin/oauth/access_token")) {
+      tokens += 1;
+      return tokenResponse("shpat_" + tokens, 86400);
+    }
+    gql += 1;
+    headers.push(init.headers["X-Shopify-Access-Token"]);
+    if (gql === 1) return { ok: false, status: 401, text: async () => "unauthorized", json: async () => ({}) };
+    return ordersPage();
+  };
+  try {
+    const rows = await fetchOrderRows(cfg, "2026-11-11T00:00:00Z", fetchImpl);
+    assert.equal(rows.length, 0);
+    assert.equal(tokens, 2);
+    assert.equal(gql, 2);
+    assert.deepEqual(headers, ["shpat_1", "shpat_2"]);
+    await fetchOrderRows(cfg, "2026-11-11T00:00:00Z", async (url, init) => {
+      assert.ok(!String(url).includes("access_token"));
+      assert.equal(init.headers["X-Shopify-Access-Token"], "shpat_2");
+      return ordersPage();
+    });
+    tokens = 0;
+    gql = 0;
+    headers.length = 0;
+    dropShopifyTokenCache();
+    const failing = async (url, init) => {
+      if (String(url).endsWith("/admin/oauth/access_token")) {
+        tokens += 1;
+        return tokenResponse("again_" + tokens, 86400);
+      }
+      gql += 1;
+      headers.push(init.headers["X-Shopify-Access-Token"]);
+      return { ok: false, status: 401, text: async () => "" };
+    };
+    await assert.rejects(() => fetchOrderRows(cfg, "2026-11-11T00:00:00Z", failing), (e) => e.status === 502 && e.code === "shop_unavailable");
+    assert.equal(tokens, 2);
+    assert.equal(gql, 2);
+    assert.deepEqual(headers, ["again_1", "again_2"]);
+    assert.equal(await getShopifyAdminToken(env, async () => tokenResponse("fresh", 86400)), "fresh");
+  } finally {
+    dropShopifyTokenCache();
+  }
+});
+
+test("bez client credentials se použije SHOPIFY_ADMIN_TOKEN a token endpoint se nevolá", async () => {
+  dropShopifyTokenCache();
+  const env = { SHOPIFY_STORE_DOMAIN: "qhq4hi-z0.myshopify.com", SHOPIFY_CLIENT_ID: "only-id", SHOPIFY_ADMIN_TOKEN: "static-token" };
+  const urls = [];
+  try {
+    await fetchOrderRows(shopConfig(env), "2026-11-11T00:00:00Z", async (url, init) => {
+      urls.push(String(url));
+      assert.equal(init.headers["X-Shopify-Access-Token"], "static-token");
+      return ordersPage();
+    });
+    assert.deepEqual(urls, ["https://qhq4hi-z0.myshopify.com/admin/api/2025-10/graphql.json"]);
+    assert.equal(await getShopifyAdminToken(env, async () => { throw new Error("token endpoint"); }), "static-token");
+    await assert.rejects(
+      () => getShopifyAdminToken({ SHOPIFY_STORE_DOMAIN: "qhq4hi-z0.myshopify.com" }, async () => { throw new Error("token endpoint"); }),
+      (e) => e.code === "shop_not_configured",
+    );
+  } finally {
+    dropShopifyTokenCache();
+  }
 });
 
 test("HMAC: platný podpis projde, změněné tělo, špatný secret a chybějící hlavička ne", () => {
