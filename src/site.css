@@ -125,6 +125,9 @@ button.cta[disabled]{opacity:.7;cursor:progress}
 .doc h1{font-size:clamp(1.7rem,6.5vw,2.4rem);text-align:left}
 .doc h2{font-family:var(--sans);font-weight:600;font-size:1.25rem;line-height:1.25;margin:1.8rem 0 .5rem}
 .doc p,.doc li{color:var(--ink);max-width:68ch}
+.doc blockquote.why{margin:.4rem 0 1.4rem;padding:.2rem 0 .2rem 1.1rem;border-left:3px solid var(--magenta-deep,#DB0B5F);max-width:68ch}
+.doc blockquote.why p{margin:0 0 .6rem;font-size:1.08rem;line-height:1.6}
+.doc blockquote.why footer{font-weight:600;color:var(--magenta-deep,#DB0B5F)}
 .doc ul{padding-left:1.2rem;margin:.4rem 0 1rem}
 .doc li{margin:.25rem 0}
 .doc a{color:var(--ink);text-underline-offset:.15em}

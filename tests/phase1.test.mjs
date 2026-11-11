@@ -103,7 +103,7 @@ test("homepage má dvě volby, osm karet a formuláře nic neodesílají", () =>
   const stripAt = home.indexOf('class="vera-strip"');
   const goalAt = home.indexOf('id="cil"');
   assert.ok(goalAt > 0 && stripAt > goalAt);
-  assert.match(home, /Správce osobních údajů: Věra Komárová, fyzická osoba\. Adresa: doplníme\. IČ: doplníme\./);
+  assert.match(home, /Správce osobních údajů: Věra Komárová, fyzická osoba\. Adresa: Lázeňská 9, Praha 1\. IČ: doplníme\./);
   assert.doesNotMatch(visible(home), /Zapsaný ústav/);
   assert.match(read("ochrana-osobnich-udaju/index.html"), /Správce osobních údajů je Věra Komárová, fyzická osoba/);
   assert.doesNotMatch(read("ochrana-osobnich-udaju/index.html"), /Zapsaný ústav/);
@@ -150,7 +150,7 @@ test("homepage má dvě volby, osm karet a formuláře nic neodesílají", () =>
   assert.equal(visible(help).match(/type="radio"/g).length, 6);
   assert.doesNotMatch(help, /Už jsem si tím prošla/);
   assert.doesNotMatch(read("potrebuji-pomoc/index.html"), /Instagram|Facebook|e-shop|Odkaz na web/);
-  assert.doesNotMatch(visible(home), /50 %|Dermacol|Kateřina|Maruška|Miklíková|Golden Line|Malé nám|Dlouhá 34|Lázeňská|Supabase|Resend/i);
+  assert.doesNotMatch(visible(home), /50 %|Dermacol|Kateřina|Maruška|Miklíková|Golden Line|Malé nám|Dlouhá 34|Supabase|Resend/i);
   const soon = read("coming-soon/index.html");
   assert.match(soon, /<img class="logo"[^>]*src="\/img\/nadbytecna-script\.svg"[^>]*data-split="0"/);
   assert.match(soon, /src="\/fluid\.js"/);
@@ -191,6 +191,8 @@ test("právní stránky mluví o souhlasu a kontakt není krizová linka", () =>
   assert.match(read("pravidla-zverejnovani/index.html"), /Příběh zveřejníme jen tehdy/);
   assert.match(read("o-nas/index.html"), /<h1>O nás<\/h1>/);
   assert.match(read("o-nas/index.html"), /Není to krizová linka/);
+  assert.match(read("o-nas/index.html"), /<h2>Proč jsme vznikli\?<\/h2>/);
+  assert.match(read("o-nas/index.html"), /Spousta žen si prošly, prochází u nás podobným dramatem\. Ponížení, nedůstojnost, strach, zoufalství, bezmoc, frustrace nás spojuje\. Vím, jak dlouho jsem sama bála, jestli to můžu vůbec udělat\. Mám vůbec šanci\? Co se stane, když\? A pak jsem to udělala a dostala stovky zpráv o podobných příbězích\. Nejsem sama a vy nejste samy\. Pojďme si pomoct\./);
   assert.match(read("kontakt/index.html"), /Není to krizová linka/);
   assert.match(read("cookies/index.html"), /jen po souhlasu/);
   const verin = read("verin-pribeh/index.html");
