@@ -55,3 +55,17 @@ test("veřejná doména dál přesměruje a vercel.app přepíše og adresu", as
     else process.env.SITE_LIVE = prev;
   }
 });
+
+test("indexace: vercel.app dostane noindex hlavičku, veřejná doména ne", async () => {
+  const { default: middleware } = await import("../middleware.js");
+  const prev = process.env.SITE_LIVE;
+  process.env.SITE_LIVE = "true";
+  try {
+    const pub = await middleware(req("https://nadbytecna.cz/o-nas/"));
+    assert.equal(pub.headers.get("x-robots-tag"), null);
+    const alias = await middleware(req("https://nadbytecna-prelanding.vercel.app/og-v3.jpg"));
+    assert.match(alias.headers.get("x-robots-tag") || "", /noindex/);
+  } finally {
+    if (prev === undefined) delete process.env.SITE_LIVE; else process.env.SITE_LIVE = prev;
+  }
+});

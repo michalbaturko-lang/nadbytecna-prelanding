@@ -265,3 +265,18 @@ test("preview API požadavek odmítne dřív, než přečte tělo", () => {
     if (fetches) throw new Error("fetch " + fetches);
   `], { cwd: ROOT, env: { ...process.env, PHASE1: "1", VERCEL_ENV: "preview" }, stdio: "pipe" });
 });
+
+test("indexace se zapne jen při ostrém buildu (index: true)", async () => {
+  const { renderPhase1 } = await import("../lib/phase1-html.js");
+  const args = { css: "", preload: "", heart: "", logoAttrs: "" };
+  const off = renderPhase1({ ...args, draft: false });
+  assert.match(off.pages["/"], /content="noindex, nofollow, noarchive"/);
+  assert.equal(off.robots, "User-agent: *\nDisallow: /\n");
+  const on = renderPhase1({ ...args, draft: false, index: true });
+  assert.match(on.pages["/"], /name="robots" content="index, follow, max-image-preview:large"/);
+  assert.doesNotMatch(on.pages["/"], /noindex/);
+  assert.doesNotMatch(on.pages["/o-nas/"], /noindex/);
+  assert.match(on.robots, /Allow: \/\nDisallow: \/api\//);
+  assert.match(on.pages["/coming-soon/"], /noindex/);
+  renderPhase1({ ...args, draft: false });
+});

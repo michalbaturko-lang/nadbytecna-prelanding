@@ -9,6 +9,7 @@ import { fileURLToPath } from "node:url";
 import { CONSENT_VERSIONS, LANGS, PATHS, consentHtml, controller } from "./lib/consent.js";
 import { VOTE_CLAIMS, VOTE_MAX } from "./lib/claims.js";
 import { renderPhase1 } from "./lib/phase1-html.js";
+import { siteLive } from "./lib/host-gate.mjs";
 
 const ROOT = path.dirname(fileURLToPath(import.meta.url));
 // Dokud není připojená doména nadbytecna.cz, na Vercelu míří absolutní URL (OG obrázek, canonical) na vercel.app, aby sdílecí náhledy fungovaly.
@@ -424,7 +425,7 @@ function buildPhase1(out) {
     tiktok: process.env.NEXT_PUBLIC_TIKTOK_PIXEL_ID || "",
   };
   fs.writeFileSync(path.join(out, "config.js"), "window.NADBYTECNA_SUPABASE=" + JSON.stringify({ url: supaUrl, key: supaKey }) + ";\nwindow.NADBYTECNA_ADS=" + JSON.stringify(ads) + ";\n");
-  const { pages, robots, llms } = renderPhase1({ css, preload: PRELOAD, heart: HEART, logoAttrs: LOGO_ATTRS, draft: process.env.VERCEL_ENV !== "production" });
+  const { pages, robots, llms } = renderPhase1({ css, preload: PRELOAD, heart: HEART, logoAttrs: LOGO_ATTRS, draft: process.env.VERCEL_ENV !== "production", index: siteLive(process.env.SITE_LIVE) && process.env.VERCEL_ENV === "production" });
   for (const [p, html] of Object.entries(pages)) {
     const rel = p === "/" ? "index.html" : path.join(p.replace(/^\//, ""), "index.html");
     write(path.join(out, rel), html);
