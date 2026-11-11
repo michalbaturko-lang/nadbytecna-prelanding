@@ -60,6 +60,15 @@ body[data-page="scroll"] .top-cta{border-radius:999px;padding:.45rem 1.4rem;font
   body[data-page="scroll"] .site-nav a{font-size:.9rem}
 }
 
+@media (min-width:768px) and (max-width:1099px){
+  body[data-page="scroll"] .nav-burger{margin-left:auto}
+  body[data-page="scroll"] .site-nav{margin-left:0}
+  body[data-page="scroll"] .top-cta{margin-left:.6rem}
+  body[data-page="scroll"] .site-head.is-open,
+  body[data-page="scroll"] .site-head:has(.nav-toggle:checked){background:rgba(251,229,236,.96)}
+  body[data-page="scroll"] .site-nav a{font-size:.9rem}
+}
+
 /* ---------- tečky kapitol ---------- */
 .sc-dots{display:none}
 @media (min-width:64rem){
