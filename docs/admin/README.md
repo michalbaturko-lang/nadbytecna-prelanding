@@ -81,3 +81,13 @@ E-maily i příběhy/nabídky používají kompaktní seznam vlevo a čtení vpr
 Migrace `20261111153428_admin_inbox_previews.sql` přidává úryvky do 180 znaků; služební pohled má `security_invoker=true`, veřejné a běžné přihlášené role nemají přístup. Původní texty a zvukové soubory se nemění. V produkci ověřena shoda počtů záznamů, omezení délky a oprávnění. Aktivace AI ani změna Microsoft oprávnění nejsou součástí úpravy.
 
 Lokálně: 351 testů, 34 obecných browser kontrol, 22 průchodů poštou s reálnou testovací databází, šest šířek 320–1920 px, 8 kontrol přihlášení a 6 kontrol dlouhodobé relace. Poznámky, stavy, export, výmaz pouze místních kopií, přehrávání a vyčištění hlasovky při zavření/odhlášení jsou součástí syntetických průchodů. Produkční ověření nového rozhraní je omezené na čtení; ostré záznamy se kvůli vizuální změně neupravují.
+
+## Stažení příběhu do PDF
+
+V horní liště detailu příběhu je tlačítko **Stáhnout PDF** (na mobilu **PDF ↓**). Vytvoří čtecí kopii s vloženým bezpatkovým písmem Jost, datem v českém časovém pásmu, automatickým stránkováním a původním textem. Krátký úvod může sloužit jako nadpis; žádný nový nadpis ani shrnutí se negeneruje. Zvolená anonymita se respektuje u jména autorky/autora. Kontakty, interní poznámky, pracovní stavy a podepsané odkazy na zvuk se neexportují.
+
+U hlasovky bez přepisu PDF výslovně uvádí, že je k dispozici jen zvuk v přihlášeném adminu. Existující přepis je označený jako AI přepis, který může obsahovat chyby. PDF není publikace ani GDPR ZIP.
+
+Export používá existující oprávnění administrátora a uložený záznam, není veřejně dostupný, neukládá další kopii textu do databáze ani nespouští AI. Audit obsahuje pouze typ exportu, ID záznamu a počet stran. Není potřeba migrace databáze ani další služba.
+
+Ověření doplnění: 355 testů, 34 obecných browser kontrol, skutečné stažení přes lokální API/databázi při šesti šířkách 320–1920 px, nulové nálezy přístupnosti a ochrana proti opožděnému stažení po odhlášení. Kontrola výsledného PDF ověřila českou diakritiku a úplnou shodu všech odstavců se zdrojovým textem.
