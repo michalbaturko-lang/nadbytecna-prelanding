@@ -73,3 +73,11 @@ Automatická AI v této variantě čeká na pětiminutový worker, který zpracu
 ## Lokální ukázka
 
 `npm run preview:admin` spustí na tomto počítači syntetický náhled na `http://127.0.0.1:4477/admin/?sort=urgency`. Přihlášení je v tomto výhradně lokálním testovacím serveru nahrazené testovací session, nikoli heslem ani produkčním účtem. Všechny změny žijí jen v paměti a po vypnutí náhledu zmizí. Produkční Vercel tyto testovací routy nepoužívá.
+
+## Přehled seznam–detail — 11. 11. 2026
+
+E-maily i příběhy/nabídky používají kompaktní seznam vlevo a čtení vpravo; na mobilu se seznam a detail střídají. Hlavní text nebo přehrávač jsou první. Poznámky, zařazení, kontakt/souhlasy, AI a historie se otevírají jednotlivě. Vyhledávání zůstává viditelné, další filtry a provozní nastavení jsou rozbalovací.
+
+Migrace `20261111153428_admin_inbox_previews.sql` přidává úryvky do 180 znaků; služební pohled má `security_invoker=true`, veřejné a běžné přihlášené role nemají přístup. Původní texty a zvukové soubory se nemění. V produkci ověřena shoda počtů záznamů, omezení délky a oprávnění. Aktivace AI ani změna Microsoft oprávnění nejsou součástí úpravy.
+
+Lokálně: 351 testů, 34 obecných browser kontrol, 22 průchodů poštou s reálnou testovací databází, šest šířek 320–1920 px, 8 kontrol přihlášení a 6 kontrol dlouhodobé relace. Poznámky, stavy, export, výmaz pouze místních kopií, přehrávání a vyčištění hlasovky při zavření/odhlášení jsou součástí syntetických průchodů. Produkční ověření nového rozhraní je omezené na čtení; ostré záznamy se kvůli vizuální změně neupravují.
