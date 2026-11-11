@@ -148,6 +148,9 @@ test("homepage má dvě volby, osm karet a formuláře nic neodesílají", () =>
   assert.match(help, /Nabídni svůj potenciál \(hledám práci\)/);
   assert.match(help, /Nabídni pomoc – přidej se k nám/);
   assert.equal(visible(help).match(/type="radio"/g).length, 6);
+  const helpJs = fs.readFileSync(path.join(ROOT, "src/help-form.js"), "utf8");
+  assert.match(helpJs, /pomoc-osloveni/);
+  assert.match(helpJs, /greeting:/);
   assert.doesNotMatch(help, /Už jsem si tím prošla/);
   assert.doesNotMatch(read("potrebuji-pomoc/index.html"), /Instagram|Facebook|e-shop|Odkaz na web/);
   assert.doesNotMatch(visible(home), /50 %|Dermacol|Kateřina|Maruška|Miklíková|Golden Line|Malé nám|Dlouhá 34|Lázeňská|Supabase|Resend/i);

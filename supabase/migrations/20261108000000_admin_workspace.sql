@@ -210,7 +210,9 @@ DO $migration$
 DECLARE f record;
 BEGIN
 IF to_regclass('public.stories') IS NULL THEN RETURN; END IF;
-EXECUTE $sql$ CREATE OR REPLACE VIEW public.admin_records WITH(security_invoker=true) AS
+-- Drop first so a later column (greeting) does not make this file fail when it is applied again.
+EXECUTE 'DROP VIEW IF EXISTS public.admin_records';
+EXECUTE $sql$ CREATE VIEW public.admin_records WITH(security_invoker=true) AS
 SELECT 'stories'::text entity,id,created_at,updated_at,full_name,email,NULL::text phone,anonymous,wants_to_help,input_type,NULL::text helper_type,status,coalesce(admin_category,ai_category) category,coalesce(admin_urgency,ai_urgency) urgency,admin_category,admin_urgency,classified_by,classified_email,classified_at,ai_summary,ai_category,ai_urgency,ai_help_type,ai_model,ai_at,ai_error,consent,consent_publish,consent_at,consent_transcript_at,consent_publish_at,consent_version,consent_texts,age_confirmed,age_confirmed_at,last_contact_at,opened_at,story_text body,transcript,audio_path,NULL::text links,admin_note,search_document,erasure_requested_at,
 CASE WHEN status='published' THEN NULL ELSE created_at+interval '12 months' END delete_at, CASE coalesce(admin_urgency,ai_urgency) WHEN 'acute' THEN 4 WHEN 'high' THEN 3 WHEN 'medium' THEN 2 WHEN 'low' THEN 1 ELSE 0 END urgency_rank, consent_transcript FROM public.stories
 UNION ALL

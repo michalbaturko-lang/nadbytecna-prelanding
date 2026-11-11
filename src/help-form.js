@@ -45,6 +45,7 @@
       id: id,
       full_name: name,
       email: email,
+      greeting: val("pomoc-osloveni") || null,
       phone: val("pomoc-telefon") || null,
       helper_type: type.value === "potencial" ? "lived_experience" : "professional",
       help_kinds: kinds,

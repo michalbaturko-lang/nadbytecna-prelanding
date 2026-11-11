@@ -5,22 +5,48 @@ import { fileURLToPath } from "node:url";
 
 const root = path.dirname(fileURLToPath(import.meta.url));
 const FROM_LINE = "veryvera@nadbytecna.cz";
+// Značková magenta z :root --magenta ve src/site.css. Satén a papír jsou stejné tokeny.
+const MAGENTA = "#DB0B5F";
+const SATIN = "#F4CCD8";
+const PAPER = "#FFF8FA";
+// VERY VERA není webfont. Obrysy jsou ve public/img/nadbytecna-lockup.svg; e-mail používá výřez jako PNG,
+// protože klienti @font-face ani SVG spolehlivě nezobrazí. Alt je textová záloha.
+const WORDMARK = "https://nadbytecna.cz/img/very-vera-wordmark.png";
+const WORDMARK_W = 640;
+const WORDMARK_H = 362;
 
 function fill(s, vars) {
   return s.replace(/\{\{(\w+)\}\}/g, (_, k) => (vars[k] == null ? "" : String(vars[k])));
 }
 
+function esc(s) {
+  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;");
+}
+
+function wordmark(displayWidth) {
+  const height = Math.round((displayWidth * WORDMARK_H) / WORDMARK_W);
+  return `<table role="presentation" align="center" cellpadding="0" cellspacing="0" border="0"><tr><td><img src="${WORDMARK}" alt="VERY VERA" width="${displayWidth}" height="${height}" style="display:block;width:${displayWidth}px;max-width:100%;height:auto;border:0;outline:none;text-decoration:none"></td></tr></table>`;
+}
+
+function chrome(inner) {
+  return `<!doctype html><html lang="cs" dir="ltr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>nadbytečná</title></head><body style="margin:0;background:${SATIN};color:${MAGENTA}"><div lang="cs" dir="ltr">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:${SATIN}"><tr><td align="center" style="padding:28px 12px">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:520px;background:${PAPER};border-radius:8px"><tr><td style="padding:32px 28px;font-family:Arial,Helvetica,sans-serif;color:${MAGENTA};font-size:16px;line-height:1.55">
+${wordmark(220)}
+<div style="height:28px;line-height:28px;font-size:0">&nbsp;</div>
+${inner}
+</td></tr></table></td></tr></table></div></body></html>`;
+}
+
 function letter({ hello, paragraphs }) {
   const text = [hello, "", ...paragraphs, "", "Věra", "nadbytečná", "VERY VERA", FROM_LINE, "", "Správce osobních údajů: Věra Komárová, fyzická osoba."].join("\n");
-  const body = paragraphs.map((p) => `<p style="margin:0 0 16px;font-size:16px;line-height:1.55">${p.replace(/&/g, "&amp;").replace(/</g, "&lt;")}</p>`).join("");
-  const html = `<!doctype html><html lang="cs"><body style="margin:0;background:#F4CCD8;font-family:Arial,Helvetica,sans-serif;color:#3A0B22">
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#F4CCD8"><tr><td align="center" style="padding:24px 12px">
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;background:#FFF8FA;border-radius:8px"><tr><td style="padding:32px 28px">
-<p style="margin:0 0 16px;font-size:16px;line-height:1.55">${hello.replace(/&/g, "&amp;").replace(/</g, "&lt;")}</p>
+  const body = paragraphs.map((p) => `<p style="margin:0 0 16px;font-size:16px;line-height:1.55;color:${MAGENTA}">${esc(p)}</p>`).join("");
+  const html = chrome(`<p style="margin:0 0 16px;font-size:16px;line-height:1.55;color:${MAGENTA}">${esc(hello)}</p>
 ${body}
-<p style="margin:24px 0 0;font-family:Georgia,'Times New Roman',serif;font-size:18px">Věra</p>
-<p style="margin:4px 0 0;font-size:14px;line-height:1.5;color:#5E2A41">nadbytečná<br>VERY VERA<br><a href="mailto:${FROM_LINE}" style="color:#5E2A41">${FROM_LINE}</a><br>Správce osobních údajů: Věra Komárová, fyzická osoba.</p>
-</td></tr></table></td></tr></table></body></html>`;
+<p style="margin:24px 0 0;font-family:Arial,Helvetica,sans-serif;font-size:18px;line-height:1.4;color:${MAGENTA}">Věra</p>
+<p style="margin:8px 0 0;font-size:14px;line-height:1.5;color:${MAGENTA}">nadbytečná</p>
+<div style="margin:12px 0">${wordmark(160)}</div>
+<p style="margin:0;font-size:14px;line-height:1.5;color:${MAGENTA}"><a href="mailto:${FROM_LINE}" style="color:${MAGENTA};text-decoration:underline">${FROM_LINE}</a><br>Správce osobních údajů: Věra Komárová, fyzická osoba.</p>`);
   return { text, html };
 }
 
@@ -89,15 +115,12 @@ Věra Komárová
 nadbytečná
 VERY VERA
 `;
-const launchHtml = `<!doctype html><html lang="cs"><body style="margin:0;background:#F4CCD8;font-family:Arial,Helvetica,sans-serif;color:#3A0B22">
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#F4CCD8"><tr><td align="center" style="padding:24px 12px">
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;background:#FFF8FA;border-radius:8px"><tr><td style="padding:32px 28px">
-<p style="margin:0 0 16px;font-size:16px;line-height:1.55">Dobrý den,</p>
-<p style="margin:0 0 16px;font-size:16px;line-height:1.55">děkujeme, že chcete být u otevření platformy nadbytečná. Spouštíme ji 11. 11. 2026 a vám dáme vědět jako prvním.</p>
-<p style="margin:0 0 16px;font-size:16px;line-height:1.55">nadbytečná vzniká pro ženy, které se ocitly v nerovném postavení, a pro všechny, kdo jim chtějí pomoci. Brzy u nás budete moct sdílet svůj příběh nebo nabídnout pomoc.</p>
-<p style="margin:0 0 16px;font-size:16px;line-height:1.55">Pokud zprávy dostávat nechcete, stačí odpovědět na tento e-mail a vaši adresu smažeme.</p>
-<p style="margin:24px 0 0;font-size:16px;line-height:1.55">S úctou<br>Věra Komárová<br>nadbytečná<br>VERY VERA</p>
-</td></tr></table></td></tr></table></body></html>`;
+const launchHtml = chrome(`<p style="margin:0 0 16px;font-size:16px;line-height:1.55;color:${MAGENTA}">Dobrý den,</p>
+<p style="margin:0 0 16px;font-size:16px;line-height:1.55;color:${MAGENTA}">děkujeme, že chcete být u otevření platformy nadbytečná. Spouštíme ji 11. 11. 2026 a vám dáme vědět jako prvním.</p>
+<p style="margin:0 0 16px;font-size:16px;line-height:1.55;color:${MAGENTA}">nadbytečná vzniká pro ženy, které se ocitly v nerovném postavení, a pro všechny, kdo jim chtějí pomoci. Brzy u nás budete moct sdílet svůj příběh nebo nabídnout pomoc.</p>
+<p style="margin:0 0 16px;font-size:16px;line-height:1.55;color:${MAGENTA}">Pokud zprávy dostávat nechcete, stačí odpovědět na tento e-mail a vaši adresu smažeme.</p>
+<p style="margin:24px 0 0;font-size:16px;line-height:1.55;color:${MAGENTA}">S úctou<br>Věra Komárová<br>nadbytečná</p>
+<div style="margin:12px 0 0">${wordmark(160)}</div>`);
 jobs.push({ id: "launch-signup", dir: "launch", file: "signup", subject: "Děkujeme, že chcete být u toho", text: launchText, html: launchHtml, anonymous: true });
 jobs.push({ id: "help-been-through", dir: "can-help", file: "been-through", ...been, anonymous: false });
 jobs.push({ id: "help-others", dir: "can-help", file: "help-others", ...helpOthers(null), anonymous: false });

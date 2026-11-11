@@ -68,6 +68,34 @@ test("admin migration: categories, RLS, anon metadata guard and age", async () =
   assert.ok(r.age_confirmed_at);
   assert.equal(r.consent_version, "2026-11-07-v1");
 });
+test("help offer keeps the optional greeting from the public form", async () => {
+  await db.exec("set role anon");
+  await db.query(
+    `INSERT INTO help_offers(id,email,full_name,helper_type,help_kinds,message,links,consent,age_confirmed,greeting)
+     VALUES('77777777-7777-4777-8777-777777777777','greeting@example.invalid','Celé Jméno','professional',ARRAY['pravni'],'Nabídka.','{"web":"https://example.invalid"}',true,true,'Káťa')`,
+  );
+  await db.exec("reset role");
+  const row = (
+    await db.query(
+      "select greeting, links from help_offers where id='77777777-7777-4777-8777-777777777777'",
+    )
+  ).rows[0];
+  assert.equal(row.greeting, "Káťa");
+  assert.match(row.links, /example\.invalid/);
+  const view = (
+    await db.query(
+      "select greeting, full_name from admin_records where id='77777777-7777-4777-8777-777777777777'",
+    )
+  ).rows[0];
+  assert.equal(view.greeting, "Káťa");
+  assert.equal(view.full_name, "Celé Jméno");
+  const search = (
+    await db.query(
+      "select search_document::text as t from help_offers where id='77777777-7777-4777-8777-777777777777'",
+    )
+  ).rows[0].t;
+  assert.match(search, /kata/i);
+});
 test("audio consent v2 stores the displayed wording; old clients and historical snapshots retain v1", async () => {
   const previous = (await db.query("select consent_version,consent_texts from stories where id=$1", [STORY])).rows[0];
   for (const version of [null, "2026-11-08-audio-v2", "forged-version"]) {
@@ -421,9 +449,26 @@ test("migration can be reapplied to populated reconstructed schema", async () =>
       "utf8",
     ),
   );
+  await db.exec(
+    readFileSync(
+      new URL(
+        "../supabase/migrations/20261111120000_help_offer_greeting.sql",
+        import.meta.url,
+      ),
+      "utf8",
+    ),
+  );
   assert.equal(
     (await db.query("select count(*)::int n from categories")).rows[0].n,
     8,
+  );
+  assert.equal(
+    (
+      await db.query(
+        "select greeting from admin_records where id='77777777-7777-4777-8777-777777777777'",
+      )
+    ).rows[0].greeting,
+    "Káťa",
   );
 });
 
