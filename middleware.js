@@ -39,7 +39,9 @@ export default async function middleware(request) {
     return new Response(request.method === "HEAD" ? null : adminHtml(), { headers });
   }
 
-  const pass = () => (decision.type === "rewrite" ? rewrite(new URL(decision.url, request.url)) : next());
+  const publicHost = ["nadbytecna.cz", "www.nadbytecna.cz"].includes(requestHost(request.headers));
+  const noindexHeaders = publicHost ? undefined : { "x-robots-tag": "noindex, nofollow, noarchive" };
+  const pass = () => (decision.type === "rewrite" ? rewrite(new URL(decision.url, request.url), { headers: noindexHeaders }) : next({ headers: noindexHeaders }));
   if (request.method !== "GET" || request.headers.get(PASS) === "1") return pass();
 
   const served = decision.type === "rewrite" ? new URL(decision.url, request.url).pathname : url.pathname;
@@ -59,6 +61,7 @@ export default async function middleware(request) {
   if (!res.ok || !type.includes("text/html")) return pass();
   const html = withOrigin(await res.text(), url.origin);
   const out = new Headers(res.headers);
+  out.set("x-robots-tag", "noindex, nofollow, noarchive");
   out.delete("content-length");
   out.delete("content-encoding");
   return new Response(html, { status: res.status, headers: out });
