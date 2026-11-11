@@ -32,9 +32,9 @@ test("noindex v HTML, robots.txt zakazuje vše, stránky nemají kanonický odka
 });
 
 test("hero má psací nápis a stejné fluid.js, app.js se nenačítá", () => {
-  assert.match(home, /<img class="wordmark" src="\/img\/nadbytecna-script\.svg"/);
+  assert.match(home, /<img class="wordmark" src="\/img\/nadbytecna-script-v2\.svg"/);
   const logo = home.match(/<img class="logo"[^>]*>/)[0];
-  assert.match(logo, /src="\/img\/nadbytecna-script\.svg"/);
+  assert.match(logo, /src="\/img\/nadbytecna-script-v2\.svg"/);
   assert.match(logo, /data-split="0"/);
   assert.match(logo, /data-base="0\.6333"/);
   assert.match(logo, /alt="nadbytečná"/);
@@ -97,7 +97,7 @@ test("homepage má dvě volby, osm karet a formuláře nic neodesílají", () =>
   assert.match(home, /class="claim-lead">Žádná práce není</);
   assert.match(home, /class="claim-lead">Žádná láska není</);
   assert.match(home, /class="claim-lead">Never</);
-  assert.equal(home.match(/class="claim-word" src="\/img\/nadbytecna-word-lc\.svg"/g).length, 6);
+  assert.equal(home.match(/class="claim-word" src="\/img\/nadbytecna-word-lc-v2\.svg"/g).length, 6);
   assert.match(home, /class="rule claim-rule"/);
   assert.ok(home.indexOf('id="pribeh"') < home.indexOf('class="claims"'))  // video je hned za úvodní obrazovkou, před hesly;
   assert.ok(home.indexOf('id="pribeh"') < home.indexOf('class="choices"'));
@@ -157,7 +157,7 @@ test("homepage má dvě volby, osm karet a formuláře nic neodesílají", () =>
   assert.doesNotMatch(read("potrebuji-pomoc/index.html"), /Instagram|Facebook|e-shop|Odkaz na web/);
   assert.doesNotMatch(visible(home), /50 %|Dermacol|Kateřina|Maruška|Miklíková|Golden Line|Malé nám|Dlouhá 34|Supabase|Resend/i);
   const soon = read("coming-soon/index.html");
-  assert.match(soon, /<img class="logo"[^>]*src="\/img\/nadbytecna-script\.svg"[^>]*data-split="0"/);
+  assert.match(soon, /<img class="logo"[^>]*src="\/img\/nadbytecna-script-v2\.svg"[^>]*data-split="0"/);
   assert.match(soon, /src="\/fluid\.js"/);
   assert.match(soon, /Spouštíme 11\. 11\. 2026/);
   assert.match(soon, /Zanechte nám e-mail a o spuštění se dozvíte jako první\./);
