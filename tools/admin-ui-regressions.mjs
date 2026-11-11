@@ -223,7 +223,9 @@ export async function runUiRegressions({
       .fill("private-person@example.invalid");
     await p.getByRole("button", { name: "Smazat osobu", exact: true }).click();
     await p.locator("#delete-confirm").waitFor();
-    await p.clock.fastForward(12 * 3600000 + 60000);
+    await p.clock.fastForward(15 * 24 * 3600000);
+    assert.equal(await p.locator("#admin-app").isVisible(), true);
+    await p.clock.fastForward(16 * 24 * 3600000);
     assert.equal(await p.locator("#admin-login").isVisible(), true);
     assert.equal(await p.locator("dialog").count(), 0);
     assert.equal(
@@ -238,7 +240,7 @@ export async function runUiRegressions({
     );
     results.push({
       label:
-        "long audio survives signing TTL and closes safely; idle logout removes private dialogs",
+        "long audio survives signing TTL and closes safely; 30-day expiry removes private dialogs",
       pass: true,
     });
     await context.close();
