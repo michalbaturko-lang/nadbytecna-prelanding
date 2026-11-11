@@ -135,6 +135,7 @@ body[data-page="scroll"] a.vid:hover{display:block;width:min(100%,27rem,calc(86s
 body[data-page="scroll"] a.vid:hover .vid-play{background:#9F0842}
 @media (max-width:47.99rem){
   body[data-page="scroll"] #pribeh{grid-template-columns:minmax(0,1fr);gap:1.6rem}
+  body[data-page="scroll"] #pribeh h2{text-align:center}
   body[data-page="scroll"] a.vid,
   body[data-page="scroll"] a.vid:hover{width:min(78vw,19rem);margin:0 auto}
 }
