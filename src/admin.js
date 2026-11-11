@@ -1473,40 +1473,61 @@
   function money(n, cur) {
     return new Intl.NumberFormat("cs-CZ", { style: "currency", currency: cur || "CZK", maximumFractionDigits: 0 }).format(n || 0);
   }
-  function barChart(rows, key, label, fmt) {
-    fmt = fmt || function (r) { return r.day.slice(8, 10) + ". " + r.day.slice(5, 7) + "."; };
-    var W = 720, H = 140, max = Math.max.apply(null, rows.map(function (r) { return r[key]; }).concat([1]));
-    var svg = document.createElementNS(SVGNS, "svg");
-    svg.setAttribute("viewBox", "0 0 " + W + " " + (H + 18));
-    svg.setAttribute("class", "shop-chart");
-    svg.setAttribute("role", "img");
-    svg.setAttribute("aria-label", label);
-    var step = W / rows.length;
-    rows.forEach(function (r, i) {
-      var h = Math.round((r[key] / max) * H);
-      var bar = document.createElementNS(SVGNS, "rect");
-      var bw = Math.max(1, Math.min(Math.round(step - 4), 48));
-      bar.setAttribute("x", String(Math.round(i * step + (step - bw) / 2)));
-      bar.setAttribute("y", String(H - h));
-      bar.setAttribute("width", String(bw));
-      bar.setAttribute("height", String(Math.max(h, r[key] > 0 ? 2 : 0)));
-      bar.setAttribute("rx", "2");
-      var t = document.createElementNS(SVGNS, "title");
-      t.textContent = fmt(r) + " — " + r[key];
-      bar.append(t);
-      svg.append(bar);
+  var shopMetric = "orders";
+  function svgEl(name, attrs, text) {
+    var e = document.createElementNS(SVGNS, name);
+    Object.keys(attrs || {}).forEach(function (k) { e.setAttribute(k, String(attrs[k])); });
+    if (text != null) e.textContent = text;
+    return e;
+  }
+  function niceMax(v) {
+    if (v <= 4) return 4;
+    var p = Math.pow(10, Math.floor(Math.log10(v))), n = v / p;
+    return (n <= 1 ? 1 : n <= 2 ? 2 : n <= 5 ? 5 : 10) * p;
+  }
+  function barChart(rows, o) {
+    var W = 760, H = o.height || 220, L = 44, T = 18, B = 26, iw = W - L - 6, ih = H - T - B;
+    var max = niceMax(Math.max.apply(null, rows.map(function (r) { return r.v; }).concat([1])));
+    var svg = svgEl("svg", { viewBox: "0 0 " + W + " " + H, "class": "shop-chart", role: "img", "aria-label": o.label });
+    [0, 0.5, 1].forEach(function (f) {
+      var y = T + ih - Math.round(ih * f);
+      svg.append(svgEl("line", { x1: L, x2: W - 6, y1: y, y2: y, "class": f ? "grid" : "axis" }));
+      svg.append(svgEl("text", { x: L - 8, y: y + 4, "text-anchor": "end", "class": "tick" }, o.fmtY(max * f)));
     });
-    var a = document.createElementNS(SVGNS, "text");
-    a.setAttribute("x", "0");
-    a.setAttribute("y", String(H + 14));
-    a.textContent = fmt(rows[0]);
-    var z = document.createElementNS(SVGNS, "text");
-    z.setAttribute("x", String(W));
-    z.setAttribute("y", String(H + 14));
-    z.setAttribute("text-anchor", "end");
-    z.textContent = fmt(rows[rows.length - 1]);
-    svg.append(a, z);
+    var step = iw / rows.length, bw = Math.min(Math.round(step * 0.62), 44);
+    rows.forEach(function (r, i) {
+      var x = Math.round(L + i * step + (step - bw) / 2), h = Math.round((r.v / max) * ih);
+      var g = svgEl("g", { "class": r.future ? "future" : "" });
+      if (r.v > 0) g.append(svgEl("rect", { x: x, y: T + ih - h, width: bw, height: h, rx: 3, "class": "bar" }));
+      else if (!r.future) g.append(svgEl("rect", { x: x, y: T + ih - 2, width: bw, height: 2, "class": "bar zero" }));
+      if (r.v > 0 && o.values !== false) g.append(svgEl("text", { x: x + bw / 2, y: T + ih - h - 6, "text-anchor": "middle", "class": "val" }, o.fmtV(r.v)));
+      if (i % (o.every || 1) === 0) g.append(svgEl("text", { x: x + bw / 2, y: H - 8, "text-anchor": "middle", "class": "tick" }, r.x));
+      g.append(svgEl("title", {}, r.title));
+      svg.append(g);
+    });
     return svg;
+  }
+  function pragueToday(iso) {
+    return new Date(iso).toLocaleDateString("sv-SE", { timeZone: "Europe/Prague" });
+  }
+  function dayRows(d, metric) {
+    var byDay = {};
+    d.daily.forEach(function (r) { byDay[r.day] = r; });
+    var today = pragueToday(d.generatedAt), start = "2026-11-11", out = [], n = 0;
+    var cur2 = new Date(start + "T12:00:00Z"), endD = new Date(today + "T12:00:00Z");
+    var days = Math.max(7, Math.round((endD - cur2) / 864e5) + 1);
+    if (days > 45) { cur2 = new Date(endD.getTime() - 44 * 864e5); days = 45; }
+    for (; n < days; n++) {
+      var k = cur2.toISOString().slice(0, 10), r = byDay[k] || { orders: 0, czk: 0 };
+      var label = Number(k.slice(8, 10)) + ". " + Number(k.slice(5, 7)) + ".";
+      out.push({ x: label, v: metric === "czk" ? r.czk : r.orders, future: k > today,
+        title: label + " — " + r.orders + " obj. · " + money(r.czk, "CZK") });
+      cur2 = new Date(cur2.getTime() + 864e5);
+    }
+    return out;
+  }
+  function hourRows(d) {
+    return d.hourly.map(function (h) { return { x: String(h.hour), v: h.orders, title: h.hour + ":00 — " + h.orders + " obj." }; });
   }
   var shopTimer = 0;
   function eur(n) {
@@ -1528,89 +1549,82 @@
     if (s < 5400) return "před " + Math.round(s / 60) + " min";
     return when(iso);
   }
-  function rankList(rows, label) {
-    var box = node("div", "shop-rank");
-    var max = Math.max.apply(null, rows.map(function (r) { return r.orders; }).concat([1]));
-    if (!rows.length) box.append(node("p", "hint", "Zatím bez dat."));
-    rows.forEach(function (r) {
-      var row = node("div", "shop-rank-row");
-      var bar = node("progress");
-      bar.max = max;
-      bar.value = r.orders;
-      bar.setAttribute("aria-label", label + " " + r.key + ": " + r.orders);
-      row.append(node("span", "", r.key), bar, node("strong", "", String(r.orders)));
-      box.append(row);
-    });
-    return box;
+  function row(label, value) {
+    var r = node("div", "shop-row");
+    r.append(node("dt", "", label), node("dd", "", value));
+    return r;
   }
-  function block(title, child, hint) {
-    var b = node("section", "shop-block");
-    b.append(node("h3", "", title));
-    if (hint) b.append(node("p", "hint", hint));
-    b.append(child);
-    return b;
+  function list(title, rows) {
+    var sec = node("section", "shop-list");
+    sec.append(node("h3", "", title));
+    var dl = node("dl");
+    if (!rows.length) dl.append(row("Zatím bez dat", ""));
+    rows.forEach(function (r) { dl.append(row(r[0], r[1])); });
+    sec.append(dl);
+    return sec;
   }
-  function kpi(label, value, sub) {
-    var c = node("div", "panel count shop-kpi");
-    c.append(node("span", "", label), node("strong", "", value));
-    if (sub) c.append(node("span", "hint", sub));
-    return c;
+  function figure(title, v, sub) {
+    var f = node("section", "shop-fig");
+    f.append(node("h3", "", title));
+    var big = node("p", "shop-big");
+    big.append(node("strong", "", String(v.orders)), node("span", "", " " + plural(v.orders)));
+    f.append(big, node("p", "shop-money", money(v.czk, "CZK")));
+    f.append(node("p", "hint", "průměr " + money(v.average_czk, "CZK") + " · " + v.units + " ks" + (sub ? " · " + sub : "")));
+    return f;
   }
-  function grid(cards) {
-    var g = node("div", "counts");
-    cards.forEach(function (c) { g.append(c); });
-    return g;
+  function plural(n) {
+    return n === 1 ? "objednávka" : n >= 2 && n <= 4 ? "objednávky" : "objednávek";
   }
   function renderShop(d) {
     var body = $("shop-body");
     clear(body);
-    var t = d.today, all = d.total;
-    $("shop-meta").textContent = "Aktualizováno " + when(d.generatedAt) + " · poslední webhook " + ago(d.sync && d.sync.last_webhook_at) + " · poslední dorovnání " + ago(d.sync && d.sync.last_reconcile_at);
-    if (d.last) {
-      var last = node("p", "shop-last");
-      last.append(node("strong", "", "Poslední objednávka "), document.createTextNode(d.last.name + " · " + when(d.last.at) + " · " + cur(d.last.total, d.last.currency) + (d.last.country ? " · " + d.last.country : "")));
-      body.append(last);
-    }
-    body.append(block("Dnes", grid([
-      kpi("Objednávky", String(t.orders), "dnešní den v Praze"),
-      kpi("Obrat", money(t.czk, "CZK"), currencySplit(t.by_currency)),
-      kpi("Prodané kusy", String(t.units), "EDP nadbytečná 50 ml"),
-      kpi("Průměrná objednávka", money(t.average_czk, "CZK"), "v Kč"),
-    ])));
-    body.append(block("Od spuštění (11. 11. 2026)", grid([
-      kpi("Objednávky", String(all.orders)),
-      kpi("Obrat", money(all.czk, "CZK"), currencySplit(all.by_currency)),
-      kpi("Prodané kusy", String(all.units)),
-      kpi("Průměrná objednávka", money(all.average_czk, "CZK")),
-    ]), "Obrat v Kč je přepočet Shopify podle jeho kurzu v den objednávky. Bez zrušených a testovacích objednávek."));
-    if (d.daily.length) body.append(block("Obrat po dnech (Kč)", barChart(d.daily, "czk", "Obrat po dnech v Kč")));
-    var hours = d.hourly.map(function (h) { return { day: "0000-00-" + String(h.hour).padStart(2, "0"), hour: h.hour, orders: h.orders }; });
-    body.append(block("Objednávky podle hodiny dne", barChart(hours, "orders", "Objednávky podle hodiny dne", function (r) { return r.hour + ":00"; }), "Pražský čas, od spuštění. Zleva 0:00, zprava 23:00."));
-    body.append(block("Česko a Slovensko", grid([
-      kpi("Česko", d.countries.CZ.orders + " obj.", money(d.countries.CZ.czk, "CZK") + " · průměr " + money(d.countries.CZ.average_czk, "CZK")),
-      kpi("Slovensko", d.countries.SK.orders + " obj.", currencySplit(d.countries.SK.by_currency) + " · v Kč " + money(d.countries.SK.czk, "CZK")),
-    ])));
-    var st = d.status;
-    body.append(block("Stav objednávek", grid([
-      kpi("Zaplaceno", String(st.paid)),
-      kpi("Čeká na platbu", String(st.pending)),
-      kpi("Zrušeno", String(st.cancelled)),
-      kpi("Vráceno", String(st.refunded)),
-    ])));
-    body.append(block("Doprava", rankList(d.shipping, "Doprava")));
-    body.append(block("Odkud přišly objednávky", rankList(d.sources, "Zdroj"), "Z referreru a UTM. Přímý vstup = bez známého zdroje."));
+    $("shop-meta").textContent = "Aktualizováno " + when(d.generatedAt) + " · poslední objednávka " + (d.last ? d.last.name + ", " + ago(d.last.at) + ", " + cur(d.last.total, d.last.currency) + (d.last.country ? ", " + d.last.country : "") : "zatím žádná");
+    var hero = node("div", "shop-hero");
+    hero.append(figure("Dnes", d.today), figure("Od spuštění 11. 11.", d.total));
+    body.append(hero);
+    var ch = node("section", "shop-block");
+    var head = node("div", "shop-head");
+    head.append(node("h3", "", "Po dnech"));
+    var seg = node("div", "shop-seg");
+    [["orders", "Objednávky"], ["czk", "Obrat"]].forEach(function (m) {
+      var b = node("button", "", m[1]);
+      b.type = "button";
+      b.setAttribute("aria-pressed", String(shopMetric === m[0]));
+      b.addEventListener("click", function () { shopMetric = m[0]; renderShop(d); });
+      seg.append(b);
+    });
+    head.append(seg);
+    ch.append(head);
+    var money1 = shopMetric === "czk";
+    var rows = dayRows(d, shopMetric);
+    ch.append(barChart(rows, {
+      label: money1 ? "Obrat po dnech v Kč" : "Objednávky po dnech", every: rows.length > 16 ? Math.ceil(rows.length / 12) : 1,
+      fmtY: function (v) { return money1 ? new Intl.NumberFormat("cs-CZ", { maximumFractionDigits: 0 }).format(v) : String(Math.round(v)); },
+      fmtV: function (v) { return money1 ? new Intl.NumberFormat("cs-CZ", { maximumFractionDigits: 0 }).format(v) : String(v); },
+      values: rows.length <= 16,
+    }));
+    body.append(ch);
+    var hb = node("section", "shop-block");
+    hb.append(node("h3", "", "Podle hodiny"));
+    hb.append(barChart(hourRows(d), { label: "Objednávky podle hodiny dne, pražský čas", height: 150, every: 3, values: false, fmtY: function (v) { return String(Math.round(v)); }, fmtV: String }));
+    body.append(hb);
+    var cz = d.countries.CZ, sk = d.countries.SK, st = d.status, lists = node("div", "shop-lists");
+    lists.append(
+      list("Země", [["Česko", cz.orders + " · " + money(cz.czk, "CZK")], ["Slovensko", sk.orders + " · " + currencySplit(sk.by_currency).replace(/ \(\d+\)/, "")]]),
+      list("Stav", [["Zaplaceno", String(st.paid)], ["Čeká na platbu", String(st.pending)], ["Zrušeno", String(st.cancelled)], ["Vráceno", String(st.refunded)]]),
+      list("Doprava", d.shipping.map(function (r) { return [r.key, String(r.orders)]; })),
+      list("Zdroj", d.sources.map(function (r) { return [r.key, String(r.orders)]; }))
+    );
     var tr = d.traffic;
-    var vis = node("div");
     if (tr) {
-      vis.append(grid([
-        kpi("Návštěvy dnes", String(tr.today), tr.conversion.today == null ? "" : "konverze " + String(tr.conversion.today).replace(".", ",") + " %"),
-        kpi("Návštěvy od spuštění", String(tr.total), tr.conversion.total == null ? "" : "konverze " + String(tr.conversion.total).replace(".", ",") + " %"),
+      lists.append(list("Návštěvy", [
+        ["Dnes", tr.today + (tr.conversion.today == null ? "" : " · konverze " + String(tr.conversion.today).replace(".", ",") + " %")],
+        ["Od spuštění", tr.total + (tr.conversion.total == null ? "" : " · konverze " + String(tr.conversion.total).replace(".", ",") + " %")],
       ]));
-    } else {
-      vis.append(node("p", "hint", "Návštěvnost obchodu zatím není dostupná. Shopify ji dává jen přes přehledy (oprávnění read_reports a podporovaný tarif). Měření webu nadbytecna.cz zůstává ve Vercel Analytics, na obchod veryvera22.cz se nevztahuje."));
     }
-    body.append(block("Návštěvnost a konverze", vis, "Konverze = objednávky ÷ návštěvy."));
-    body.append(node("p", "hint", "Žádné osobní údaje zákazníků se neukládají ani nezobrazují. Stránka se obnovuje každou minutu."));
+    body.append(lists);
+    var foot = ["Bez zrušených a testovacích objednávek. Kč jsou přepočet Shopify v den objednávky.", tr ? "" : "Návštěvnost obchodu zatím není dostupná."].filter(Boolean).join(" ");
+    body.append(node("p", "hint shop-foot", foot));
   }
   function stopShopTimer() {
     if (shopTimer) clearInterval(shopTimer);
