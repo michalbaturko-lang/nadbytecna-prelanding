@@ -404,7 +404,8 @@
       "maxDuration": 120
     },
     "api/admin.js": {
-      "maxDuration": 60
+      "maxDuration": 60,
+      "includeFiles": "assets/pdf/**"
     },
     "api/mail-sync.js": {
       "maxDuration": 180
