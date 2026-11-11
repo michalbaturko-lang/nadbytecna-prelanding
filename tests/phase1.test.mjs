@@ -310,3 +310,18 @@ test("Vercel Web Analytics je na veřejných stránkách právě jednou", () => 
   assert.ok(csp.includes(`'${hash}'`), hash);
   assert.doesNotMatch(csp, /unsafe-inline/);
 });
+
+test("tisková zpráva: podstránka s logem, odkaz v hlavičce i patičce, text doslova", () => {
+  const tz = read("tiskova-zprava/index.html");
+  assert.match(tz, /<title>Tisková zpráva — nadbytečná<\/title>/);
+  assert.match(tz, /class="press-logo"[^>]*><a[^>]*><img src="\/img\/nadbytecna-script-v2\.svg"/);
+  assert.match(tz, /Věra Komárová zakládá neziskovou organizaci Nadbytečná a uvádí taky stejnojmenný parfém v rámci nové značky Very Vera/);
+  assert.match(tz, /Jsem šťastná, že k mému novému projektu se připojila značka Triola/);
+  assert.match(tz, /michal\.uryc@taktiq\.com/);
+  for (const f of ["index.html", "o-nas/index.html", "tiskova-zprava/index.html"]) {
+    const h = read(f);
+    assert.match(h, /<nav class="site-nav"[\s\S]*?<a href="\/tiskova-zprava\/">Tisková zpráva<\/a>[\s\S]*?<\/nav>/, `${f}: hlavička`);
+    assert.match(h, /<ul class="foot-links">[\s\S]*?<a href="\/tiskova-zprava\/">Tisková zpráva<\/a>[\s\S]*?<\/ul>/, `${f}: patička`);
+  }
+  assert.match(read("sitemap.xml"), /\/tiskova-zprava\//);
+});
