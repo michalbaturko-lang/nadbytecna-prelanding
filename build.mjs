@@ -412,6 +412,7 @@ function buildPhase1(out) {
   fs.copyFileSync(path.join(ROOT, "src/submit.js"), path.join(out, "submit.js"));
   fs.copyFileSync(path.join(ROOT, "src/cookies.js"), path.join(out, "cookies.js"));
   fs.copyFileSync(path.join(ROOT, "src/admin.js"), path.join(out, "admin.js"));
+  for (const file of ["admin-client.js", "admin-client.css"]) fs.copyFileSync(path.join(ROOT,"src",file),path.join(out,file));
   fs.copyFileSync(path.join(ROOT, "src/admin-pkce.js"), path.join(out, "admin-pkce.js"));
   fs.copyFileSync(path.join(ROOT, "src/admin-session.js"), path.join(out, "admin-session.js"));
   fs.copyFileSync(path.join(ROOT, "src/admin.css"), path.join(out, "admin.css"));
