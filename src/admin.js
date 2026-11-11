@@ -388,6 +388,9 @@
     S.view = "stories";
     $("admin-stories").hidden = false;
     $("admin-mail").hidden = true;
+    $("admin-shop").hidden = true;
+    clear($("shop-body"));
+    stopShopTimer();
     setViewButtons();
     stopAudio();
     document.querySelectorAll("dialog").forEach(function (dialog) {
@@ -1434,7 +1437,7 @@
   function setViewButtons() {
     document
       .querySelector(".skip")
-      .setAttribute("href", S.view === "mail" ? "#mail-cards" : "#admin-cards");
+      .setAttribute("href", S.view === "mail" ? "#mail-cards" : S.view === "shop" ? "#shop-body" : "#admin-cards");
     document.querySelectorAll("[data-admin-view]").forEach(function (b) {
       b.setAttribute("aria-pressed", String(b.dataset.adminView === S.view));
     });
@@ -1446,7 +1449,14 @@
     setViewButtons();
     $("admin-stories").hidden = view !== "stories";
     $("admin-mail").hidden = view !== "mail";
-    if (view === "mail") {
+    $("admin-shop").hidden = view !== "shop";
+    if (view !== "shop") stopShopTimer();
+    if (view === "shop") {
+      S.serial++;
+      closeDetail();
+      clearMail();
+      await loadShop(false);
+    } else if (view === "mail") {
       S.serial++;
       closeDetail();
       clear($("admin-cards"));
@@ -1457,6 +1467,177 @@
     } else {
       clearMail();
       await loadList();
+    }
+  }
+  var SVGNS = "http://www.w3.org/2000/svg";
+  function money(n, cur) {
+    return new Intl.NumberFormat("cs-CZ", { style: "currency", currency: cur || "CZK", maximumFractionDigits: 0 }).format(n || 0);
+  }
+  function barChart(rows, key, label, fmt) {
+    fmt = fmt || function (r) { return r.day.slice(8, 10) + ". " + r.day.slice(5, 7) + "."; };
+    var W = 720, H = 140, max = Math.max.apply(null, rows.map(function (r) { return r[key]; }).concat([1]));
+    var svg = document.createElementNS(SVGNS, "svg");
+    svg.setAttribute("viewBox", "0 0 " + W + " " + (H + 18));
+    svg.setAttribute("class", "shop-chart");
+    svg.setAttribute("role", "img");
+    svg.setAttribute("aria-label", label);
+    var step = W / rows.length;
+    rows.forEach(function (r, i) {
+      var h = Math.round((r[key] / max) * H);
+      var bar = document.createElementNS(SVGNS, "rect");
+      var bw = Math.max(1, Math.min(Math.round(step - 4), 48));
+      bar.setAttribute("x", String(Math.round(i * step + (step - bw) / 2)));
+      bar.setAttribute("y", String(H - h));
+      bar.setAttribute("width", String(bw));
+      bar.setAttribute("height", String(Math.max(h, r[key] > 0 ? 2 : 0)));
+      bar.setAttribute("rx", "2");
+      var t = document.createElementNS(SVGNS, "title");
+      t.textContent = fmt(r) + " — " + r[key];
+      bar.append(t);
+      svg.append(bar);
+    });
+    var a = document.createElementNS(SVGNS, "text");
+    a.setAttribute("x", "0");
+    a.setAttribute("y", String(H + 14));
+    a.textContent = fmt(rows[0]);
+    var z = document.createElementNS(SVGNS, "text");
+    z.setAttribute("x", String(W));
+    z.setAttribute("y", String(H + 14));
+    z.setAttribute("text-anchor", "end");
+    z.textContent = fmt(rows[rows.length - 1]);
+    svg.append(a, z);
+    return svg;
+  }
+  var shopTimer = 0;
+  function eur(n) {
+    return new Intl.NumberFormat("cs-CZ", { style: "currency", currency: "EUR", minimumFractionDigits: 2 }).format(n || 0);
+  }
+  function cur(amount, code) {
+    return code === "EUR" ? eur(amount) : money(amount, code);
+  }
+  function currencySplit(by) {
+    var parts = Object.keys(by || {}).map(function (k) {
+      return cur(by[k].amount, k) + " (" + by[k].orders + ")";
+    });
+    return parts.length ? parts.join(" · ") : "—";
+  }
+  function ago(iso) {
+    if (!iso) return "zatím žádný";
+    var s = Math.max(0, Math.round((Date.now() - new Date(iso).getTime()) / 1000));
+    if (s < 90) return "před " + s + " s";
+    if (s < 5400) return "před " + Math.round(s / 60) + " min";
+    return when(iso);
+  }
+  function rankList(rows, label) {
+    var box = node("div", "shop-rank");
+    var max = Math.max.apply(null, rows.map(function (r) { return r.orders; }).concat([1]));
+    if (!rows.length) box.append(node("p", "hint", "Zatím bez dat."));
+    rows.forEach(function (r) {
+      var row = node("div", "shop-rank-row");
+      var bar = node("progress");
+      bar.max = max;
+      bar.value = r.orders;
+      bar.setAttribute("aria-label", label + " " + r.key + ": " + r.orders);
+      row.append(node("span", "", r.key), bar, node("strong", "", String(r.orders)));
+      box.append(row);
+    });
+    return box;
+  }
+  function block(title, child, hint) {
+    var b = node("section", "shop-block");
+    b.append(node("h3", "", title));
+    if (hint) b.append(node("p", "hint", hint));
+    b.append(child);
+    return b;
+  }
+  function kpi(label, value, sub) {
+    var c = node("div", "panel count shop-kpi");
+    c.append(node("span", "", label), node("strong", "", value));
+    if (sub) c.append(node("span", "hint", sub));
+    return c;
+  }
+  function grid(cards) {
+    var g = node("div", "counts");
+    cards.forEach(function (c) { g.append(c); });
+    return g;
+  }
+  function renderShop(d) {
+    var body = $("shop-body");
+    clear(body);
+    var t = d.today, all = d.total;
+    $("shop-meta").textContent = "Aktualizováno " + when(d.generatedAt) + " · poslední webhook " + ago(d.sync && d.sync.last_webhook_at) + " · poslední dorovnání " + ago(d.sync && d.sync.last_reconcile_at);
+    if (d.last) {
+      var last = node("p", "shop-last");
+      last.append(node("strong", "", "Poslední objednávka "), document.createTextNode(d.last.name + " · " + when(d.last.at) + " · " + cur(d.last.total, d.last.currency) + (d.last.country ? " · " + d.last.country : "")));
+      body.append(last);
+    }
+    body.append(block("Dnes", grid([
+      kpi("Objednávky", String(t.orders), "dnešní den v Praze"),
+      kpi("Obrat", money(t.czk, "CZK"), currencySplit(t.by_currency)),
+      kpi("Prodané kusy", String(t.units), "EDP nadbytečná 50 ml"),
+      kpi("Průměrná objednávka", money(t.average_czk, "CZK"), "v Kč"),
+    ])));
+    body.append(block("Od spuštění (11. 11. 2026)", grid([
+      kpi("Objednávky", String(all.orders)),
+      kpi("Obrat", money(all.czk, "CZK"), currencySplit(all.by_currency)),
+      kpi("Prodané kusy", String(all.units)),
+      kpi("Průměrná objednávka", money(all.average_czk, "CZK")),
+    ]), "Obrat v Kč je přepočet Shopify podle jeho kurzu v den objednávky. Bez zrušených a testovacích objednávek."));
+    if (d.daily.length) body.append(block("Obrat po dnech (Kč)", barChart(d.daily, "czk", "Obrat po dnech v Kč")));
+    var hours = d.hourly.map(function (h) { return { day: "0000-00-" + String(h.hour).padStart(2, "0"), hour: h.hour, orders: h.orders }; });
+    body.append(block("Objednávky podle hodiny dne", barChart(hours, "orders", "Objednávky podle hodiny dne", function (r) { return r.hour + ":00"; }), "Pražský čas, od spuštění. Zleva 0:00, zprava 23:00."));
+    body.append(block("Česko a Slovensko", grid([
+      kpi("Česko", d.countries.CZ.orders + " obj.", money(d.countries.CZ.czk, "CZK") + " · průměr " + money(d.countries.CZ.average_czk, "CZK")),
+      kpi("Slovensko", d.countries.SK.orders + " obj.", currencySplit(d.countries.SK.by_currency) + " · v Kč " + money(d.countries.SK.czk, "CZK")),
+    ])));
+    var st = d.status;
+    body.append(block("Stav objednávek", grid([
+      kpi("Zaplaceno", String(st.paid)),
+      kpi("Čeká na platbu", String(st.pending)),
+      kpi("Zrušeno", String(st.cancelled)),
+      kpi("Vráceno", String(st.refunded)),
+    ])));
+    body.append(block("Doprava", rankList(d.shipping, "Doprava")));
+    body.append(block("Odkud přišly objednávky", rankList(d.sources, "Zdroj"), "Z referreru a UTM. Přímý vstup = bez známého zdroje."));
+    var tr = d.traffic;
+    var vis = node("div");
+    if (tr) {
+      vis.append(grid([
+        kpi("Návštěvy dnes", String(tr.today), tr.conversion.today == null ? "" : "konverze " + String(tr.conversion.today).replace(".", ",") + " %"),
+        kpi("Návštěvy od spuštění", String(tr.total), tr.conversion.total == null ? "" : "konverze " + String(tr.conversion.total).replace(".", ",") + " %"),
+      ]));
+    } else {
+      vis.append(node("p", "hint", "Návštěvnost obchodu zatím není dostupná. Shopify ji dává jen přes přehledy (oprávnění read_reports a podporovaný tarif). Měření webu nadbytecna.cz zůstává ve Vercel Analytics, na obchod veryvera22.cz se nevztahuje."));
+    }
+    body.append(block("Návštěvnost a konverze", vis, "Konverze = objednávky ÷ návštěvy."));
+    body.append(node("p", "hint", "Žádné osobní údaje zákazníků se neukládají ani nezobrazují. Stránka se obnovuje každou minutu."));
+  }
+  function stopShopTimer() {
+    if (shopTimer) clearInterval(shopTimer);
+    shopTimer = 0;
+  }
+  async function loadShop(quiet) {
+    var serial = S.serial;
+    if (!quiet) {
+      $("shop-msg").textContent = "Načítám statistiky e-shopu…";
+      clear($("shop-body"));
+    }
+    try {
+      var d = await api({ action: "stats" }, false, "/api/admin-shop/");
+      if (S.view !== "shop" || serial !== S.serial) return;
+      $("shop-msg").textContent = "";
+      renderShop(d);
+      if (!shopTimer)
+        shopTimer = setInterval(function () {
+          if (S.view !== "shop") return stopShopTimer();
+          if (!document.hidden) loadShop(true).catch(function () {});
+        }, 60000);
+    } catch (e) {
+      if (e && (e.name === "AbortError" || e.message === "cancelled")) return;
+      if (S.view !== "shop") return;
+      $("shop-msg").textContent = quiet
+        ? "Obnovení se nepodařilo, zkusím to znovu za minutu."
+        : "Statistiky e-shopu se nepodařilo načíst. Zkuste to znovu.";
     }
   }
   function mailCategory(row) {
@@ -2674,6 +2855,9 @@
   });
   $("stories-refresh").addEventListener("click",function(){closeDetail();loadList().catch(error);});
   document.querySelectorAll("[data-mail-queue]").forEach(function(b){b.addEventListener("click",function(){var key=b.dataset.mailQueue;M.filters.status=key === "progress" ? "in_progress" : key === "archived" ? "archived" : "";M.filters.review=key === "review" ? "pending" : "";M.page=0;closeMailDetail();renderMailFilters();loadMailList().catch(mailError);});});
+  $("shop-refresh").addEventListener("click", function () {
+    Promise.resolve().then(function () { return loadShop(false); }).catch(error);
+  });
   $("mail-refresh").addEventListener("click", function () {
     closeMailDetail();
     loadMail().catch(mailError);
