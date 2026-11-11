@@ -20,12 +20,13 @@ for (const p of pages) {
   if (apex) ok(`${p} je indexovatelná`, /index/.test(robots) && !/noindex/.test(robots + xr), `meta="${robots}" header="${xr}"`);
   else ok(`${p} není indexovatelná (náhled)`, /noindex/.test(robots + xr));
   ok(`${p} bez zástupných značek`, !/\[(DOPLNIT|ROZHODNOUT|OVĚŘIT)/.test(html) && !/class="draft"/.test(html), (html.match(/\[(DOPLNIT|ROZHODNOUT|OVĚŘIT)[^\]]*\]/g) || []).slice(0, 3).join(" "));
+  ok(`${p} bez starého správce`, !/30254442|Lázeňská/.test(html));
   ok(`${p} má logo v2 a měření`, /nadbytecna-script-v2\.svg/.test(html) && /_vercel\/insights\/script\.js/.test(html));
   ok(`${p} název s malým n, bez „.cz“ v logu`, !/alt="Nadbytečná/.test(html));
 }
 
 const home = await (await get("/")).text();
-ok("úvod: patička se správcem a IČ", /Nadbytečná z\. ú\. Adresa: Lázeňská 9, Praha 1\. IČ: 30254442\./.test(home));
+ok("úvod: patička se správcem a IČ", /Very Vera s\.r\.o\. Adresa: Dlouhá 713\/34, 110 00 Praha 1\. IČO: 30245354\./.test(home));
 ok("úvod: OG obrázek og-v4 a alt", /og-v4\.jpg/.test(home) && /Pro všechny ženy, které poznaly zradu/.test(home));
 ok("úvod: pořadí hesel (2. Žádná žena není)", /Nejsi[\s\S]*?Žádná žena není[\s\S]*?Krása není/.test(home));
 ok("úvod: příběh Věry vedle videa", /class="pribeh-text"/.test(home));
