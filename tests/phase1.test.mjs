@@ -316,8 +316,13 @@ test("tisková zpráva: podstránka s logem, odkaz v hlavičce i patičce, text 
   const tz = read("tiskova-zprava/index.html");
   assert.match(tz, /<title>Tisková zpráva — nadbytečná<\/title>/);
   assert.match(tz, /class="press-logo"[^>]*><a[^>]*><img src="\/img\/nadbytecna-script-v2\.svg"/);
-  assert.match(tz, /Věra Komárová zakládá neziskovou organizaci Nadbytečná a uvádí taky stejnojmenný parfém v rámci nové značky Very Vera/);
-  assert.match(tz, /Jsem šťastná, že k mému novému projektu se připojila značka Triola/);
+  assert.match(tz, /Věra Komárová zakládá neziskovou organizaci Nadbytečná a uvádí také stejnojmenný parfém v rámci nové značky Very Vera/);
+  assert.match(tz, /Tedy vše, čím si prochází její zakladatelka\./);
+  assert.match(tz, /www\.nadbytecna\.cz<\/a> byl právě spuštěn\./);
+  assert.match(tz, /témata, která nás spojují/);
+  assert.match(tz, /Na trh by měl vstoupit 14\. prosince letošního roku\./);
+  assert.match(tz, /„Jsem šťastná, že k mému novému projektu se připojila značka Triola a parfém se bude prodávat i prostřednictvím 35 kamenných obchodů\.“/);
+  assert.match(tz, /šancí pro další ženu a silou pro naši novou společnost\.“ dodává Věra Komárová/);
   assert.match(tz, /michal\.uryc@taktiq\.com/);
   for (const f of ["index.html", "o-nas/index.html", "tiskova-zprava/index.html"]) {
     const h = read(f);
@@ -332,7 +337,7 @@ test("Věřin příběh je na úvodu vedle videa, text doslova, na mobilu pod vi
   const block = home.match(/<div class="pribeh-text">([\s\S]*?)<\/div>/)[1];
   assert.equal((block.match(/<p>/g) || []).length, 5);
   assert.match(block, /^\s*<p>Pouze 11 minut stačilo mému manželovi, aby mě označil za nadbytečnou ve firmě, kterou jsme spolu 24 let budovali\./);
-  assert.match(block, /Proto uvádím na trh novou vůně VERY VERA nadbytečná\. Vzdor\? Možná\./);
+  assert.match(block, /Proto uvádím na trh novou vůni VERY VERA nadbytečná\. Vzdor\? Možná\./);
   assert.match(block, /označit ženu za pár minut za nadbytečnou\.<\/p>\s*$/);
   assert.doesNotMatch(block, /Vaše Věra Komárová|tvář/);
   const css = fs.readFileSync(path.join(ROOT, "src", "scroll.css"), "utf8");
