@@ -31,6 +31,32 @@ test("noindex v HTML, robots.txt zakazuje vše, stránky nemají kanonický odka
   assert.doesNotMatch(home, /nadbytecna-prelanding\.vercel\.app/);
 });
 
+test("canonical a og:url míří na vlastní absolutní adresu stránky", () => {
+  const walk = (d) => fs.readdirSync(d, { withFileTypes: true }).flatMap((e) => {
+    const p = path.join(d, e.name);
+    return e.isDirectory() ? walk(p) : [p];
+  });
+  const htmls = walk(OUT).filter((f) => f.endsWith(".html"));
+  const seen = new Set();
+  for (const file of htmls) {
+    const rel = path.relative(OUT, file).split(path.sep).join("/");
+    if (rel === "admin/index.html") continue;
+    const route = rel === "index.html" ? "/" : `/${rel.slice(0, -"index.html".length)}`;
+    const url = `https://nadbytecna.cz${route}`;
+    const html = read(rel);
+    assert.equal(html.match(/<link rel="canonical" href="([^"]*)">/)?.[1], url, `${rel} canonical`);
+    assert.equal(html.match(/<meta property="og:url" content="([^"]*)">/)?.[1], url, `${rel} og:url`);
+    assert.equal((html.match(/rel="canonical"/g) || []).length, 1, rel);
+    assert.equal((html.match(/property="og:url"/g) || []).length, 1, rel);
+    assert.doesNotMatch(html, /nadbytecna-prelanding\.vercel\.app/, rel);
+    seen.add(route);
+  }
+  for (const route of ["/", "/tiskova-zprava/", "/ochrana-osobnich-udaju/", "/zasady/", "/o-nas/", "/kontakt/", "/cookies/", "/coming-soon/", "/sdilet-pribeh/", "/mohu-pomoci/", "/verin-pribeh/", "/pravidla-zverejnovani/", "/potrebuji-pomoc/"]) {
+    assert.ok(seen.has(route), route);
+  }
+  assert.equal(read("tiskova-zprava/index.html").match(/<a href="(https:\/\/nadbytecna\.cz\/)">www\.nadbytecna\.cz<\/a>/)[1], "https://nadbytecna.cz/");
+});
+
 test("hero má psací nápis a stejné fluid.js, app.js se nenačítá", () => {
   assert.match(home, /<img class="wordmark" src="\/img\/nadbytecna-script-v2\.svg"/);
   const logo = home.match(/<img class="logo"[^>]*>/)[0];
