@@ -443,7 +443,8 @@ function buildPhase1(out) {
   write(path.join(out, "llms.txt"), llms);
   write(path.join(out, "llms-full.txt"), llmsFull);
   const publicPaths = Object.keys(pages).filter((p) => p !== "/admin/" && p !== "/coming-soon/" && p !== "/kontakt/" && p !== "/potrebuji-pomoc/" && p !== "/zasady/");
-  const urls = publicPaths.map((p) => `<url><loc>${SITE}${p === "/" ? "/" : p}</loc></url>`).join("\n");
+  const lastmod = new Date().toISOString().slice(0, 10);
+  const urls = publicPaths.map((p) => `<url><loc>${SITE}${p === "/" ? "/" : p}</loc><lastmod>${lastmod}</lastmod></url>`).join("\n");
   write(path.join(out, "sitemap.xml"), `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls}\n</urlset>\n`);
 }
 
