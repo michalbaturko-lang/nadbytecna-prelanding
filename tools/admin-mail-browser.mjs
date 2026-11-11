@@ -1,3 +1,4 @@
+import {revealControl,revealButton} from './admin-test-ui.mjs';
 // Synthetic UI contract checks. No mailbox, Supabase or other external network is used.
 import http from "node:http";
 import fs from "node:fs";
@@ -217,9 +218,11 @@ try {
     await page
       .getByRole("button", { name: "Otevřít e-mailové vlákno", exact: true })
       .waitFor();
+    await revealControl(page.locator("#mail-sync-status"));
     assert.ok(
       (await page.locator("#mail-sync-status").innerText()).includes("čeká"),
     );
+    await page.locator("#mail-settings > summary").click();
     if (screenshotDir && [375, 1440].includes(width))
       await page.screenshot({
         path: path.join(screenshotDir, width + "-mail-list.png"),
@@ -230,7 +233,6 @@ try {
       await page.waitForTimeout(400);
       assert.ok(!page.url().includes("SYNTHETIC_SEARCH_PRIVATE"));
       await page.locator("#mail-reset").click();
-      await page.locator("#mail-filters summary").click();
     }
     await page
       .getByRole("button", { name: "Otevřít e-mailové vlákno", exact: true })
@@ -240,6 +242,7 @@ try {
       await page.locator('#mail-edit-status option[value="published"]').count(),
       0,
     );
+    await revealButton(page,"Spustit AI nad e-mailem");
     assert.equal(
       await page
         .getByRole("button", { name: "Spustit AI nad e-mailem", exact: true })
@@ -286,6 +289,7 @@ try {
         .getByText("Zařazení místní kopie e-mailu je uložené.", { exact: true })
         .waitFor();
       assert.equal(thread.status, "in_progress");
+      await revealControl(page.locator("#mail-new-note"));
       await page
         .locator("#mail-new-note")
         .fill("Syntetická poznámka k e-mailu.");
@@ -295,6 +299,7 @@ try {
       await page
         .getByText("Syntetická poznámka k e-mailu.", { exact: true })
         .waitFor();
+      await revealButton(page,"Exportovat místní vlákno (JSON)");
       const download = page.waitForEvent("download");
       await page
         .getByRole("button", {
@@ -342,6 +347,7 @@ try {
   await page
     .getByRole("button", { name: "Otevřít e-mailové vlákno", exact: true })
     .click();
+  await revealButton(page,"Smazat místní kopii vlákna");
   await page
     .getByRole("button", { name: "Smazat místní kopii vlákna", exact: true })
     .click();

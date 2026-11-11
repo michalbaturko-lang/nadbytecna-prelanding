@@ -1,3 +1,4 @@
+import {revealControl,revealButton} from './admin-test-ui.mjs';
 // Real local PostgreSQL + API + UI. All contacts and mail contents are synthetic.
 // Run after the primary agent has built PHASE1 dist with the email UI.
 import fs from "node:fs";
@@ -146,6 +147,7 @@ try {
       await page.locator('#mail-edit-status option[value="published"]').count(),
       0,
     );
+    await revealButton(page,"Spustit AI nad e-mailem");
     assert.equal(
       await page
         .getByRole("button", { name: "Spustit AI nad e-mailem", exact: true })
@@ -180,7 +182,9 @@ try {
           pass: true,
         });
       }
+      await revealControl(page.locator("#mail-edit-type"));
       await page.locator("#mail-edit-type").selectOption("story");
+      await revealControl(page.locator("#mail-edit-category"));
       await page.locator("#mail-edit-category").selectOption("pravni");
       await page.locator("#mail-edit-urgency").selectOption("high");
       await page.locator("#mail-edit-status").selectOption("in_progress");
@@ -198,6 +202,7 @@ try {
         await page.locator("#mail-edit-category").inputValue(),
         "pravni",
       );
+      await revealControl(page.locator("#mail-new-note"));
       await page
         .locator("#mail-new-note")
         .fill("Syntetická integrační poznámka k e-mailu.");
@@ -207,6 +212,7 @@ try {
       await page
         .getByText("Syntetická integrační poznámka k e-mailu.", { exact: true })
         .waitFor();
+      await revealButton(page,"Exportovat místní vlákno (JSON)");
       const downloadPromise = page.waitForEvent("download");
       await page
         .getByRole("button", {
@@ -240,6 +246,7 @@ try {
           .first()
           .click();
         await page.locator("#mail-edit-status").waitFor();
+        await revealControl(page.locator("#mail-edit-category"));
         assert.equal(
           await page.locator("#mail-edit-category").inputValue(),
           "pravni",
@@ -298,6 +305,7 @@ try {
     .getByRole("button", { name: "Otevřít e-mailové vlákno", exact: true })
     .first()
     .click();
+  await revealButton(page,"Smazat místní kopii vlákna");
   await page
     .getByRole("button", { name: "Smazat místní kopii vlákna", exact: true })
     .click();

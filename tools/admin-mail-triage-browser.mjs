@@ -1,3 +1,4 @@
+import {revealControl,revealButton} from './admin-test-ui.mjs';
 // Actual admin UI with synthetic HTTP fixtures. No real mailbox or AI provider.
 import http from "node:http";
 import fs from "node:fs";
@@ -108,8 +109,9 @@ try {
     await page.getByRole("button", { name: "E-maily", exact: true }).click();
     await expect(page.locator("#mail-triage-stats")).toContainText("Ke kontrole: 1");
     await expect(page.locator("#mail-sync-status")).toContainText("Historie se ještě načítá");
-    await expect(page.locator("#mail-cards")).toContainText("Žádost o pomoc");
-    await expect(page.locator("#mail-cards")).toContainText("Návrh AI: nižší jistota");
+    await expect(page.locator("#mail-cards")).toContainText(thread.ai_summary);
+
+    await revealButton(page,"Ke kontrole: 1");
     await page.getByRole("button", { name: "Ke kontrole: 1", exact: true }).click();
     await expect(page.locator("#mail-sort")).toHaveValue("newest");
     assert.ok(calls.some(c => c.action === "list" && c.filters.review === "pending" && c.filters.sort === "newest"));
@@ -127,8 +129,10 @@ try {
     await expect(page.locator("#mail-detail .mail-review-reason")).toHaveText(thread.ai_review_reason);
     assert.equal(await page.locator("#mail-detail .mail-review-reason img").count(), 0);
     assert.equal(await page.evaluate(() => window.injected), undefined);
+    await revealControl(page.locator("#mail-ai-scope-approved"));
     const runAi=()=>page.getByRole("button",{name:"Spustit AI znovu",exact:true});
     await expect(page.locator("#mail-detail .mail-ai-scope")).toContainText("Rozsah AI: nenastaven");
+    await revealButton(page,"Spustit AI znovu");
     await expect(runAi()).toBeDisabled();
     await page.locator("#mail-ai-scope-approved").check();
     await page.getByRole("button",{name:"Uložit rozsah AI",exact:true}).click();
@@ -137,6 +141,7 @@ try {
     await page.locator("#mail-ai-scope-approved").uncheck();
     await page.getByRole("button",{name:"Uložit rozsah AI",exact:true}).click();
     await expect(page.locator("#mail-detail .mail-ai-scope")).toContainText("Rozsah AI: zablokováno");
+    await revealButton(page,"Spustit AI znovu");
     await expect(runAi()).toBeDisabled();
     await page.locator("#mail-ai-scope-approved").check();
     await page.getByRole("button",{name:"Uložit rozsah AI",exact:true}).click();
@@ -160,6 +165,7 @@ try {
     await page.locator("#mail-refresh").click();
     await page.getByRole("button", { name: "Otevřít e-mailové vlákno", exact: true }).click();
     await expect(page.locator("#mail-detail .mail-ai-scope")).toContainText("Rozsah AI: povoleno");
+    await revealButton(page,"Spustit AI znovu");
     await expect(runAi()).toBeDisabled();
     assert.equal(thread.revision, 2); assert.equal(thread.reviewed_revision, null);
     // A later reply independently invalidates an earlier human review.

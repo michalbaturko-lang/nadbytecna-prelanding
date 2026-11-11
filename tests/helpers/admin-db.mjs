@@ -40,6 +40,7 @@ export async function applyAdminWorkspace(db) {
   await db.exec(fs.readFileSync(new URL("20261108180637_audio_consent_version.sql", migrations), "utf8"));
   await db.exec(fs.readFileSync(new URL("20261111141207_admin_remember_30_days.sql", migrations), "utf8"));
   await db.exec(fs.readFileSync(new URL("20261111120000_help_offer_greeting.sql", migrations), "utf8"));
+  await db.exec(fs.readFileSync(new URL("20261111153428_admin_inbox_previews.sql", migrations), "utf8"));
 }
 export async function freshAdminDb({
   optionalPreregistrations = false,

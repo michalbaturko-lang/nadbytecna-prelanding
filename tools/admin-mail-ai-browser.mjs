@@ -1,3 +1,4 @@
+import {revealControl,revealButton} from './admin-test-ui.mjs';
 // Synthetic PostgreSQL + actual API/UI; no Microsoft, mail or model calls.
 import fs from "node:fs";
 import path from "node:path";

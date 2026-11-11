@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';import fs from 'node:fs';import {chromium} from '@playwright/test';
 import {startAdminServer,token} from '../tests/helpers/admin-server.mjs';
-const s=await startAdminServer(),browser=await chromium.launch({channel:'chrome'}),checks=[];
+const s=await startAdminServer(),browser=await chromium.launch(process.env.ADMIN_BROWSER_EXECUTABLE?{executablePath:process.env.ADMIN_BROWSER_EXECUTABLE}:{channel:'chrome'}),checks=[];
 const key='nadbytecna-admin',life=30*86400000;let refreshes=0,hold=false,started,release;
 async function route(ctx){await ctx.route('https://**/*',async r=>{
  const req=r.request(),u=new URL(req.url());

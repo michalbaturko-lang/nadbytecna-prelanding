@@ -1,3 +1,4 @@
+import {revealControl,revealButton} from './admin-test-ui.mjs';
 import fs from "node:fs";
 import assert from "node:assert/strict";
 import { chromium } from "@playwright/test";
@@ -121,6 +122,7 @@ try {
     await p.getByRole("button", { name: "Otevřít zprávu" }).first().click();
     await p.locator("#edit-status").waitFor();
     await check(p, width + " detail");
+    await revealButton(p,"Spustit znovu");
     assert.equal(
       await p
         .getByRole("button", { name: "Spustit znovu", exact: true })
@@ -136,6 +138,7 @@ try {
       await p.getByRole("button", { name: "Uložit změny" }).click();
       await p.waitForTimeout(300);
       assert.equal(await p.locator("#edit-status").inputValue(), "in_progress");
+      await revealControl(p.locator("#new-note"));
       await p.locator("#new-note").fill("Syntetická poznámka z telefonu.");
       await p.getByRole("button", { name: "Přidat poznámku" }).click();
       await p
@@ -280,6 +283,7 @@ try {
   const gdprPage = await gdprContext.newPage();
   await gdprPage.goto(s.url + "/admin/");
   await gdprPage.locator(".story-card").first().waitFor();
+  await revealControl(gdprPage.locator("#admin-person"));
   await gdprPage.locator("#admin-person").click();
   await gdprPage
     .locator("#person-tools-email")

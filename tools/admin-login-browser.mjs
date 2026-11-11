@@ -4,7 +4,7 @@ import crypto from 'node:crypto';
 import { chromium } from '@playwright/test';
 import { startAdminServer, token } from '../tests/helpers/admin-server.mjs';
 const s=await startAdminServer();
-const browser=await chromium.launch({channel:process.env.ADMIN_BROWSER_CHANNEL||'chrome'});
+const browser=await chromium.launch(process.env.ADMIN_BROWSER_EXECUTABLE?{executablePath:process.env.ADMIN_BROWSER_EXECUTABLE}:{channel:process.env.ADMIN_BROWSER_CHANNEL||'chrome'});
 const checks=[];
 try {
  const ctx=await browser.newContext();
@@ -29,7 +29,7 @@ try {
  otpStatus=429;await first.locator('#admin-send').click();await first.getByText(/Odesílání přihlašovacích e-mailů je dočasně omezené/).waitFor();
  assert.equal(challenge,initialChallenge);assert.equal(await first.evaluate(()=>localStorage.getItem('nadbytecna-admin-pkce')),initialProof);
  checks.push('rate-limited resend explains the limit and preserves the original unexpired proof and challenge');
- const sans=await first.locator('h1').evaluate(el=>getComputedStyle(el).fontFamily);assert.match(sans,/^Jost,/);assert.match(sans,/sans-serif/);assert.doesNotMatch(sans,/Playfair|Georgia/);
+ const sans=await first.locator('.intro h1').evaluate(el=>getComputedStyle(el).fontFamily);assert.match(sans,/^Jost,/);assert.match(sans,/sans-serif/);assert.doesNotMatch(sans,/Playfair|Georgia/);
  checks.push('admin main heading uses the Jost sans-serif font');
  for(const path of ['/','/sdilet-pribeh/','/mohu-pomoci/']){
   const publicPage=await ctx.newPage();await publicPage.goto(s.url+path);await publicPage.evaluate(()=>document.fonts.ready);

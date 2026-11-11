@@ -1,3 +1,4 @@
+import {revealControl,revealButton} from './admin-test-ui.mjs';
 // Regression cases for sensitive UI state; use only the offline synthetic server.
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
@@ -217,10 +218,12 @@ export async function runUiRegressions({
       })),
       { paused: true, src: null },
     );
+    await revealControl(p.locator("#admin-person"));
     await p.locator("#admin-person").click();
     await p
       .locator("#person-tools-email")
       .fill("private-person@example.invalid");
+    await revealButton(p,"Smazat osobu");
     await p.getByRole("button", { name: "Smazat osobu", exact: true }).click();
     await p.locator("#delete-confirm").waitFor();
     await p.clock.fastForward(15 * 24 * 3600000);
@@ -257,7 +260,9 @@ export async function runUiRegressions({
     await p.getByRole("button", {name:"E-maily",exact:true}).click();
     await p.locator("#mail-cards .mail-card").first().waitFor();
     assert.equal(await p.locator("#mail-count").innerText(), "1 e-mailové vlákno");
-    assert.equal(await p.locator("#mail-cards .kicker").innerText(), "Zatím bez shrnutí AI");
+    assert.equal(await p.locator("#mail-cards .kicker").count(), 0);
+    await p.locator("#mail-detail .reader-scroll").waitFor();
+    assert.ok(await p.getByText("Zatím bez shrnutí AI", {exact:true}).count() > 0);
     results.push({label:"unprocessed mail has an honest AI label and singular Czech count",pass:true});
     // This PostgreSQL instance is the throwaway in-memory fixture created by startAdminServer.
     assert.match(server.url, /^http:\/\/127\.0\.0\.1:/);
@@ -284,6 +289,7 @@ export async function runUiRegressions({
     await p.getByRole("button",{name:"Filtry",exact:true}).click();
     await p.locator("#filter-q").fill("Nenalezitelnýpojem");
     await p.getByText("Žádná zpráva neodpovídá zvoleným filtrům.",{exact:true}).waitFor();
+    await p.getByRole("button",{name:"Filtry",exact:true}).click();
     await p.locator("#admin-cards").getByRole("button",{name:"Zrušit filtry",exact:true}).click();
     await p.locator(".story-card").first().waitFor();
     assert.equal(await p.locator(".story-card").count(),5);

@@ -363,6 +363,7 @@
     }, 1000);
   }
   function showLogin() {
+    document.body.classList.remove("client-mode");
     $("admin-app").hidden = true;
     $("admin-login").hidden = false;
     $("admin-out").hidden = true;
@@ -489,6 +490,7 @@
   function renderFilters() {
     var box = $("filter-fields");
     clear(box);
+    clear($("story-search-slot"));
     FIELDS.forEach(function (f) {
       var wrap, input;
       if (f[0] === "q") {
@@ -526,7 +528,7 @@
           f[0] === "q" ? 350 : 0,
         );
       });
-      box.append(wrap);
+      (f[0] === "q" ? $("story-search-slot") : box).append(wrap);
     });
     $("admin-sort").value = S.filters.sort || "newest";
     document.querySelectorAll("[data-entity]").forEach(function (b) {
@@ -669,43 +671,17 @@
       box.append(empty);
     }
     S.rows.forEach(function (row) {
-      var art = node(
-        "article",
-        "story-card" +
-          (row.urgency === "acute" ? " is-acute" : "") +
-          (S.detail && S.detail.id === row.id ? " is-selected" : ""),
-      );
-      art.append(aiBlock(row, false));
-      var head = node("div", "card-head");
-      head.append(
-        node(
-          "h2",
-          "",
-          row.anonymous ? "Anonymně" : row.full_name || "Bez jména",
-        ),
-      );
-      art.append(head, tags(row), node("p", "meta", when(row.created_at)));
-      if (row.delete_at && new Date(row.delete_at) - Date.now() < 14 * 864e5)
-        art.append(
-          node(
-            "p",
-            "hint",
-            "Bude smazáno: " +
-              when(row.delete_at) +
-              " (po schválení retenčního režimu)",
-          ),
-        );
-      art.append(
-        button(
-          "Otevřít zprávu",
-          function () {
-            return openDetail(row);
-          },
-          "card-open",
-        ),
-      );
+      var name=row.anonymous ? "Anonymně" : row.full_name || "Bez jména";
+      var art=global.NadbytecnaAdminLayout.row({id:row.id,name:name,
+        title:row.category ? category(row.category) : row.entity === "stories" ? "Sdílený příběh" : "Nabídka pomoci",
+        preview:row.preview || row.ai_summary || (row.input_type === "recording" ? "Hlasová zpráva · přehrání v detailu" : row.input_type === "upload" ? "Nahraný zvukový soubor" : "Otevřít celý text zprávy"),
+        at:row.created_at,when:when(row.created_at),status:STATUSES[row.status]||row.status,
+        acute:row.urgency === "acute",warning:row.erasure_requested_at ? "Výmaz čeká" : row.urgency === "acute" ? "Akutní" : "",
+        media:row.input_type === "recording" ? "Hlasovka" : row.input_type === "upload" ? "Soubor" : ""
+      },button("Otevřít zprávu",function(){return openDetail(row);},"card-open"));
       box.append(art);
     });
+    global.NadbytecnaAdminLayout.selected(box,S.detail?.id);
     $("prev-page").disabled = S.page === 0;
     $("next-page").disabled = (S.page + 1) * 25 >= S.total;
     $("page-info").textContent = "Strana " + (S.page + 1);
@@ -721,6 +697,7 @@
     S.rows = data.rows;
     S.total = data.total;
     renderCards();
+    if (!S.detail && innerWidth >= 1024 && S.view === "stories" && S.rows.length) await openDetail(S.rows[0], true);
   }
   function closeDetail() {
     S.detailSerial++;
@@ -729,6 +706,7 @@
     clear($("admin-detail"));
     $("admin-app").classList.remove("detail-open");
     S.detail = null;
+    global.NadbytecnaAdminLayout.selected($("admin-cards"),null);
   }
   function section(title) {
     var s = node("section", "section");
@@ -885,9 +863,19 @@
     document.body.append(d);
     d.showModal();
   }
-  async function openDetail(ref) {
+  async function openDetail(ref, automatic) {
+    var previousUi=S.detail?.id === ref.id ? global.NadbytecnaAdminLayout.state($("admin-detail")) : null;
+    var keyboardSelection=global.NadbytecnaAdminLayout.keyboard();
+    var keepListFocus=automatic || keyboardSelection;
     var detailSerial = ++S.detailSerial;
-    var data = await api({ action: "detail", entity: ref.entity, id: ref.id });
+    var pendingBox=$("admin-detail");
+    stopAudio(pendingBox);
+    clear(pendingBox);
+    pendingBox.hidden=true;
+    S.detail=ref;
+    var data;
+    try { data = await api({ action: "detail", entity: ref.entity, id: ref.id }); }
+    catch(e){if(detailSerial===S.detailSerial)closeDetail();throw e;}
     if (detailSerial !== S.detailSerial) return;
     var row = data.row;
     S.detail = row;
@@ -1021,7 +1009,7 @@
     edit.append(bar);
     box.append(edit);
     var story = section("Celá zpráva");
-    story.append(node("p", "body-text", row.body || "Text není k dispozici."));
+    story.append(node("p", "body-text", row.body || (row.audio_path ? "Zpráva je uložená jako zvuková nahrávka." : "Text není k dispozici.")));
     if (row.audio_path) {
       var audio = null;
       var resumeAt = 0;
@@ -1338,9 +1326,9 @@
       ),
     );
     box.append(gdpr);
-    box.focus({ preventScroll: true });
-    if (innerWidth < 1024) box.scrollIntoView({ block: "start" });
-    renderCards();
+    global.NadbytecnaAdminLayout.detail(box,"story",previousUi);
+    global.NadbytecnaAdminLayout.selected($("admin-cards"),row.id);
+    if (!keepListFocus) box.focus({ preventScroll: true });
   }
   var MAIL_STATUSES = {
     new: "Nový",
@@ -1567,6 +1555,7 @@
       if (originals.cleanupPending > 0) pieces.push("Dokončuje se odstranění originálů: " + originals.cleanupPending + ".");
     }
     $("mail-sync-status").textContent = pieces.join(" ");
+    $("mail-brief").textContent = "veryvera@nadbytecna.cz · " + (status.connected ? "Připojeno" : "Nepřipojeno") + (status.aiEnabled ? " · AI zapnutá" : " · AI vypnutá") + (status.lastError ? " · Načítání vyžaduje kontrolu" : !status.syncEnabled ? " · Načítání vypnuté" : "") + (status.originals?.failed > 0 ? " · Některé originály se neuložily" : "");
     renderMailTriageStats(status.triageStats);
     renderMailConnection(status);
   }
@@ -1885,6 +1874,7 @@
   function renderMailFilters() {
     var fields = $("mail-filter-fields");
     clear(fields);
+    clear($("mail-search-slot"));
     var searchWrap = node("div"),
       searchLabel = node("label", "", "Hledat v e-mailech"),
       search = node("input");
@@ -1894,7 +1884,8 @@
     search.value = M.filters.q || "";
     searchLabel.htmlFor = search.id;
     searchWrap.append(searchLabel, search);
-    fields.append(searchWrap);
+    search.placeholder="Hledat v e-mailech…";
+    $("mail-search-slot").append(searchWrap);
     var timer;
     search.addEventListener("input", function () {
       clearTimeout(timer);
@@ -1951,30 +1942,16 @@
         empty.append(button("Zrušit filtry e-mailů", function () { $("mail-reset").click(); }));
       cards.append(empty);
     }
-    M.rows.forEach(function (row) {
-      var article = node(
-        "article",
-        "story-card mail-card" +
-          (mailUrgency(row) === "acute" ? " is-acute" : ""),
-      );
-      article.append(
-        mailAiBlock(row),
-        node("h2", "", row.subject || "Bez předmětu"),
-        node("p", "mail-sender", mailSender(row)),
-        node("p", "meta", when(mailWhen(row))),
-        mailTags(row),
-      );
-      article.append(
-        button(
-          "Otevřít e-mailové vlákno",
-          function () {
-            return openMailDetail(row.id);
-          },
-          "card-open",
-        ),
-      );
-      cards.append(article);
+    M.rows.forEach(function(row){
+      var art=global.NadbytecnaAdminLayout.row({id:row.id,mail:true,name:row.sender_name || row.sender_email || "Neznámý odesílatel",title:row.subject || "Bez předmětu",
+        preview:row.preview || row.ai_summary || "Otevřít e-mail",at:mailWhen(row),when:when(mailWhen(row)),status:MAIL_STATUSES[row.status]||row.status,
+        acute:mailUrgency(row) === "acute",warning:mailUrgency(row) === "acute" ? "Akutní" : mailReviewed(row) ? "Zkontrolováno" : "Ke kontrole",
+        media:row.has_attachments ? "Přílohy" : row.message_count > 1 ? row.message_count+" zpráv" : ""
+      },button("Otevřít e-mailové vlákno",function(){return openMailDetail(row.id);},"card-open"));
+      cards.append(art);
     });
+    global.NadbytecnaAdminLayout.selected(cards,M.detail?.id);
+    document.querySelectorAll("[data-mail-queue]").forEach(function(b){var k=b.dataset.mailQueue;var active=k === "review" ? M.filters.review === "pending" && !M.filters.status : k === "progress" ? M.filters.status === "in_progress" : k === "archived" ? M.filters.status === "archived" : !M.filters.status && !M.filters.review;b.setAttribute("aria-pressed",String(active));});
     $("mail-prev").disabled = M.page === 0;
     $("mail-next").disabled = (M.page + 1) * 25 >= M.total;
     $("mail-page").textContent = "Strana " + (M.page + 1);
@@ -1995,6 +1972,7 @@
     M.rows = data.rows;
     M.total = Number(data.total);
     renderMailList();
+    if (!M.detail && innerWidth >= 1024 && S.view === "mail" && M.rows.length) await openMailDetail(M.rows[0].id,0,true);
   }
   async function loadMail() {
     var serial = ++M.serial;
@@ -2012,6 +1990,7 @@
     clear($("mail-detail"));
     $("mail-detail").hidden = true;
     $("mail-workspace").classList.remove("mail-detail-open");
+    global.NadbytecnaAdminLayout.selected($("mail-cards"),null);
   }
   function askEraseMail(row) {
     var d = node("dialog"),
@@ -2086,14 +2065,22 @@
     document.body.append(d);
     d.showModal();
   }
-  async function openMailDetail(id, messagePage) {
+  async function openMailDetail(id, messagePage, automatic) {
+    var previousUi=M.detail?.id === id ? global.NadbytecnaAdminLayout.state($("mail-detail")) : null;
+    var keyboardSelection=global.NadbytecnaAdminLayout.keyboard();
+    var keepListFocus=automatic || keyboardSelection;
     messagePage = Math.max(0, Math.floor(Number(messagePage) || 0));
     var serial = ++M.detailSerial;
-    var data = await mailApi({
+    var pendingBox=$("mail-detail");
+    clear(pendingBox);
+    pendingBox.hidden=true;
+    M.detail={id:id};
+    var data;
+    try { data = await mailApi({
       action: "detail",
       id: id,
       message_page: messagePage,
-    });
+    }); } catch(e){if(serial===M.detailSerial)closeMailDetail();throw e;}
     if (serial !== M.detailSerial || S.view !== "mail") return;
     var row = data.thread,
       box = $("mail-detail");
@@ -2342,7 +2329,8 @@
             " zpráv. Zobrazujeme je po 20 od nejnovějších; starší zprávy otevřete tlačítkem níže.",
         ),
       );
-    (Array.isArray(data.messages) ? data.messages : []).forEach(function (m) {
+    if (currentMessagePage > 0) messages.classList.add("page-older");
+    (Array.isArray(data.messages) ? data.messages.slice().sort(function(a,b){return new Date(b.received_at)-new Date(a.received_at)||String(a.id).localeCompare(String(b.id));}) : []).forEach(function (m) {
       var article = node("article", "mail-message");
       article.append(
         node("h3", "", m.subject || row.subject || "Zpráva"),
@@ -2471,14 +2459,17 @@
       ),
     );
     box.append(privacy);
-    box.focus({ preventScroll: true });
-    if (innerWidth < 1024) box.scrollIntoView({ block: "start" });
+    global.NadbytecnaAdminLayout.detail(box,"mail",previousUi);
+    global.NadbytecnaAdminLayout.selected($("mail-cards"),row.id);
+    if (!keepListFocus) box.focus({ preventScroll: true });
+
   }
   async function load() {
     var data = await api({ action: "init" });
     S.categories = data.categories;
     S.user = data.user;
     S.aiEnabled = data.aiEnabled;
+    document.body.classList.add("client-mode");
     $("admin-login").hidden = true;
     $("admin-app").hidden = false;
     $("admin-out").hidden = false;
@@ -2554,6 +2545,7 @@
   }
   $("admin-filters-open").addEventListener("click", function () {
     var box = $("admin-filters");
+    if(!box.hidden){closeFilters();return;}
     box.hidden = false;
     $("admin-filters-open").setAttribute("aria-expanded", "true");
     $("admin-filters-close").focus();
@@ -2665,6 +2657,8 @@
     try { var result=await mailApi({action:"source_check"});mailSay((result.matches ? "Počty při kontrole odpovídají. " : "Počty se při kontrole liší; načítání může ještě probíhat. ")+"Inbox Microsoftu: "+result.sourceMessages+" zpráv. Aktivní místní kopie: "+result.activeMessages+". Celkem místně: "+result.allMessages+"."); }
     catch(error) {mailError(error);}finally{btn.disabled=false;}
   });
+  $("stories-refresh").addEventListener("click",function(){closeDetail();loadList().catch(error);});
+  document.querySelectorAll("[data-mail-queue]").forEach(function(b){b.addEventListener("click",function(){var key=b.dataset.mailQueue;M.filters.status=key === "progress" ? "in_progress" : key === "archived" ? "archived" : "";M.filters.review=key === "review" ? "pending" : "";M.page=0;closeMailDetail();renderMailFilters();loadMailList().catch(mailError);});});
   $("mail-refresh").addEventListener("click", function () {
     closeMailDetail();
     loadMail().catch(mailError);
@@ -2676,6 +2670,7 @@
     loadMailList().catch(mailError);
   });
   $("mail-reset").addEventListener("click", function () {
+    $("mail-filters").open=false;
     M.filters = {};
     M.page = 0;
     closeMailDetail();
