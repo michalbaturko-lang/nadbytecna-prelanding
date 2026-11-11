@@ -29,7 +29,7 @@ test("šablony pro Resend jsou v repu a nic neposílají", () => {
     assert.match(html, /alt="VERY VERA"/);
     assert.doesNotMatch(html, /#3A0B22|#5E2A41|Georgia/);
     assert.match(text, /nadbytečná/);
-    assert.doesNotMatch(text, /Nadbytečná/);
+    assert.doesNotMatch(text.replaceAll("Nadbytečná z. ú.", ""), /Nadbytečná/); // jen úřední název správce má velké N
     if (t.id === "launch-signup") {
       assert.equal(t.subject, "Děkujeme, že chcete být u toho");
       assert.match(text, /děkujeme, že chcete být u otevření platformy nadbytečná\. Spouštíme ji 11\. 11\. 2026 a vám dáme vědět jako prvním\./);
@@ -39,7 +39,7 @@ test("šablony pro Resend jsou v repu a nic neposílají", () => {
       assert.match(text, /veryvera@nadbytecna\.cz/);
       assert.match(text, /nadbytečná\nVERY VERA/);
       assert.match(html, /alt="VERY VERA"/);
-      assert.match(text, /Věra Komárová/);
+      assert.match(text, /Správce osobních údajů: Nadbytečná z\. ú\./);
       if (t.anonymous) assert.doesNotMatch(text + html, /\{\{jmeno\}\}/);
       else assert.match(text, /\{\{jmeno\}\}/);
     }

@@ -105,9 +105,9 @@ test("homepage má dvě volby, osm karet a formuláře nic neodesílají", () =>
   const stripAt = home.indexOf('class="vera-strip"');
   const goalAt = home.indexOf('id="cil"');
   assert.ok(goalAt > 0 && stripAt > goalAt);
-  assert.match(home, /Správce osobních údajů: Věra Komárová, fyzická osoba\. Adresa: Lázeňská 9, Praha 1\. IČ: doplníme\./);
+  assert.match(home, /Správce osobních údajů: Nadbytečná z\. ú\. Adresa: Lázeňská 9, Praha 1\. IČ: 30254442\./);
   assert.doesNotMatch(visible(home), /Zapsaný ústav/);
-  assert.match(read("ochrana-osobnich-udaju/index.html"), /Správce osobních údajů je Věra Komárová, fyzická osoba/);
+  assert.match(read("ochrana-osobnich-udaju/index.html"), /Správce osobních údajů je Nadbytečná z\. ú\./);
   assert.doesNotMatch(read("ochrana-osobnich-udaju/index.html"), /Zapsaný ústav/);
   assert.doesNotMatch(read("kontakt/index.html"), /Zapsaný ústav/);
   assert.match(home, /mailto:veryvera@nadbytecna\.cz/);
@@ -207,7 +207,7 @@ test("právní stránky mluví o souhlasu a kontakt není krizová linka", () =>
   assert.equal(verin.match(/class="choice"/g).length, 2);
   const policy = read("ochrana-osobnich-udaju/index.html");
   assert.match(policy, /<p class="draft">Návrh<\/p>/);
-  assert.match(policy, /\[DOPLNIT\]/);
+  assert.doesNotMatch(policy, /Adresa: \[DOPLNIT\]|IČ: \[DOPLNIT\]/);
   assert.match(policy, /\[ROZHODNOUT\]/);
   assert.match(policy, /\[OVĚŘIT formulaci\]/);
   assert.match(policy, /\[OVĚŘIT předání mimo EU\]/);

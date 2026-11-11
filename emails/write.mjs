@@ -39,14 +39,14 @@ ${inner}
 }
 
 function letter({ hello, paragraphs }) {
-  const text = [hello, "", ...paragraphs, "", "Věra", "nadbytečná", "VERY VERA", FROM_LINE, "", "Správce osobních údajů: Věra Komárová, fyzická osoba."].join("\n");
+  const text = [hello, "", ...paragraphs, "", "Věra", "nadbytečná", "VERY VERA", FROM_LINE, "", "Správce osobních údajů: Nadbytečná z. ú."].join("\n");
   const body = paragraphs.map((p) => `<p style="margin:0 0 16px;font-size:16px;line-height:1.55;color:${MAGENTA}">${esc(p)}</p>`).join("");
   const html = chrome(`<p style="margin:0 0 16px;font-size:16px;line-height:1.55;color:${MAGENTA}">${esc(hello)}</p>
 ${body}
 <p style="margin:24px 0 0;font-family:Arial,Helvetica,sans-serif;font-size:18px;line-height:1.4;color:${MAGENTA}">Věra</p>
 <p style="margin:8px 0 0;font-size:14px;line-height:1.5;color:${MAGENTA}">nadbytečná</p>
 <div style="margin:12px 0">${wordmark(160)}</div>
-<p style="margin:0;font-size:14px;line-height:1.5;color:${MAGENTA}"><a href="mailto:${FROM_LINE}" style="color:${MAGENTA};text-decoration:underline">${FROM_LINE}</a><br>Správce osobních údajů: Věra Komárová, fyzická osoba.</p>`);
+<p style="margin:0;font-size:14px;line-height:1.5;color:${MAGENTA}"><a href="mailto:${FROM_LINE}" style="color:${MAGENTA};text-decoration:underline">${FROM_LINE}</a><br>Správce osobních údajů: Nadbytečná z. ú.</p>`);
   return { text, html };
 }
 
