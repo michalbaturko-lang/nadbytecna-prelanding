@@ -102,6 +102,7 @@ function head({ lang, title, desc, path: p, index = true, og = null, ld = "", al
 <html lang="${lang}">
 <head>
 <meta charset="utf-8">
+<meta name="google-site-verification" content="Y93n64fx2YNcZRXz9UoHIC6ZFyDdItwVM2NFtgyqFDY" />
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>${esc(title)}</title>
 <meta name="description" content="${esc(desc)}">
