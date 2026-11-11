@@ -518,6 +518,7 @@ test("Napsali o nás: karty s citací, odkazy na originály, v hlavičce, patič
   const h = read("napsali-o-nas/index.html");
   assert.equal((h.match(/class="media-card"/g) || []).length, 2);
   assert.match(h, /href="https:\/\/www\.e15\.cz\/byznys\/[^"]+" target="_blank" rel="noopener"/);
+  assert.equal((h.match(/class="media-photo"/g) || []).length, 2);
   assert.match(h, /href="https:\/\/www\.newstream\.cz\/[^"]+" target="_blank" rel="noopener"/);
   for (const q of h.match(/<blockquote class="media-quote"><p>„([^“]+)“/g)) assert.ok(q.split(/\s+/).length < 16, q);
   for (const f of ["index.html", "o-nas/index.html", "napsali-o-nas/index.html"]) {
