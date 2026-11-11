@@ -1,10 +1,11 @@
 // Statická kontrola sestaveného webu (dist/) a repozitáře: žádné inline skripty a události, žádné cizí zdroje,
-// žádná tajemství, bezpečné odkazy a formuláře.
+// žádná tajemství, bezpečné odkazy a formuláře. Jediný povolený inline skript je fronta Vercel Web Analytics.
 import test from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
 import { execFileSync } from "node:child_process";
+import { webAnalyticsHtml, webAnalyticsScript } from "../lib/web-analytics.js";
 
 const ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname), "..");
 execFileSync("node", ["build.mjs"], { cwd: ROOT, stdio: "ignore" });
@@ -20,12 +21,15 @@ test("HTML: žádný inline skript, žádné onXXX události, žádné javascrip
     for (const m of h.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/gi)) {
       const attrs = m[1];
       if (/type="application\/ld\+json"/.test(attrs)) { JSON.parse(m[2]); continue; }
+      if (m[2] === webAnalyticsScript) continue;
       assert.ok(/\bsrc="\/[^"]+"/.test(attrs) && !m[2].trim(), `${f}: inline skript`);
     }
     assert.ok(!/\son[a-z]+\s*=/i.test(h.replace(/<script[\s\S]*?<\/script>/gi, "")), `${f}: inline událost`);
     assert.ok(!/(href|src|action)\s*=\s*["']\s*(javascript|data|vbscript):/i.test(h), `${f}: nebezpečné URL`);
     assert.ok(!/\sstyle\s*=/i.test(h), `${f}: style atribut`);
     assert.ok(!/<(iframe|object|embed|base|meta[^>]+http-equiv=["']?refresh)/i.test(h), `${f}: iframe/object/base/refresh`);
+    assert.equal(h.split(webAnalyticsHtml).length - 1, 1, `${f}: Web Analytics`);
+    assert.doesNotMatch(h, /speed-insights/);
   }
 });
 

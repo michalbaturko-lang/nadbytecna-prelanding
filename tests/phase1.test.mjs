@@ -1,10 +1,12 @@
 // Pracovní náhled fáze 1: žádné odeslání, noindex, osm formulářů, stejný padající nápis.
 import test from "node:test";
 import assert from "node:assert/strict";
+import crypto from "node:crypto";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { execFileSync } from "node:child_process";
+import { webAnalyticsHtml, webAnalyticsScript } from "../lib/web-analytics.js";
 
 const ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname), "..");
 const OUT = fs.mkdtempSync(path.join(os.tmpdir(), "nadbytecna-faze1-"));
@@ -279,4 +281,29 @@ test("indexace se zapne jen při ostrém buildu (index: true)", async () => {
   assert.match(on.robots, /Allow: \/\nDisallow: \/api\//);
   assert.match(on.pages["/coming-soon/"], /noindex/);
   renderPhase1({ ...args, draft: false });
+});
+
+test("Vercel Web Analytics je na veřejných stránkách právě jednou", () => {
+  const walk = (d) => fs.readdirSync(d, { withFileTypes: true }).flatMap((e) => {
+    const p = path.join(d, e.name);
+    return e.isDirectory() ? walk(p) : [p];
+  });
+  const htmls = walk(OUT).filter((f) => f.endsWith(".html"));
+  assert.ok(htmls.some((f) => f.endsWith(`${path.sep}coming-soon${path.sep}index.html`)));
+  for (const f of htmls) {
+    const rel = path.relative(OUT, f);
+    const html = fs.readFileSync(f, "utf8");
+    const count = html.split(webAnalyticsHtml).length - 1;
+    if (rel === path.join("admin", "index.html")) {
+      assert.equal(count, 0, rel);
+      assert.doesNotMatch(html, /_vercel\/insights|speed-insights/);
+    } else {
+      assert.equal(count, 1, rel);
+      assert.doesNotMatch(html, /speed-insights/);
+    }
+  }
+  const hash = "sha256-" + crypto.createHash("sha256").update(webAnalyticsScript).digest("base64");
+  const csp = JSON.parse(fs.readFileSync(path.join(ROOT, "vercel.json"), "utf8")).headers[0].headers.find((h) => h.key === "Content-Security-Policy").value;
+  assert.ok(csp.includes(`'${hash}'`), hash);
+  assert.doesNotMatch(csp, /unsafe-inline/);
 });

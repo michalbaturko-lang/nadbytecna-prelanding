@@ -10,6 +10,7 @@ import { CONSENT_VERSIONS, LANGS, PATHS, consentHtml, controller } from "./lib/c
 import { VOTE_CLAIMS, VOTE_MAX } from "./lib/claims.js";
 import { renderPhase1 } from "./lib/phase1-html.js";
 import { siteLive } from "./lib/host-gate.mjs";
+import { webAnalyticsHtml, webAnalyticsScript } from "./lib/web-analytics.js";
 
 const ROOT = path.dirname(fileURLToPath(import.meta.url));
 // Dokud není připojená doména nadbytecna.cz, na Vercelu míří absolutní URL (OG obrázek, canonical) na vercel.app, aby sdílecí náhledy fungovaly.
@@ -64,14 +65,21 @@ const TXT = {
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const css = fs.readFileSync(path.join(ROOT, "src/site.css"), "utf8").replace(/\/\*[\s\S]*?\*\//g, "").replace(/\s*\n\s*/g, "\n");
 
-// CSP bez 'unsafe-inline': inline <style> povolíme jen podle otisku jeho přesného obsahu.
-// Otisk se propíše do vercel.json (test ověří, že sedí; změníš-li CSS, spusť build a commitni vercel.json).
+// CSP bez 'unsafe-inline': inline <style> a fronta Web Analytics se povolí jen podle otisku přesného obsahu.
+// Otisk se propíše do vercel.json (test ověří, že sedí; změníš-li CSS nebo snippet, spusť build a commitni vercel.json).
 {
   const cssHash = "sha256-" + crypto.createHash("sha256").update(css).digest("base64");
+  const scriptHash = "sha256-" + crypto.createHash("sha256").update(webAnalyticsScript).digest("base64");
   const vjPath = path.join(ROOT, "vercel.json");
   const vj = JSON.parse(fs.readFileSync(vjPath, "utf8"));
   const h = vj.headers[0].headers.find((x) => x.key === "Content-Security-Policy");
-  const next = h.value.replace(/style-src [^;]*;/, `style-src 'self' '${cssHash}';`);
+  const next = h.value
+    .replace(/style-src [^;]*;/, `style-src 'self' '${cssHash}';`)
+    .replace(/script-src ([^;]*);/, (_, src) => {
+      const parts = src.split(/\s+/).filter((part) => part && !part.startsWith("'sha256-"));
+      parts.push(`'${scriptHash}'`);
+      return `script-src ${parts.join(" ")};`;
+    });
   if (!process.env.OUT_DIR && next !== h.value) { h.value = next; fs.writeFileSync(vjPath, JSON.stringify(vj, null, 2) + "\n"); }
 }
 
@@ -125,6 +133,7 @@ ${LANGS.filter((l) => l !== lang).map((l) => `<meta property="og:locale:alternat
 ${PRELOAD}
 <style>${css}</style>
 ${ld}
+${webAnalyticsHtml}
 </head>`;
 }
 
@@ -133,7 +142,6 @@ const footer = (lang, switcher = null) => {
   const sw = switcher ? `<br><a class="lang" href="${switcher}" hreflang="${t.otherLang.code}" lang="${t.otherLang.code}">${t.otherLang.label}</a>` : "";
   return `<footer class="foot"><img class="dom" src="/img/nadbytecna-script.svg" width="1802" height="517" alt="nadbytečná"><a class="mail" href="mailto:veryvera@nadbytecna.cz">veryvera@nadbytecna.cz</a><br><a href="${PATHS[lang].policy}">${t.policyLink}</a>${C.complete ? `<br>${esc(C.name)}, IČO ${esc(C.ico)}` : ""}${sw}</footer>`;
 };
-const analytics = '<script defer src="/_vercel/insights/script.js"></script>';
 const LOGO_ATTRS = 'width="1802" height="517" data-split="0" data-base="0.6333" alt="nadbytečná"';
 
 function home(lang, variant) {
@@ -173,7 +181,6 @@ ${footer(lang, PATHS[t.otherLang.code].home)}
 </div>
 <script src="/app.js" defer></script>
 <script src="/fluid.js" defer></script>
-${analytics}
 </body>
 </html>
 `;
