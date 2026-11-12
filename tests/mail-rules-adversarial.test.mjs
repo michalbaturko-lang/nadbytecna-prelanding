@@ -90,3 +90,17 @@ test("classification does not echo private source text or sender identity into e
   })]);
   assert.ok(!JSON.stringify(result).includes("SECRET_PRIVATE_"));
 });
+
+test("common Czech and Slovak personal stories and offers get visible topic labels", () => {
+  for (const body_text of ["Můj osobní příběh po odchodu ze zaměstnání.", "Môj životný príbeh. Prišla som o prácu.", "Výpověď jsem dostala bez varování.", "Ráda bych se podělila o vlastní zkušenost."]) {
+    assert.ok(codes(classify([message({ body_text })])).includes("personal_story"));
+  }
+  for (const subject of ["Nabídka pomoci projektu", "Nabídka právní pomoci", "Ponúkam pomoc", "Chcem pomáhať"]) {
+    const r=classify([message({ subject })]); assert.ok(codes(r).includes("offer_help")); assert.notEqual(r.disposition,"suspect");
+  }
+});
+test("preference links and no-reply variants are labels, not proof of spam", () => {
+  assert.ok(codes(classify([message({body_text:"Manage your email preferences"})])).includes("newsletter"));
+  assert.ok(codes(classify([message({sender_email:"no-reply-service@example.invalid"})])).includes("automated"));
+  assert.notEqual(classify([message({body_text:"Manage email preferences. Potřebuji právní pomoc."})]).disposition,"suspect");
+});

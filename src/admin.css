@@ -814,3 +814,52 @@ button.primary:hover:not(:disabled) {
     grid-template-columns: 1fr 1fr 32px;
   }
 }
+
+/* Shop overview: compact metrics and paired analytical sections. */
+.client-mode #admin-shop{padding:0 28px 32px;max-width:1640px;margin:auto}
+.client-mode #admin-shop>.mail-heading{height:auto;min-height:92px;padding:20px 0 15px;border-bottom:1px solid var(--line);align-items:center}
+.client-mode #admin-shop .mail-heading h1{font-size:25px;line-height:1.2;margin:0 0 5px;font-weight:550}
+.client-mode #admin-shop .eyebrow{display:none}
+.client-mode #admin-shop #shop-meta{margin:0;font-size:11px;color:var(--muted)}
+#shop-msg:empty{display:none}
+#shop-body{font-variant-numeric:tabular-nums}
+.shop-summary-heading{display:flex;align-items:baseline;gap:14px;margin:18px 0 10px}
+.shop-summary-heading h2{font-size:15px;margin:0;font-weight:550}
+.shop-summary-heading .hint{font-size:11px;margin:0}
+.shop-metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));border:1px solid var(--line);border-radius:5px;background:#fcfafb}
+.shop-metric{display:flex;flex-direction:column;min-width:0;padding:16px 20px;gap:4px}
+.shop-metrics .shop-metric+.shop-metric{border-left:1px solid var(--line)}
+.shop-metric-label{font-size:12px;color:var(--muted)}
+.shop-metric-value{font-size:30px;font-weight:550;letter-spacing:-1px;line-height:1.2;color:var(--ink)}
+.shop-metric:first-child .shop-metric-value{color:var(--rose)}
+.shop-metric-total{font-size:12px;font-weight:450;margin-top:3px}
+.shop-metric .hint{font-size:10px;margin:0;line-height:1.5}
+#admin-shop .shop-last{display:flex;flex-wrap:wrap;gap:6px 12px;padding:11px 0;margin:0;border-bottom:1px solid var(--line);font-size:11px;color:var(--muted)}
+.shop-last strong{color:var(--ink);font-weight:550}
+.shop-columns{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:32px}
+#admin-shop .shop-block{margin:0;padding:20px 0;border-bottom:1px solid var(--line);min-width:0}
+#admin-shop .shop-block h2{font-size:14px;font-weight:550;margin:0 0 8px}
+#admin-shop .shop-block>.hint{font-size:11px;margin:0 0 14px}
+#admin-shop .shop-chart{width:100%;height:150px;max-height:150px}
+.shop-daily{display:grid;gap:13px;max-height:170px;overflow:auto;padding:6px 0}
+.shop-day{display:grid;grid-template-columns:52px minmax(20px,1fr) 106px;gap:12px;align-items:center;font-size:12px}
+.shop-day strong{text-align:right;font-size:13px;font-weight:550}
+#admin-shop progress{appearance:none;height:5px;border:0;border-radius:3px;background:#f0e9ed;color:var(--rose);width:100%}
+#admin-shop progress::-webkit-progress-bar{background:#f0e9ed;border-radius:3px}
+#admin-shop progress::-webkit-progress-value{background:var(--rose);border-radius:3px}
+#admin-shop progress::-moz-progress-bar{background:var(--rose);border-radius:3px}
+.shop-values{margin:0;display:grid;gap:0}
+.shop-values>div{display:flex;justify-content:space-between;gap:15px;padding:7px 0;border-bottom:1px solid #f1edf0;font-size:12px}
+.shop-values>div:last-child{border-bottom:0}
+.shop-values dt{color:var(--muted)}.shop-values dd{margin:0;font-weight:550;white-space:nowrap}
+#admin-shop .shop-rank{gap:12px}
+#admin-shop .shop-rank-row{grid-template-columns:minmax(100px,1fr) minmax(40px,1fr) 30px;gap:12px;font-size:12px}
+#admin-shop .shop-rank-row>span{overflow-wrap:anywhere}
+#admin-shop .shop-rank-row strong{font-size:12px;font-weight:550}
+.shop-traffic{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));max-width:600px}
+.shop-traffic .shop-metric{padding:0 20px 0 0}
+.shop-traffic .shop-metric-value{font-size:24px;letter-spacing:-.5px}
+.shop-method{padding:12px 0;font-size:11px;color:var(--muted)}
+.shop-method summary{cursor:pointer;min-height:44px;display:flex;align-items:center}
+.shop-method .hint{max-width:850px;font-size:11px;line-height:1.6}
+@media(max-width:767px){.client-mode #admin-shop{padding:0 17px 24px}.client-mode #admin-shop>.mail-heading{min-height:82px;padding:14px 0}.client-mode #admin-shop .mail-heading h1{font-size:21px}.shop-summary-heading{display:block}.shop-summary-heading .hint{display:block;margin-top:4px}.shop-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.shop-metric{padding:13px 12px}.shop-metrics .shop-metric:nth-child(3){border-left:0}.shop-metrics .shop-metric:nth-child(n+3){border-top:1px solid var(--line)}.shop-metric-value{font-size:25px}.shop-columns{grid-template-columns:1fr;gap:0}#admin-shop .shop-block{padding:17px 0}.shop-metric-label{font-size:11px}.shop-day{grid-template-columns:45px 1fr 95px;gap:8px}.shop-method .hint{font-size:11px}}
