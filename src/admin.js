@@ -1506,6 +1506,12 @@
     z.setAttribute("text-anchor", "end");
     z.textContent = fmt(rows[rows.length - 1]);
     svg.append(a, z);
+    if (rows.length === 24 && rows[0].hour === 0) {
+      [6,12,18].forEach(function(i) {
+        var tick = document.createElementNS(SVGNS,"text"); tick.setAttribute("x",String((i+.5)*step));tick.setAttribute("y",String(H+14));tick.setAttribute("text-anchor","middle");tick.textContent=i+":00";svg.append(tick);
+      });
+      var peak = document.createElementNS(SVGNS,"text");peak.setAttribute("x","0");peak.setAttribute("y","12");peak.textContent="Maximum: "+Math.max.apply(null,rows.map(function(r){return r[key];}))+" objednávek";svg.append(peak);
+    }
     return svg;
   }
   var shopTimer = 0;
@@ -1545,7 +1551,7 @@
   }
   function block(title, child, hint) {
     var b = node("section", "shop-block");
-    b.append(node("h3", "", title));
+    b.append(node("h2", "", title));
     if (hint) b.append(node("p", "hint", hint));
     b.append(child);
     return b;
@@ -1561,56 +1567,56 @@
     cards.forEach(function (c) { g.append(c); });
     return g;
   }
+  function shopMetric(label, today, total, hint) {
+    var card = node("div", "shop-metric");
+    card.append(node("span", "shop-metric-label", label), node("strong", "shop-metric-value", today), node("span", "shop-metric-total", "Celkem " + total));
+    if (hint) card.append(node("span", "hint", hint));
+    return card;
+  }
+  function shopColumns(left, right) {
+    var row = node("div", "shop-columns"); row.append(left, right); return row;
+  }
+  function shopRows(rows) {
+    var list = node("dl", "shop-values");
+    rows.forEach(function (r) { var pair = node("div"); pair.append(node("dt", "", r[0]), node("dd", "", r[1])); list.append(pair); });
+    return list;
+  }
   function renderShop(d) {
-    var body = $("shop-body");
-    clear(body);
+    var body = $("shop-body"); clear(body);
     var t = d.today, all = d.total;
-    $("shop-meta").textContent = "Aktualizováno " + when(d.generatedAt) + " · poslední webhook " + ago(d.sync && d.sync.last_webhook_at) + " · poslední dorovnání " + ago(d.sync && d.sync.last_reconcile_at);
-    if (d.last) {
-      var last = node("p", "shop-last");
-      last.append(node("strong", "", "Poslední objednávka "), document.createTextNode(d.last.name + " · " + when(d.last.at) + " · " + cur(d.last.total, d.last.currency) + (d.last.country ? " · " + d.last.country : "")));
-      body.append(last);
-    }
-    body.append(block("Dnes", grid([
-      kpi("Objednávky", String(t.orders), "dnešní den v Praze"),
-      kpi("Obrat", money(t.czk, "CZK"), currencySplit(t.by_currency)),
-      kpi("Prodané kusy", String(t.units), "EDP nadbytečná 50 ml"),
-      kpi("Průměrná objednávka", money(t.average_czk, "CZK"), "v Kč"),
-    ])));
-    body.append(block("Od spuštění (11. 11. 2026)", grid([
-      kpi("Objednávky", String(all.orders)),
-      kpi("Obrat", money(all.czk, "CZK"), currencySplit(all.by_currency)),
-      kpi("Prodané kusy", String(all.units)),
-      kpi("Průměrná objednávka", money(all.average_czk, "CZK")),
-    ]), "Obrat v Kč je přepočet Shopify podle jeho kurzu v den objednávky. Bez zrušených a testovacích objednávek."));
-    if (d.daily.length) body.append(block("Obrat po dnech (Kč)", barChart(d.daily, "czk", "Obrat po dnech v Kč")));
-    var hours = d.hourly.map(function (h) { return { day: "0000-00-" + String(h.hour).padStart(2, "0"), hour: h.hour, orders: h.orders }; });
-    body.append(block("Objednávky podle hodiny dne", barChart(hours, "orders", "Objednávky podle hodiny dne", function (r) { return r.hour + ":00"; }), "Pražský čas, od spuštění. Zleva 0:00, zprava 23:00."));
-    body.append(block("Česko a Slovensko", grid([
-      kpi("Česko", d.countries.CZ.orders + " obj.", money(d.countries.CZ.czk, "CZK") + " · průměr " + money(d.countries.CZ.average_czk, "CZK")),
-      kpi("Slovensko", d.countries.SK.orders + " obj.", currencySplit(d.countries.SK.by_currency) + " · v Kč " + money(d.countries.SK.czk, "CZK")),
-    ])));
+    $("shop-meta").textContent = "Aktualizováno " + when(d.generatedAt) + " · automaticky každou minutu";
+    var heading = node("div", "shop-summary-heading");
+    heading.append(node("h2", "", "Dnes"), node("span", "hint", "Srovnání s celkem od 11. 11. 2026 · pražský čas")); body.append(heading);
+    var metrics = node("div", "shop-metrics");
+    metrics.append(shopMetric("Obrat", money(t.czk), money(all.czk), currencySplit(t.by_currency)),
+      shopMetric("Objednávky", String(t.orders), String(all.orders)),
+      shopMetric("Prodané kusy", String(t.units), String(all.units)),
+      shopMetric("Průměrná objednávka", money(t.average_czk), money(all.average_czk)));
+    body.append(metrics);
+    if (d.last) { var last = node("p", "shop-last"); last.append(node("span", "", "Poslední objednávka"), node("strong", "", d.last.name), document.createTextNode(when(d.last.at) + " · " + cur(d.last.total, d.last.currency) + (d.last.country ? " · " + d.last.country : ""))); body.append(last); }
+    var days = node("div", "shop-daily");
+    var max = Math.max.apply(null, d.daily.map(function (r) { return r.czk; }).concat([1]));
+    d.daily.slice(-14).forEach(function (r) {
+      var day = node("div", "shop-day"), meter = node("progress"); meter.max = max; meter.value = r.czk; meter.setAttribute("aria-label", "Obrat " + r.day + ": " + money(r.czk));
+      day.append(node("span", "", r.day.slice(8,10) + ". " + r.day.slice(5,7) + "."), meter, node("strong", "", money(r.czk))); days.append(day);
+    });
+    if (!d.daily.length) days.append(node("p", "hint", "Zatím bez objednávek."));
+    var hours = d.hourly.map(function (h) { return { hour: h.hour, orders: h.orders }; });
+    body.append(shopColumns(block("Obrat po dnech", days, "Posledních 14 dní s objednávkami · přepočet do Kč"), block("Kdy přicházejí objednávky", barChart(hours, "orders", "Objednávky podle hodiny dne", function (r) { return r.hour + ":00"; }), "Počet objednávek podle hodiny · od spuštění")));
     var st = d.status;
-    body.append(block("Stav objednávek", grid([
-      kpi("Zaplaceno", String(st.paid)),
-      kpi("Čeká na platbu", String(st.pending)),
-      kpi("Zrušeno", String(st.cancelled)),
-      kpi("Vráceno", String(st.refunded)),
-    ])));
-    body.append(block("Doprava", rankList(d.shipping, "Doprava")));
-    body.append(block("Odkud přišly objednávky", rankList(d.sources, "Zdroj"), "Z referreru a UTM. Přímý vstup = bez známého zdroje."));
-    var tr = d.traffic;
-    var vis = node("div");
+    body.append(shopColumns(block("Země", shopRows([
+      ["Česko · " + d.countries.CZ.orders + " objednávek", money(d.countries.CZ.czk)],
+      ["Slovensko · " + d.countries.SK.orders + " objednávek", money(d.countries.SK.czk)],
+    ]), "Od spuštění · obrat v Kč"), block("Stav objednávek", shopRows([["Zaplaceno",String(st.paid)],["Čeká na platbu",String(st.pending)],["Zrušeno",String(st.cancelled)],["Vráceno",String(st.refunded)]]))));
+    body.append(shopColumns(block("Doprava", rankList(d.shipping, "Doprava")), block("Zdroje objednávek", rankList(d.sources, "Zdroj"), "Podle referreru a UTM · přímý vstup = zdroj není známý")));
+    var traffic = node("div", "shop-traffic"), tr = d.traffic;
+    function conversion(n) { return n == null ? "Nedostupná" : String(n).replace(".", ",") + " %"; }
     if (tr) {
-      vis.append(grid([
-        kpi("Návštěvy dnes", String(tr.today), tr.conversion.today == null ? "" : "konverze " + String(tr.conversion.today).replace(".", ",") + " %"),
-        kpi("Návštěvy od spuštění", String(tr.total), tr.conversion.total == null ? "" : "konverze " + String(tr.conversion.total).replace(".", ",") + " %"),
-      ]));
-    } else {
-      vis.append(node("p", "hint", "Návštěvnost obchodu zatím není dostupná. Shopify ji dává jen přes přehledy (oprávnění read_reports a podporovaný tarif). Měření webu nadbytecna.cz zůstává ve Vercel Analytics, na obchod veryvera22.cz se nevztahuje."));
-    }
-    body.append(block("Návštěvnost a konverze", vis, "Konverze = objednávky ÷ návštěvy."));
-    body.append(node("p", "hint", "Žádné osobní údaje zákazníků se neukládají ani nezobrazují. Stránka se obnovuje každou minutu."));
+      traffic.append(shopMetric("Návštěvy dnes", String(tr.today), String(tr.total)), shopMetric("Konverze dnes", conversion(tr.conversion.today), conversion(tr.conversion.total)));
+    } else traffic.append(node("p", "hint", "Návštěvnost Shopify zatím není dostupná. Bez ní nelze určit konverzi."));
+    body.append(block("Návštěvnost obchodu", traffic, "Konverze = objednávky ÷ návštěvy · veryvera22.cz"));
+    var details = node("details", "shop-method"), summary = node("summary", "", "Výpočet a aktuálnost dat"); details.append(summary,
+      node("p", "hint", "Obrat v Kč je přepočet Shopify podle kurzu v den objednávky. Souhrny nezahrnují zrušené a testovací objednávky. Stav objednávek ukazuje i zrušené objednávky. Poslední webhook " + ago(d.sync && d.sync.last_webhook_at) + "; dorovnání " + ago(d.sync && d.sync.last_reconcile_at) + ". Osobní údaje zákazníků se nezobrazují.")); body.append(details);
   }
   function stopShopTimer() {
     if (shopTimer) clearInterval(shopTimer);
@@ -2068,6 +2074,12 @@
     d.showModal();
   }
   function renderMailFilters() {
+    var topic = $("mail-topic");
+    if (topic) {
+      var wanted = M.filters.label || "";
+      if (![...topic.options].some(function (o) { return o.value === wanted; })) topic.add(new Option(global.NadbytecnaMailLabels.name(wanted,M.status), wanted));
+      topic.value = wanted;
+    }
     var fields = $("mail-filter-fields");
     clear(fields);
     clear($("mail-search-slot"));
@@ -2112,6 +2124,7 @@
       var p = pick(f[1], "mail-filter-" + f[0], f[2], M.filters[f[0]]);
       p.input.addEventListener("change", function () {
         M.filters[f[0]] = p.input.value;
+        if (f[0] === "label") { var quick = $("mail-topic"); if (![...quick.options].some(function(o){return o.value === p.input.value;})) quick.add(new Option(global.NadbytecnaMailLabels.name(p.input.value,M.status),p.input.value)); quick.value = p.input.value; }
         M.page = 0;
         closeMailDetail();
         loadMailList().catch(mailError);
@@ -2859,6 +2872,12 @@
     b.addEventListener("click", function () {
       selectView(b.dataset.adminView).catch(mailError);
     });
+  });
+  $("mail-topic").addEventListener("change", function () {
+    M.filters.label = this.value;
+    M.filters.disposition = ["spam","suspected_fraud"].includes(this.value) ? "all" : "normal";
+    M.filters.status = ""; M.filters.review = ""; M.page = 0;
+    closeMailDetail(); renderMailFilters(); loadMailList().catch(mailError);
   });
   $("mail-connect-invite").addEventListener("click", createMailInvite);
   $("mail-connect-copy").addEventListener("click", copyMailInvite);
