@@ -2889,7 +2889,7 @@
   });
   $("mail-source-check").addEventListener("click", async function () {
     var btn=$("mail-source-check");btn.disabled=true;mailSay("Porovnávám uložené zprávy s Inboxem Microsoftu…");
-    try { var result=await mailApi({action:"source_check"});mailSay((result.matches ? "Počty při kontrole odpovídají. " : "Počty se při kontrole liší; načítání může ještě probíhat. ")+"Inbox Microsoftu: "+result.sourceMessages+" zpráv. Aktivní místní kopie: "+result.activeMessages+". Celkem místně: "+result.allMessages+"."); }
+    try { var result=await mailApi({action:"source_check",detailed:true});mailSay((result.matches ? (result.comparison === "immutable_ids" ? "Všechny identifikátory zpráv při kontrole odpovídají. " : "Počty při kontrole odpovídají. ") : "Při kontrole je rozdíl; načítání může ještě probíhat. ")+"Inbox Microsoftu: "+result.sourceMessages+" zpráv. Aktivní místní kopie: "+result.activeMessages+". Celkem místně: "+result.allMessages+"."); }
     catch(error) {mailError(error);}finally{btn.disabled=false;}
   });
   $("stories-refresh").addEventListener("click",function(){closeDetail();loadList().catch(error);});
