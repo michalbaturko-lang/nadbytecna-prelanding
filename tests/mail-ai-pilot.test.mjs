@@ -7,7 +7,7 @@ test('expired, unconfirmed, revoked and stale samples cannot return a live previ
 test('controls are explicitly synthetic and cannot touch real snapshots',async()=>{const r=await runMailPilot({index:1,confirm:'TEST_AI_BEZ_ZMEN',env,now,categories:[],rpc:()=>assert.fail(),classify:async()=>({subtype:'request_help'})});assert.equal(r.source,'synthetic_control');assert.equal(r.id,null);assert.match(r.subject,/KONTROLNÍ/);assert.equal(pilotConfig({AI_EMAIL_PILOT_SAMPLE:JSON.stringify({ids:[id,id],expiresAt:'2026-11-12T21:00:00Z'})},now().getTime()),null);});
 
 test('comparison model is fixed by the allowlisted server config, never by mail content',async()=>{
- const candidate={...env,AI_EMAIL_PILOT_SAMPLE:JSON.stringify({ids:[id],expiresAt:'2026-11-12T21:00:00Z',model:'gpt-4.1-mini-2025-04-14'})};
- await runMailPilot({index:0,confirm:'TEST_AI_BEZ_ZMEN',env:candidate,now,rpc:async()=>snapshot,classify:async o=>{assert.equal(o.model,'gpt-4.1-mini-2025-04-14');return {};}});
+ const candidate={...env,AI_EMAIL_PILOT_SAMPLE:JSON.stringify({ids:[id],expiresAt:'2026-11-12T21:00:00Z',model:'gpt-5.6-terra'})};
+ await runMailPilot({index:0,confirm:'TEST_AI_BEZ_ZMEN',env:candidate,now,rpc:async()=>snapshot,classify:async o=>{assert.equal(o.model,'gpt-5.6-terra');return {};}});
  assert.equal(pilotConfig({...env,AI_EMAIL_PILOT_SAMPLE:JSON.stringify({ids:[id],expiresAt:'2026-11-12T21:00:00Z',model:'unapproved-model'})},now().getTime()),null);
 });
