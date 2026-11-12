@@ -900,14 +900,14 @@
         $("admin-cards").querySelector("button")?.focus();
       }),
     );
-    if (row.entity === "stories") {
+    {
       var pdfButton = button("Stáhnout PDF", async function () {
         var epoch = S.authEpoch;
         pdfButton.disabled = true;
         try {
           var blob = await api({ action: "story_pdf", entity: row.entity, id: row.id }, true);
           if (epoch !== S.authEpoch) return;
-          downloadBlob(blob, "pribeh-" + row.id.slice(0, 8) + ".pdf");
+          downloadBlob(blob, (row.entity === "stories" ? "pribeh-" : "nabidka-") + row.id.slice(0, 8) + ".pdf");
         } finally {
           if (pdfButton.isConnected) pdfButton.disabled = Boolean(row.erasure_requested_at);
         }
