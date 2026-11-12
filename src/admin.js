@@ -2887,6 +2887,17 @@
     try { var result=await mailApi({action:"archive_integrity_check"});mailSay(result.ok && result.hashVerified && result.deleted ? "Úložiště originálů ověřeno: testovací soubor se uložil, načetl beze změny a byl odstraněn." : "Test úložiště není dokončený. Zkontrolujte stav ukládání originálů."); }
     catch(error) {mailError(error);}finally{btn.disabled=false;}
   });
+  $("mail-originals-verify").addEventListener("click",async function(){
+    var btn=this,epoch=S.authEpoch,after=null,checked=0,failed=0,pending=0;btn.disabled=true;
+    try{for(var i=0;i<2000;i++){
+      mailSay("Prověřuji uložené originály: "+checked+" ověřeno, "+failed+" chyb.");
+      var r=await mailApi({action:"archive_verify_batch",after:after});
+      if(epoch!==S.authEpoch||S.view!=="mail")return;
+      checked+=r.checked;failed+=r.failed;pending+=r.pending;after=r.next;
+      if(!after){mailSay("Kontrola originálů dokončena: "+checked+" souborů načteno a ověřeno kontrolním součtem. Chyby: "+failed+". Zatím neuložené: "+pending+".");return;}
+    }mailSay("Kontrola dosáhla limitu. Ověřeno "+checked+" originálů; další kontrolu spusťte znovu.");
+    }catch(e){mailError(e);}finally{btn.disabled=false;}
+  });
   $("mail-source-check").addEventListener("click", async function () {
     var btn=$("mail-source-check");btn.disabled=true;mailSay("Porovnávám uložené zprávy s Inboxem Microsoftu…");
     try { var result=await mailApi({action:"source_check",detailed:true});mailSay((result.matches ? (result.comparison === "immutable_ids" ? "Všechny identifikátory zpráv při kontrole odpovídají. " : "Počty při kontrole odpovídají. ") : "Při kontrole je rozdíl; načítání může ještě probíhat. ")+"Inbox Microsoftu: "+result.sourceMessages+" zpráv. Aktivní místní kopie: "+result.activeMessages+". Celkem místně: "+result.allMessages+"."); }

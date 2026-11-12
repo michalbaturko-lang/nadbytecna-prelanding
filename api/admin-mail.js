@@ -15,7 +15,7 @@ import { mailAiAutomationEnabled } from "../lib/mail-ai-worker.mjs";
 import { mailAiScopeAllows,mailAiAllowUnmarked } from "../lib/mail-ai-scope.mjs";
 import { MAIL_LABEL_CATALOG, MAIL_LABEL_CODES, mailRulesEnabled } from "../lib/mail-rules.mjs";
 import { checkArchiveStorage } from "../lib/mail-archive-probe.mjs";
-import { archiveStatus,archiveThread,archiveDownload,archiveExport,prepareArchiveErase,finishArchiveErase,retryArchive } from "../lib/mail-archive.mjs";
+import { verifyArchiveOriginal,archiveStatus,archiveThread,archiveDownload,archiveExport,prepareArchiveErase,finishArchiveErase,retryArchive } from "../lib/mail-archive.mjs";
 import { validateM365AuthConfig,getM365AccessToken } from "../lib/m365-auth.mjs";
 import { compareInboxIds } from "../lib/mail-source-check.mjs";
 import { graphGet } from "../lib/m365-transport.mjs";
@@ -78,6 +78,17 @@ export default async function handler(req, res) {
         connected: connection?.connected === true,
         connectionUpdatedAt: connection?.connected_at || null,
       });
+    }
+    if (b.action === "archive_verify_batch") {
+      if (b.after && !UUID.test(b.after)) throw fail(400,"identity");
+      const rows=await supa(restPath("email_messages",{select:"id",mailbox:"eq."+MAILBOX,order:"id.asc",limit:6,...(b.after?{id:"gt."+b.after}:{})}));
+      const batch=rows.slice(0,5),counts={checked:0,failed:0,pending:0};
+      for(let i=0;i<batch.length;i+=2) await Promise.all(batch.slice(i,i+2).map(async item=>{
+        const list=await rpc("mail_archive",{p_action:"list",p_payload:{id:item.id}}),r=list.messages?.[0];
+        if(r?.status!=="archived"){counts.pending++;return;}
+        try{await verifyArchiveOriginal(r.path,r);counts.checked++;}catch{counts.failed++;}
+      }));
+      return json(res,200,{...counts,next:rows.length>5?batch.at(-1).id:null});
     }
     if (b.action === "archive_integrity_check") return json(res,200,await checkArchiveStorage());
     if (b.action === "source_check") {
