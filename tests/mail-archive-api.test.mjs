@@ -23,6 +23,13 @@ test('only authorized admins obtain short-lived download URLs and original bytes
  const manifest=JSON.parse(strFromU8(files['data.json']));assert.ok(!JSON.stringify(manifest).includes('token=offline'));assert.ok(JSON.stringify(manifest).includes(sha256));
  const outsider=await call({action:'person_export',email:sender},otherToken,'/api/admin/');assert.equal(outsider.status,403);
 });
+test('batch integrity check verifies stored bytes, detects corruption and exposes no private paths',async()=>{
+ for(const t of ['',otherToken])assert.equal((await call({action:'archive_verify_batch'},t)).status,t?403:401);
+ assert.equal((await call({action:'archive_verify_batch',after:'not-a-uuid'})).status,400);
+ let r=await call({action:'archive_verify_batch'});assert.equal(r.status,200);let d=await r.json();assert.deepEqual(d,{checked:1,failed:0,pending:0,next:null});
+ s.storage.set(objectPath,Buffer.alloc(bytes.length));d=await(await call({action:'archive_verify_batch'})).json();assert.equal(d.failed,1);assert.equal(d.checked,0);s.storage.set(objectPath,bytes);
+ assert.ok(!JSON.stringify(d).includes('objects/'));assert.equal((await rpc('status')).archived,1);
+});
 test('thread erasure removes source, queue and private object; other-scope pending cleanup does not block it',async()=>{
  await s.db.query("insert into private.mail_archive_objects(path,message_id,thread_id,lease,revision,delete_requested,settle_after,next_cleanup_at) values('objects/11111111-1111-4111-8111-111111111111/22222222-2222-4222-8222-222222222222.eml','11111111-1111-4111-8111-111111111111','33333333-3333-4333-8333-333333333333','22222222-2222-4222-8222-222222222222',1,true,now()+interval '10 minutes',now()+interval '10 minutes')");
  const response=await call({action:'erase',id:threadId,confirm:'SMAZAT'});assert.equal(response.status,200);const result=await response.json();assert.equal(result.ok,true);assert.equal('archive_scope' in result,false);
