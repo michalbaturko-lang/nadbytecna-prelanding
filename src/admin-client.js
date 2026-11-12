@@ -25,7 +25,7 @@
   if(back){back.classList.add('reader-back');back.title=back.textContent;back.setAttribute('aria-label',back.textContent);toolbar.append(back);}
   var status=box.querySelector(kind==='mail'?'#mail-edit-status':'#edit-status');if(status){var wrap=status.parentElement;wrap.classList.add('toolbar-state');toolbar.append(wrap);}
   var save=edit?.querySelector('.save-bar button');if(save){save.classList.add('reader-save');save.setAttribute('aria-label',save.textContent);save.textContent='Uložit změny';toolbar.append(save);}
-  var pdf=oldHead?.querySelector('.story-pdf-download');if(pdf){pdf.classList.add('reader-pdf');pdf.setAttribute('aria-label',pdf.textContent);pdf.title='Stáhnout příběh jako PDF';toolbar.append(pdf);}
+  var pdf=oldHead?.querySelector('.story-pdf-download');if(pdf){pdf.classList.add('reader-pdf');pdf.setAttribute('aria-label',pdf.textContent);pdf.title='Stáhnout zprávu jako PDF';toolbar.append(pdf);}
   var labelsButton=oldHead?.querySelector('.mail-labels-manage');if(labelsButton)toolbar.append(labelsButton);
   var review=box.querySelector('.mail-human-review button');if(review){review.classList.add('reader-review');review.setAttribute('aria-label',review.textContent);review.title=review.textContent;review.textContent=review.textContent.startsWith('Vrátit')?'Zkontrolováno':'Zkontrolovat';toolbar.append(review);}
   var firstOriginal=main&&Array.from(main.querySelectorAll('button')).find(b=>b.textContent==='Stáhnout originál .eml');if(firstOriginal){firstOriginal.setAttribute('aria-label',firstOriginal.textContent);firstOriginal.textContent='Originál .eml';firstOriginal.classList.add('reader-original');toolbar.append(firstOriginal);}

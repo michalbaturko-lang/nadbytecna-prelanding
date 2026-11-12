@@ -73,8 +73,22 @@ test("PDF API requires existing admin access and a valid stored story; it export
     assert.deepEqual(Object.keys(audits[0].diff), ["pages"]);
     assert.equal(s.metrics.ai, 0);
     const offer = (await s.db.query("SELECT id FROM public.help_offers LIMIT 1")).rows[0];
-    assert.equal((await call({ ...request, entity: "help_offers", id: offer.id })).status, 400);
+    const offerBefore = (await s.db.query("SELECT * FROM public.help_offers WHERE id=$1", [offer.id])).rows[0];
+    const offerPdf = await call({ ...request, entity: "help_offers", id: offer.id });
+    assert.equal(offerPdf.status, 200);
+    assert.match(offerPdf.headers.get("content-disposition"), /nabidka-/);
+    assert.equal(Buffer.from(await offerPdf.arrayBuffer()).subarray(0, 5).toString(), "%PDF-");
+    assert.deepEqual((await s.db.query("SELECT * FROM public.help_offers WHERE id=$1", [offer.id])).rows[0], offerBefore);
     await s.db.query("UPDATE public.stories SET erasure_requested_at=now() WHERE id=$1", [STORY]);
     assert.equal((await call(request)).status, 404);
   } finally { await s.close(); }
+});
+
+test("help offers have their own heading and preserve the full letter", async () => {
+  const row = { ...source, entity: "help_offers" };
+  const content = storyPdfContent(row);
+  assert.equal(content.kind, "Nabídka pomoci");
+  assert.equal(content.title, "Nabídka pomoci");
+  assert.equal(content.paragraphs.join("\n\n"), source.body);
+  assert.equal((await createStoryPdf(row)).pages, 1);
 });

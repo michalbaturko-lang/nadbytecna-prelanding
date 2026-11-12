@@ -244,6 +244,12 @@ body[data-page="phase1"] .main a.choice:hover .choice-note{color:var(--ink-soft)
 .opt input{appearance:none;-webkit-appearance:none;width:1.75rem;height:1.75rem;margin:0;border:1.5px solid #8A4A62;background:#F3E6EB;font-size:16px}
 .opt input[type="radio"]{border-radius:50%}
 .opt input[type="checkbox"]{border-radius:.3rem}
+.opt input{position:relative;display:grid;place-content:center;cursor:pointer;flex-shrink:0}
+.opt input:checked{background:#873c5b!important;border-color:#873c5b}
+.opt input[type="checkbox"]:checked::after{content:"";width:.7rem;height:.4rem;border-left:3px solid white;border-bottom:3px solid white;transform:translateY(-.1rem) rotate(-45deg)}
+.opt input[type="radio"]:checked::after{content:"";width:.65rem;height:.65rem;background:white;border-radius:50%}
+.opt input:focus-visible{outline:3px solid #873c5b;outline-offset:3px}
+@media(forced-colors:active){.opt input{appearance:auto;-webkit-appearance:auto}.opt input::after{display:none}}
 .refine{margin:.15rem 0 1.1rem;padding:.85rem 1rem;background:rgba(255,248,250,.8);border-left:3px solid var(--magenta-deep);border-radius:.35rem}
 .foot-shop{color:var(--ink-soft)}
 body[data-page="phase1"] input,

@@ -148,12 +148,11 @@ export default async function handler(req, res) {
     const { entity, id } = identity(b);
     const row = await record(entity, id, b.action === "detail");
     if (b.action === "story_pdf") {
-      if (entity !== "stories") throw fail(400, "identity");
       const { createStoryPdf } = await import("../lib/story-pdf.mjs");
       const pdf = await createStoryPdf(row);
       await audit(user, "export_story_pdf", entity, id, { pages: pdf.pages });
       res.setHeader("Content-Type", "application/pdf");
-      res.setHeader("Content-Disposition", `attachment; filename="pribeh-${id.slice(0, 8)}.pdf"`);
+      res.setHeader("Content-Disposition", `attachment; filename="${entity === "stories" ? "pribeh" : "nabidka"}-${id.slice(0, 8)}.pdf"`);
       return await streamDownload(res, pdf.bytes);
     }
     if (b.action === "detail") {
