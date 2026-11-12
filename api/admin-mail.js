@@ -17,6 +17,7 @@ import { MAIL_LABEL_CATALOG, MAIL_LABEL_CODES, mailRulesEnabled } from "../lib/m
 import { checkArchiveStorage } from "../lib/mail-archive-probe.mjs";
 import { archiveStatus,archiveThread,archiveDownload,archiveExport,prepareArchiveErase,finishArchiveErase,retryArchive } from "../lib/mail-archive.mjs";
 import { validateM365AuthConfig,getM365AccessToken } from "../lib/m365-auth.mjs";
+import { graphGet } from "../lib/m365-transport.mjs";
 import { readM365Json } from "../lib/m365-readonly.mjs";
 import {
   delegatedMode,
@@ -82,9 +83,7 @@ export default async function handler(req, res) {
       if (process.env.M365_INGEST_ENABLED !== "true") throw fail(423,"mail_sync_disabled");
       const auth = delegatedMode() ? await getDelegatedMailToken() : await getM365AccessToken();
       const resource=delegatedMode() ? "/me" : "/users/"+encodeURIComponent(MAILBOX);
-      const response=await fetch("https://graph.microsoft.com/v1.0"+resource+"/mailFolders/inbox?$select=totalItemCount,unreadItemCount",{method:"GET",redirect:"error",cache:"no-store",headers:{Authorization:"Bearer "+auth.accessToken,Accept:"application/json"},signal:AbortSignal.timeout(10000)});
-      if(!response.ok||response.redirected) throw fail(503,"mail_source_unavailable");
-      const source=await readM365Json(response,16384);
+      const source=await graphGet({url:"https://graph.microsoft.com/v1.0"+resource+"/mailFolders/inbox?$select=totalItemCount,unreadItemCount",headers:{Authorization:"Bearer "+auth.accessToken,Accept:"application/json"},consume:async response=>{if(!response.ok)throw fail(503,"http_error");return readM365Json(response,16384);}});
       if(!Number.isSafeInteger(source.totalItemCount)||source.totalItemCount<0||!Number.isSafeInteger(source.unreadItemCount)||source.unreadItemCount<0) throw fail(503,"mail_source_unavailable");
       const local=await rpc("mail_source_counts",{});
       return json(res,200,{scope:"Inbox",sourceMessages:source.totalItemCount,sourceUnread:source.unreadItemCount,...local,matches:source.totalItemCount===local.activeMessages,checkedAt:new Date().toISOString()});

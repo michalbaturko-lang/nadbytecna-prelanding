@@ -69,7 +69,7 @@ test("bounded MIME stream accepts exact limit and cancels oversize with no parti
   assert.equal(read, false);
 });
 test("HTTP failures never consume private error bodies and use fixed classifications", async () => {
-  for (const [status, code] of [[401, "authentication_failed"], [403, "authentication_failed"], [404, "source_missing"], [410, "source_missing"], [429, "throttled"], [500, "http_error"], [302, "http_error"]]) {
+  for (const [status, code] of [[401, "authentication_failed"], [403, "authentication_failed"], [404, "source_missing"], [410, "source_missing"], [429, "throttled"], [500, "throttled"], [302, "http_error"]]) {
     await assert.rejects(() => readM365Mime({ ...options, fetcher: async () => ({ status, headers: new Headers({ "retry-after": "120" }), get body() { throw new Error("private-error-body"); } }) }), (error) => {
       assert.equal(error.code, code);
       assert.equal(error.stack.includes("private-error-body"), false);

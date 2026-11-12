@@ -59,11 +59,11 @@ test('empty queue preserves zero-job return shape and short batches preserve sin
  const single=fixture({jobs:1});assert.deepEqual(await runMailArchive(single.args),{processed:1,cleanup:3,archived:1,discarded:0});
  assert.equal(single.events.filter(event=>event==='claim').length,2);
 });
-test('cleanup counts toward the deadline and a new job always has the200-second reserve',async()=>{
- const f=fixture({cleanupMs:45000,jobMs:20000});const result=await runMailArchive(f.args);
+test('cleanup counts toward the deadline and a new job always has the270-second reserve',async()=>{
+ const f=fixture({cleanupMs:10000,jobMs:10000});const result=await runMailArchive(f.args);
  assert.deepEqual(result,{processed:2,cleanup:3,archived:2,discarded:0,deadline:true});
  assert.equal(f.events.filter(event=>event==='claim').length,2);
- const cutoff=fixture({cleanupMs:70000});assert.deepEqual(await runMailArchive(cutoff.args),{processed:0,cleanup:3,deadline:true});
+ const cutoff=fixture({cleanupMs:30000});assert.deepEqual(await runMailArchive(cutoff.args),{processed:0,cleanup:3,deadline:true});
  assert.deepEqual(cutoff.events,['cleanup']);
 });
 test('disabled archival still drains GDPR cleanup without claiming or accessing credentials',async()=>{

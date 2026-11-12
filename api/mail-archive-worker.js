@@ -18,7 +18,7 @@ export function createMailArchiveHandler({authorized=cronAuthorized,run=runMailA
     return json(res,200,safe);
    }catch{return json(res,503,{error:'archive_storage_probe_failed'});}
   }
-  try{return json(res,200,await run());}catch{return json(res,503,{error:'archive_failed'});}
+  try{const result=await run();try{report({event:'mail_archive_run',processed:result.processed||0,archived:result.archived||0,failed:result.failed||0,...(result.error?{code:result.error}:{})});}catch{}return json(res,200,result);}catch{return json(res,503,{error:'archive_failed'});}
  };
 }
 export default createMailArchiveHandler();
