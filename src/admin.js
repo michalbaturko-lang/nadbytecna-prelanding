@@ -1605,8 +1605,8 @@
     body.append(shopColumns(block("Obrat po dnech", days, "Posledních 14 dní s objednávkami · přepočet do Kč"), block("Kdy přicházejí objednávky", barChart(hours, "orders", "Objednávky podle hodiny dne", function (r) { return r.hour + ":00"; }), "Počet objednávek podle hodiny · od spuštění")));
     var st = d.status;
     body.append(shopColumns(block("Země", shopRows([
-      ["Česko · " + d.countries.CZ.orders + " objednávek", money(d.countries.CZ.czk)],
-      ["Slovensko · " + d.countries.SK.orders + " objednávek", money(d.countries.SK.czk)],
+      ["Česko · " + quantity(d.countries.CZ.orders,"objednávka","objednávky","objednávek"), money(d.countries.CZ.czk)],
+      ["Slovensko · " + quantity(d.countries.SK.orders,"objednávka","objednávky","objednávek"), money(d.countries.SK.czk)],
     ]), "Od spuštění · obrat v Kč"), block("Stav objednávek", shopRows([["Zaplaceno",String(st.paid)],["Čeká na platbu",String(st.pending)],["Zrušeno",String(st.cancelled)],["Vráceno",String(st.refunded)]]))));
     body.append(shopColumns(block("Doprava", rankList(d.shipping, "Doprava")), block("Zdroje objednávek", rankList(d.sources, "Zdroj"), "Podle referreru a UTM · přímý vstup = zdroj není známý")));
     var traffic = node("div", "shop-traffic"), tr = d.traffic;

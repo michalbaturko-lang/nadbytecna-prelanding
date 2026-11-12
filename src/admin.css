@@ -863,3 +863,5 @@ button.primary:hover:not(:disabled) {
 .shop-method summary{cursor:pointer;min-height:44px;display:flex;align-items:center}
 .shop-method .hint{max-width:850px;font-size:11px;line-height:1.6}
 @media(max-width:767px){.client-mode #admin-shop{padding:0 17px 24px}.client-mode #admin-shop>.mail-heading{min-height:82px;padding:14px 0}.client-mode #admin-shop .mail-heading h1{font-size:21px}.shop-summary-heading{display:block}.shop-summary-heading .hint{display:block;margin-top:4px}.shop-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.shop-metric{padding:13px 12px}.shop-metrics .shop-metric:nth-child(3){border-left:0}.shop-metrics .shop-metric:nth-child(n+3){border-top:1px solid var(--line)}.shop-metric-value{font-size:25px}.shop-columns{grid-template-columns:1fr;gap:0}#admin-shop .shop-block{padding:17px 0}.shop-metric-label{font-size:11px}.shop-day{grid-template-columns:45px 1fr 95px;gap:8px}.shop-method .hint{font-size:11px}}
+.client-mode #admin-shop #shop-refresh{width:auto;flex:none;min-width:70px;align-self:center;font-size:12px}
+.client-mode #admin-shop>.mail-heading>div{flex:1;min-width:0}
