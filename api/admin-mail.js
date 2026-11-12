@@ -10,6 +10,7 @@ import {
 } from "../lib/admin-server.mjs";
 import { UUID, STATUSES, URGENCIES } from "../lib/admin-model.mjs";
 import { MAILBOX, mailRpc, mailHashSecret } from "../lib/mail-service.mjs";
+import { pilotStatus,runMailPilot } from "../lib/mail-ai-pilot.mjs";
 import { mailAiEnabled, classifyMail } from "../lib/mail-ai.mjs";
 import { mailAiAutomationEnabled } from "../lib/mail-ai-worker.mjs";
 import { mailAiScopeAllows,mailAiAllowUnmarked } from "../lib/mail-ai-scope.mjs";
@@ -65,6 +66,7 @@ export default async function handler(req, res) {
         configured,
         syncEnabled: process.env.M365_INGEST_ENABLED === "true",
         aiEnabled: mailAiEnabled(),
+        aiPilot: pilotStatus(),
         aiScopeMode: mailAiAllowUnmarked() ? "all" : "marked",
         aiAutomationEnabled: mailAiAutomationEnabled(),
         rulesEnabled: mailRulesEnabled(),
@@ -135,6 +137,10 @@ export default async function handler(req, res) {
           },
         }),
       );
+    }
+    if(b.action === "ai_pilot") {
+      const c=await supa(restPath("categories",{select:"code",active:"eq.true"}));
+      return json(res,200,await runMailPilot({index:b.index,confirm:b.confirm,rpc,categories:c.map(x=>x.code)}));
     }
     const id = idOf(b);
     if (b.action === "labels") {

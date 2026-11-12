@@ -1712,6 +1712,7 @@
   }
   function renderMailStatus(status) {
     M.status = status;
+    $("mail-ai-pilot").hidden = !status.aiPilot?.available;
     if ($("mail-source-check")) $("mail-source-check").disabled = !(status.syncEnabled && status.configured && (status.authMode !== "delegated" || status.connected));
     var pieces = [];
     if (status.authMode === "delegated" && status.connected !== true)
@@ -2886,6 +2887,26 @@
     var btn=$("mail-archive-check");btn.disabled=true;mailSay("Ověřuji uložení a načtení krátkého testovacího originálu…");
     try { var result=await mailApi({action:"archive_integrity_check"});mailSay(result.ok && result.hashVerified && result.deleted ? "Úložiště originálů ověřeno: testovací soubor se uložil, načetl beze změny a byl odstraněn." : "Test úložiště není dokončený. Zkontrolujte stav ukládání originálů."); }
     catch(error) {mailError(error);}finally{btn.disabled=false;}
+  });
+  $("mail-ai-pilot").addEventListener("click",async function(){
+    var btn=this,epoch=S.authEpoch,total=M.status?.aiPilot?.total||0,results=[];btn.disabled=true;
+    var d=node("dialog","mail-pilot-dialog"),heading=node("h2","","Pilot AI — pouze návrhy"),progress=node("p","","Připravuji test…"),content=node("div");
+    d.dataset.mailDialog="pilot";d.addEventListener("close",function(){d.remove();});
+    d.append(heading,node("p","hint","Vybrané skutečné e-maily a dva označené kontrolní scénáře. Zařazení zpráv se nemění a automatika zůstává vypnutá."),progress,content);
+    d.append(button("Zavřít",function(){d.close();}));document.body.append(d);d.showModal();
+    try{for(var i=0;i<total;i++){
+      if(!d.open)break;progress.textContent="Analyzuji "+(i+1)+" / "+total+"…";
+      var r;try{r=await mailApi({action:"ai_pilot",index:i,confirm:"TEST_AI_BEZ_ZMEN"});}catch(e){r={index:i,error:e.message};}
+      if(epoch!==S.authEpoch||S.view!=="mail"){d.remove();return;}results.push(r);
+      var card=node("section","pilot-result");card.append(node("h3","",r.subject||"Příklad "+(i+1)));
+      if(r.error)card.append(node("p","","Analýza se nepodařila: "+r.error));
+      else{var o=r.output;card.append(node("p","hint",(r.source==="real_email"?"Skutečný e-mail":"KONTROLNÍ SCÉNÁŘ — smyšlený text")+" · "+(MAIL_SUBTYPES[o.subtype]||o.subtype)+" · "+(URGENCIES[o.urgency]||o.urgency)+" · jistota "+o.confidence),node("p","",o.summary),node("p","hint","Další krok: "+o.help_type));if(o.review_reason)card.append(node("p","hint","Lidská kontrola: "+o.review_reason));}
+      content.append(card);
+    }
+    progress.textContent="Dokončeno "+results.length+" / "+total+". Automatika zůstává vypnutá.";
+    var details=node("details"),summary=node("summary","","Úplné výsledky JSON"),pre=node("pre","",JSON.stringify({model:results.find(x=>x.output)?.output.model,previewOnly:true,results:results},null,2));pre.id="mail-ai-pilot-output";details.append(summary,pre);content.append(details);
+    content.append(button("Stáhnout výsledky",function(){downloadBlob(new Blob([pre.textContent],{type:"application/json"}),"nadbytecna-ai-pilot.json");}));
+    }finally{btn.disabled=false;}
   });
   $("mail-originals-verify").addEventListener("click",async function(){
     var btn=this,epoch=S.authEpoch,after=null,checked=0,failed=0,pending=0;btn.disabled=true;
