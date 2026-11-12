@@ -421,7 +421,7 @@
       "maxDuration": 10
     },
     "api/mail-sync.js": {
-      "maxDuration": 180
+      "maxDuration": 300
     },
     "api/admin-mail.js": {
       "maxDuration": 180

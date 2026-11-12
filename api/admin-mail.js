@@ -15,8 +15,10 @@ import { mailAiAutomationEnabled } from "../lib/mail-ai-worker.mjs";
 import { mailAiScopeAllows,mailAiAllowUnmarked } from "../lib/mail-ai-scope.mjs";
 import { MAIL_LABEL_CATALOG, MAIL_LABEL_CODES, mailRulesEnabled } from "../lib/mail-rules.mjs";
 import { checkArchiveStorage } from "../lib/mail-archive-probe.mjs";
-import { archiveStatus,archiveThread,archiveDownload,archiveExport,prepareArchiveErase,finishArchiveErase,retryArchive } from "../lib/mail-archive.mjs";
+import { verifyArchiveOriginal,archiveStatus,archiveThread,archiveDownload,archiveExport,prepareArchiveErase,finishArchiveErase,retryArchive } from "../lib/mail-archive.mjs";
 import { validateM365AuthConfig,getM365AccessToken } from "../lib/m365-auth.mjs";
+import { compareInboxIds } from "../lib/mail-source-check.mjs";
+import { graphGet } from "../lib/m365-transport.mjs";
 import { readM365Json } from "../lib/m365-readonly.mjs";
 import {
   delegatedMode,
@@ -77,14 +79,24 @@ export default async function handler(req, res) {
         connectionUpdatedAt: connection?.connected_at || null,
       });
     }
+    if (b.action === "archive_verify_batch") {
+      if (b.after && !UUID.test(b.after)) throw fail(400,"identity");
+      const rows=await supa(restPath("email_messages",{select:"id",mailbox:"eq."+MAILBOX,order:"id.asc",limit:6,...(b.after?{id:"gt."+b.after}:{})}));
+      const batch=rows.slice(0,5),counts={checked:0,failed:0,pending:0};
+      for(let i=0;i<batch.length;i+=2) await Promise.all(batch.slice(i,i+2).map(async item=>{
+        const list=await rpc("mail_archive",{p_action:"list",p_payload:{id:item.id}}),r=list.messages?.[0];
+        if(r?.status!=="archived"){counts.pending++;return;}
+        try{await verifyArchiveOriginal(r.path,r);counts.checked++;}catch{counts.failed++;}
+      }));
+      return json(res,200,{...counts,next:rows.length>5?batch.at(-1).id:null});
+    }
     if (b.action === "archive_integrity_check") return json(res,200,await checkArchiveStorage());
     if (b.action === "source_check") {
       if (process.env.M365_INGEST_ENABLED !== "true") throw fail(423,"mail_sync_disabled");
       const auth = delegatedMode() ? await getDelegatedMailToken() : await getM365AccessToken();
+      if (b.detailed === true && delegatedMode()) return json(res,200,await compareInboxIds({accessToken:auth.accessToken}));
       const resource=delegatedMode() ? "/me" : "/users/"+encodeURIComponent(MAILBOX);
-      const response=await fetch("https://graph.microsoft.com/v1.0"+resource+"/mailFolders/inbox?$select=totalItemCount,unreadItemCount",{method:"GET",redirect:"error",cache:"no-store",headers:{Authorization:"Bearer "+auth.accessToken,Accept:"application/json"},signal:AbortSignal.timeout(10000)});
-      if(!response.ok||response.redirected) throw fail(503,"mail_source_unavailable");
-      const source=await readM365Json(response,16384);
+      const source=await graphGet({url:"https://graph.microsoft.com/v1.0"+resource+"/mailFolders/inbox?$select=totalItemCount,unreadItemCount",headers:{Authorization:"Bearer "+auth.accessToken,Accept:"application/json"},consume:async response=>{if(!response.ok)throw fail(503,"http_error");return readM365Json(response,16384);}});
       if(!Number.isSafeInteger(source.totalItemCount)||source.totalItemCount<0||!Number.isSafeInteger(source.unreadItemCount)||source.unreadItemCount<0) throw fail(503,"mail_source_unavailable");
       const local=await rpc("mail_source_counts",{});
       return json(res,200,{scope:"Inbox",sourceMessages:source.totalItemCount,sourceUnread:source.unreadItemCount,...local,matches:source.totalItemCount===local.activeMessages,checkedAt:new Date().toISOString()});
