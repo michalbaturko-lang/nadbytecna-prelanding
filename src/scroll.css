@@ -359,6 +359,9 @@ html.sc-live .sc-stage{height:66vh;height:66svh;top:17vh;top:17svh}
   .party-titles{grid-area:titles;align-items:flex-start;align-self:center}
   .party-band{grid-area:band;justify-self:center;width:min(48rem,82%);margin:2.4rem 0 2.5rem;transform:rotate(-5deg)}
   .party-date{grid-area:date;justify-self:end;align-self:center;margin:0}
+  .party-num{width:clamp(14rem,22vw,22rem);margin-bottom:-1.15rem}
+  .party-spark--a{width:1.45rem;height:1.45rem;top:2.1rem;left:-.4rem}
+  .party-spark--b{width:1rem;height:1rem;top:.5rem;right:.1rem}
   .party-facts{grid-area:facts;justify-content:flex-start;margin:.15rem 0 0}
   .party-rule{grid-area:rule;width:min(16rem,36%);margin:.25rem auto .1rem}
   .party-place{grid-area:place;justify-self:start;align-self:center;margin:0;text-align:left}
