@@ -428,8 +428,9 @@ body[data-page="phase1"] .hero h1{margin:0 0 .45rem}
 body[data-page="phase1"] .hero .lead{margin:0}
 .site-mark{display:block;line-height:0;order:1;overflow:visible}
 .wordmark{display:block;width:min(46vw,12rem);height:auto;aspect-ratio:1802/517;overflow:visible}
-.top-cta{order:3;margin-left:auto;display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:.45rem 1rem;border-radius:.5rem;background:var(--magenta-deep);color:#fff;font-weight:700;text-decoration:none}
-.top-cta:hover{color:#fff;background:#9F0842}
+.top-cta{order:3;margin-left:auto;display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:.45rem 1rem;border-radius:.5rem;background:#c21878;color:#fff;font-weight:700;text-decoration:none}
+.top-cta:hover{color:#fff;background:#9a105f}
+.top-cta:focus-visible{outline:3px solid #3A0B22;outline-offset:3px}
 .nav-toggle{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);border:0}
 .nav-burger{order:2;display:none;align-items:center;justify-content:center;min-width:44px;min-height:44px;padding:.4rem .7rem;border:1.5px solid #8A4A62;border-radius:.5rem;background:var(--paper);font-weight:700;cursor:pointer}
 .nav-toggle:focus-visible+.nav-burger{outline:3px solid var(--ink);outline-offset:3px}

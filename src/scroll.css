@@ -284,7 +284,84 @@ body[data-form] .main a:not(.backlink){color:var(--ink)}
 html.sc-live .sc-manifest{height:calc(100svh + var(--per) * 6svh)}
 html.sc-live .sc-stage{height:66vh;height:66svh;top:17vh;top:17svh}
 
-/* úvod bez celé obrazovky: Příběh Věry navazuje hned pod nadpisem */
-.sc-hero{min-height:0;padding-bottom:clamp(1.5rem,4svh,3rem)}
-@media (max-width:47.99rem){.sc-hero{min-height:0;padding-bottom:1.5rem}}
-.sc-chapter[data-chapter="1"]{padding-top:clamp(.5rem,2svh,1.5rem)}
+/* úvod bez celé obrazovky: pozvánka na párty je hned pod nadpisem, Příběh Věry pod ní */
+.sc-hero{min-height:0;padding-bottom:clamp(.85rem,2.4svh,1.6rem)}
+@media (max-width:47.99rem){.sc-hero{min-height:0;padding-bottom:.85rem}}
+.sc-chapter[data-chapter="1"]{padding-top:clamp(1.25rem,3svh,2.25rem)}
+
+/* Charitativní párty — vodorovný pruh podle Věřiny pozvánky. Jen Jost, bez loga Very Vera. */
+.party{position:relative;isolation:isolate;overflow:hidden;color:#7d124e;background:
+  linear-gradient(180deg,#c21878 0 1.9rem,#f6d2e1 2.55rem,#f8d7e5 46%,#fdeef4 100%)}
+.party::before,.party::after{content:"";position:absolute;pointer-events:none}
+.party::before{inset:0;z-index:0;background-image:
+  radial-gradient(circle at 8% 16%,rgba(255,255,255,.95) 0 1.05px,transparent 1.7px),
+  radial-gradient(circle at 18% 8%,rgba(255,255,255,.8) 0 .7px,transparent 1.3px),
+  radial-gradient(circle at 28% 28%,rgba(255,255,255,.7) 0 .85px,transparent 1.4px),
+  radial-gradient(circle at 40% 6%,rgba(255,236,244,.9) 0 .6px,transparent 1.15px),
+  radial-gradient(circle at 52% 18%,rgba(255,255,255,.55) 0 .55px,transparent 1.05px),
+  radial-gradient(circle at 66% 10%,rgba(255,255,255,.75) 0 .8px,transparent 1.35px),
+  radial-gradient(circle at 78% 22%,rgba(255,255,255,.45) 0 .5px,transparent 1px),
+  radial-gradient(circle at 90% 7%,rgba(255,255,255,.85) 0 .9px,transparent 1.5px),
+  radial-gradient(circle at 14% 42%,rgba(180,20,80,.28) 0 .7px,transparent 1.2px);
+  background-size:168px 96px;
+  -webkit-mask-image:linear-gradient(180deg,#000 0%,rgba(0,0,0,.72) 24%,rgba(0,0,0,.18) 52%,transparent 74%);
+  mask-image:linear-gradient(180deg,#000 0%,rgba(0,0,0,.72) 24%,rgba(0,0,0,.18) 52%,transparent 74%)}
+.party::after{z-index:0;left:0;top:0;width:min(42%,24rem);height:62%;background-image:
+  radial-gradient(circle at 16% 18%,rgba(255,255,255,.95) 0 1.15px,transparent 1.8px),
+  radial-gradient(circle at 38% 30%,rgba(255,255,255,.75) 0 .65px,transparent 1.15px),
+  radial-gradient(circle at 58% 12%,rgba(255,255,255,.85) 0 .9px,transparent 1.45px),
+  radial-gradient(circle at 24% 52%,rgba(255,255,255,.6) 0 .55px,transparent 1px),
+  radial-gradient(circle at 70% 42%,rgba(255,210,228,.8) 0 .7px,transparent 1.2px);
+  background-size:54px 48px;
+  -webkit-mask-image:radial-gradient(ellipse at 0 0,#000 0%,transparent 74%);
+  mask-image:radial-gradient(ellipse at 0 0,#000 0%,transparent 74%)}
+.party-inner{position:relative;z-index:1;display:grid;justify-items:center;text-align:center;gap:.35rem 1.25rem;padding:.42rem 1rem 1.2rem}
+.party-lead,.party-aside{display:contents}
+.party-titles{display:flex;flex-direction:column;align-items:center}
+.party-kicker{margin:0;color:#fff;font-weight:650;font-size:clamp(1rem,1.7vw,1.4rem);letter-spacing:.2em;line-height:1;text-transform:uppercase;text-shadow:0 2px 0 #a01462,0 8px 16px rgba(120,10,60,.28)}
+.party-title{margin:.62rem 0 0;color:#c21878;font-family:var(--sans);font-weight:800;font-size:clamp(2.35rem,5.4vw,3.7rem);line-height:.9;letter-spacing:.04em;text-transform:uppercase}
+.party-band{justify-self:stretch;margin:.45rem -12% .15rem;padding:.28rem 12%;background:linear-gradient(90deg,#c21878 0%,#d63b90 48%,#c21878 100%);transform:rotate(-6.5deg);box-shadow:0 10px 18px -12px rgba(120,10,60,.65)}
+.party-band span{display:block;color:#fff;font-weight:800;font-size:clamp(1.7rem,4.6vw,3.35rem);line-height:1.02;letter-spacing:.055em;text-align:center;text-transform:uppercase;text-wrap:balance}
+.party-date{margin:.15rem 0 .1rem}
+.party-date time{position:relative;display:flex;flex-direction:column;align-items:center}
+.party-num{display:block;width:clamp(6.2rem,16vw,8.4rem);height:auto;margin:0 0 -.35rem;filter:drop-shadow(0 7px 8px rgba(90,20,50,.28))}
+.party-spark{position:absolute;color:#fff;filter:drop-shadow(0 0 4px rgba(255,255,255,.85));pointer-events:none}
+.party-spark svg{display:block;width:100%;height:100%}
+.party-spark--a{width:.85rem;height:.85rem;left:-.2rem;top:1.1rem}
+.party-spark--b{width:.55rem;height:.55rem;right:.15rem;top:.35rem}
+.party-pill{position:relative;z-index:1;display:inline-block;margin-top:-.15rem;padding:.28em .95em .24em;border-radius:999px;background:#c21878;color:#fff;font-weight:750;font-size:clamp(.95rem,1.6vw,1.15rem);letter-spacing:.16em;line-height:1.1;text-transform:uppercase}
+.party-year{margin-top:.28rem;color:#7d124e;font-weight:750;font-size:.95rem;letter-spacing:.2em}
+.party-facts{display:flex;justify-content:center;gap:clamp(1rem,4vw,2.4rem);margin:.35rem 0 0;padding:0;list-style:none}
+.party-facts li{display:flex;flex-direction:column;align-items:center;gap:.32rem;min-width:4.4rem;font-weight:750;font-size:clamp(.92rem,1.5vw,1.05rem);letter-spacing:.04em;line-height:1.15}
+.party-where{letter-spacing:.14em;text-transform:uppercase}
+.party-ico{display:grid;place-items:center;width:2.7rem;height:2.7rem;border-radius:50%;background:#c21878;color:#fff}
+.party-ico svg{width:1.45rem;height:1.45rem;display:block}
+.party-ico--ticket{width:2.9rem;height:2.15rem;border-radius:0;background:transparent;color:#c21878;transform:rotate(-16deg)}
+.party-ico--ticket svg{width:2.55rem;height:1.7rem}
+.party-place{margin:.15rem 0 0;max-width:28rem;font-size:.98rem;font-weight:600;line-height:1.35}
+.party-rule{display:flex;align-items:center;gap:.7rem;width:min(16rem,70%);margin:.45rem 0 .1rem;color:#c21878}
+.party-rule span{flex:1;height:1px;background:currentColor}
+.party-rule svg{width:.85rem;height:.85rem;flex:none;fill:currentColor}
+.party-note{margin:0;max-width:36rem;font-size:clamp(.98rem,1.5vw,1.12rem);line-height:1.4}
+.party-note em{font-style:italic;font-weight:500}
+.party-note strong{font-style:normal;font-weight:800}
+.party-cta{display:inline-flex;align-items:center;justify-content:center;min-height:48px;margin-top:.35rem;padding:.55rem 1.45rem;border-radius:999px;background:#c21878;color:#fff;font-weight:750;font-size:1.02rem;line-height:1.2;text-decoration:none}
+.party-cta:hover{background:#9a105f;color:#fff}
+.party-cta:focus-visible{outline:3px solid #3A0B22;outline-offset:3px}
+.party-sr{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+@media (min-width:62rem){
+  .party-inner{grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;justify-items:center;text-align:center;column-gap:clamp(1rem,2.6vw,2.75rem);row-gap:0;padding:3.6rem max(3.5rem,4vw) 1.25rem}
+  .party-facts{padding-top:.35rem}
+  .party-lead,.party-aside{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.4rem;min-width:0;width:100%}
+  .party-titles{align-items:center}
+  .party-band{width:100%;max-width:22rem;margin:.35rem 0 0;padding:.22rem .5rem;transform:rotate(-6deg)}
+  .party-band span{font-size:clamp(1.25rem,2.15vw,2.15rem)}
+  .party-date{justify-self:center;align-self:center;margin:0}
+  .party-num{width:clamp(14rem,22vw,22rem);margin-bottom:-1.15rem}
+  .party-spark--a{width:1.45rem;height:1.45rem;top:2.1rem;left:-.4rem}
+  .party-spark--b{width:1rem;height:1rem;top:.5rem;right:.1rem}
+  .party-facts{justify-content:center;margin:0}
+  .party-place,.party-note{max-width:22rem;margin:0;text-align:center}
+  .party-rule{width:min(12rem,80%);margin:.15rem 0}
+  .party-cta{margin-top:.15rem}
+}
