@@ -140,9 +140,10 @@ test("homepage má dvě volby, osm karet a formuláře nic neodesílají", () =>
   assert.match(home, /class="party-year">2026</);
   assert.match(home, />18h</);
   assert.match(home, /class="party-where">Praha</);
-  assert.match(home, /2&nbsp;111&nbsp;Kč/);
-  assert.doesNotMatch(home, /2(?:\s|&nbsp;)*011/);
-  assert.match(home, /Místo oznámíme do 10\.&nbsp;12\./);
+  assert.match(home, /2&nbsp;211&nbsp;Kč/);
+  assert.doesNotMatch(home, /2(?:\s|&nbsp;)*(?:0|1)11(?:\s|&nbsp;)*Kč/);
+  assert.match(home, /Místo vybereme podle počtu přihlášených do konce měsíce/);
+  assert.doesNotMatch(home, /Místo oznámíme/);
   assert.match(home, /<em>Výtěžek z výdělku poputuje na neziskový projekt<\/em> <strong>nadbytecna\.cz<\/strong>/);
   assert.match(home, /class="party-cta" href="https:\/\/veryvera22\.cz\/products\/vstupenka-nadbytecna-party" target="_blank" rel="noopener noreferrer">Chci přijít/);
   assert.match(home, /class="sc-bar" href="#parfem"><span>Parfém nadbytečná<\/span>/);
