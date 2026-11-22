@@ -388,6 +388,10 @@
       "schedule": "*/5 * * * *"
     },
     {
+      "path": "/api/forward-copy/",
+      "schedule": "0 7 * * *"
+    },
+    {
       "path": "/api/mail-sync/",
       "schedule": "* * * * *"
     },
@@ -406,6 +410,9 @@
     },
     "api/ai-worker.js": {
       "maxDuration": 120
+    },
+    "api/forward-copy.js": {
+      "maxDuration": 60
     },
     "api/admin.js": {
       "maxDuration": 60,
