@@ -3,7 +3,7 @@ import { json } from "../lib/http.js";
 import { supa, restPath, exact, assertAudioPath } from "../lib/admin-server.mjs";
 import { buildCopy } from "../lib/forward-copy.mjs";
 
-// Každých 5 minut pošle nové příběhy a nabídky (celý text + kontakt) na FORWARD_COPY_TO.
+// Jednou denně (7:00 UTC) pošle nové příběhy a nabídky (celý text + kontakt) na FORWARD_COPY_TO.
 // Bez FORWARD_COPY_TO, RESEND_API_KEY a MAIL_FROM se nic neodesílá. Značka: forwarded_at.
 const TABLES = {
   stories: "id,created_at,full_name,email,anonymous,wants_to_help,consent_publish,input_type,story_text,audio_path",
@@ -29,7 +29,7 @@ export default async function handler(req, res) {
         erasure_requested_at: "is.null",
         email: "not.ilike.*@resend.dev",
         order: "created_at.asc",
-        limit: "20",
+        limit: "100",
       }),
     );
     for (const row of rows) {

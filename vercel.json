@@ -389,7 +389,7 @@
     },
     {
       "path": "/api/forward-copy/",
-      "schedule": "*/5 * * * *"
+      "schedule": "0 7 * * *"
     },
     {
       "path": "/api/mail-sync/",
