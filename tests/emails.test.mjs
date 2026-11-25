@@ -34,8 +34,9 @@ test("šablony pro Resend jsou v repu a nic neposílají", async () => {
     assert.match(html, /https:\/\/nadbytecna\.cz\/img\/very-vera-wordmark\.png/);
     assert.match(html, /alt="VERY VERA"/);
     assert.doesNotMatch(html, /#3A0B22|#5E2A41|Georgia/);
-    assert.match(text, /nadbytečná/);
-    assert.doesNotMatch(text, /Nadbytečná/);
+    const brandVoice = text.replace(/\nSprávce osobních údajů:[\s\S]*$/, "");
+    assert.match(brandVoice, /nadbytečná/);
+    assert.doesNotMatch(brandVoice, /Nadbytečná/);
     if (t.id === "launch-signup") {
       assert.equal(t.subject, "Děkujeme, že chcete být u toho");
       assert.match(text, /děkujeme, že chcete být u otevření platformy nadbytečná\. Spouštíme ji 11\. 11\. 2026 a vám dáme vědět jako prvním\./);
@@ -45,8 +46,9 @@ test("šablony pro Resend jsou v repu a nic neposílají", async () => {
       assert.match(text, /veryvera@nadbytecna\.cz/);
       assert.match(text, /nadbytečná\nVERY VERA/);
       assert.match(html, /alt="VERY VERA"/);
-      assert.match(text, /Správce osobních údajů: Very Vera s\.r\.o\., IČO 30245354, se sídlem Dlouhá 713\/34, Staré Město, 110 00 Praha 1\./);
-      assert.doesNotMatch(text + html, /Nadbytečná z\. ú\.|30254442|Lázeňská/);
+      assert.match(text, /Správce osobních údajů: Nadbytečná z\. ú\., IČO 30254442, se sídlem Lázeňská 289\/9, Malá Strana, 118 00 Praha 1\./);
+      assert.match(html, /Správce osobních údajů: Nadbytečná z\. ú\., IČO 30254442, se sídlem Lázeňská 289\/9, Malá Strana, 118 00 Praha 1\./);
+      assert.doesNotMatch(text + html, /Very Vera s\.r\.o\.|30245354|Dlouhá 713/);
       if (t.anonymous) assert.doesNotMatch(text + html, /\{\{jmeno\}\}/);
       else assert.match(text, /\{\{jmeno\}\}/);
     }
@@ -57,11 +59,11 @@ test("šablony pro Resend jsou v repu a nic neposílají", async () => {
   fs.copyFileSync(path.join(root, "emails/templates.mjs"), path.join(isolated, "emails/templates.mjs"));
   const isolatedPayload = (await import(pathToFileURL(path.join(isolated, "emails/resend.mjs")).href)).resendPayload("share-named-text-story", { to: "a@b.cz", jmeno: "Anna" });
   assert.match(isolatedPayload.html, /Dostali jsme příběh, který jsi napsala/);
-  assert.match(isolatedPayload.text, /Dlouhá 713\/34, Staré Město/);
+  assert.match(isolatedPayload.text, /Lázeňská 289\/9, Malá Strana/);
   const storyMail = resendPayload("share-named-text-story", { to: "a@b.cz", jmeno: "Anna" });
   assert.match(storyMail.html, /Dostali jsme příběh, který jsi napsala/);
-  assert.match(storyMail.text, /Very Vera s\.r\.o\., IČO 30245354/);
-  assert.doesNotMatch(storyMail.html + storyMail.text, /\{\{jmeno\}\}|Nadbytečná z\. ú\./);
+  assert.match(storyMail.text, /Nadbytečná z\. ú\., IČO 30254442/);
+  assert.doesNotMatch(storyMail.html + storyMail.text, /\{\{jmeno\}\}|Very Vera s\.r\.o\./);
   const named = resendPayload("share-named-text-also-help", { to: "a@b.cz", jmeno: "Anna" });
   assert.equal(named.from, from);
   assert.deepEqual(named.to, ["a@b.cz"]);

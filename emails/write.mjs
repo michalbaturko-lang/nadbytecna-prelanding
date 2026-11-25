@@ -5,7 +5,7 @@ import { fileURLToPath } from "node:url";
 
 const root = path.dirname(fileURLToPath(import.meta.url));
 const FROM_LINE = "veryvera@nadbytecna.cz";
-const CONTROLLER = "Správce osobních údajů: Very Vera s.r.o., IČO 30245354, se sídlem Dlouhá 713/34, Staré Město, 110 00 Praha 1.";
+const CONTROLLER = "Správce osobních údajů: Nadbytečná z. ú., IČO 30254442, se sídlem Lázeňská 289/9, Malá Strana, 118 00 Praha 1.";
 // Značková magenta z :root --magenta ve src/site.css. Satén a papír jsou stejné tokeny.
 const MAGENTA = "#DB0B5F";
 const SATIN = "#F4CCD8";

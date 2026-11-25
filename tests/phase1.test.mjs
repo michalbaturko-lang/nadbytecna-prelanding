@@ -162,11 +162,13 @@ test("homepage má dvě volby, osm karet a formuláře nic neodesílají", () =>
   const stripAt = home.indexOf('class="vera-strip"');
   const goalAt = home.indexOf('id="cil"');
   assert.ok(goalAt > 0 && stripAt > goalAt);
-  assert.match(home, /Správce osobních údajů: Very Vera s\.r\.o\. Adresa: Dlouhá 713\/34, 110 00 Praha 1\. IČO: 30245354\./);
+  assert.match(home, /Správce osobních údajů: Nadbytečná z\. ú\. Adresa: Lázeňská 289\/9, Malá Strana, 118 00 Praha 1\. IČO: 30254442\./);
+  assert.doesNotMatch(home, /Very Vera s\.r\.o\.|30245354|Dlouhá 713/);
   assert.doesNotMatch(visible(home), /Zapsaný ústav/);
-  assert.match(read("ochrana-osobnich-udaju/index.html"), /Správce osobních údajů je Very Vera s\.r\.o\., IČO 30245354/);
+  assert.match(read("ochrana-osobnich-udaju/index.html"), /Správce osobních údajů je Nadbytečná z\. ú\., IČO 30254442/);
   assert.doesNotMatch(read("ochrana-osobnich-udaju/index.html"), /Zapsaný ústav/);
   assert.doesNotMatch(read("kontakt/index.html"), /Zapsaný ústav/);
+  assert.match(read("kontakt/index.html"), /Nadbytečná z\. ú\. Adresa: Lázeňská 289\/9/);
   assert.match(home, /mailto:veryvera@nadbytecna\.cz/);
   for (const p of ["index.html", "sdilet-pribeh/index.html", "mohu-pomoci/index.html", "potrebuji-pomoc/index.html"]) {
     assert.doesNotMatch(visible(read(p)), /<form\b|<\/form>|method=|action=|\brequired\b|\bchecked\b|localStorage|sessionStorage|fetch\(|XMLHttpRequest|sendBeacon|\/api\//i, p);
@@ -268,9 +270,10 @@ test("právní stránky mluví o souhlasu a kontakt není krizová linka", () =>
   const rules = read("pravidla-zverejnovani/index.html");
   assert.match(policy, /<p class="draft">Návrh<\/p>/);
   assert.doesNotMatch(policy + rules, /\[(DOPLNIT|ROZHODNOUT|OVĚŘIT)[^\]]*\]/);
-  assert.doesNotMatch(policy + rules, /30254442|Lázeňská|Nadbytečná z\. ú\.|OpenAI/);
-  assert.match(policy, /se sídlem Dlouhá 713\/34, Staré Město, 110 00 Praha 1, zapsaná v obchodním rejstříku vedeném Městským soudem v Praze, oddíl C, vložka 459678\./);
-  assert.match(policy, /Kontaktní e-mail: <a href="mailto:veryvera@nadbytecna\.cz">veryvera@nadbytecna\.cz<\/a>\. Adresa: Dlouhá 713\/34, 110 00 Praha 1\./);
+  assert.doesNotMatch(policy + rules, /OpenAI|Very Vera s\.r\.o\.|30245354|Dlouhá 713/);
+  assert.match(policy, /Správce osobních údajů je Nadbytečná z\. ú\., IČO 30254442, se sídlem Lázeňská 289\/9, Malá Strana, 118 00 Praha 1, zapsaný ve veřejném rejstříku vedeném Městským soudem v Praze, oddíl U, vložka 1485\. Statutárním orgánem je ředitelka Kateřina Haring\./);
+  assert.match(policy, /Kontaktní e-mail: <a href="mailto:veryvera@nadbytecna\.cz">veryvera@nadbytecna\.cz<\/a>\. Adresa: Lázeňská 289\/9, Malá Strana, 118 00 Praha 1\./);
+  assert.match(policy, /Platí znění z 25\. 11\. 2026\./);
   assert.match(policy, /Aby se nadbytečná ozvala a věděla, s čím se člověk přidává\. Zveřejnění je samostatný souhlas\. U příběhů, nabídek pomoci a zveřejnění je právním základem souhlas \(čl\. 6 odst\. 1 písm\. a\) GDPR\)\. U provozu a bezpečnosti webu je právním základem oprávněný zájem \(čl\. 6 odst\. 1 písm\. f\) GDPR\)\./);
   assert.match(policy, /Příběhy čtou Věra Komárová a Michal Baturko\./);
   assert.match(policy, /zvláštní kategorie/);
@@ -293,9 +296,9 @@ test("právní stránky mluví o souhlasu a kontakt není krizová linka", () =>
   assert.match(policy, /od 18 let/);
   assert.match(policy, /Web po souhlasu používá analytické a marketingové cookies \(GA4, Google Ads, Meta Pixel, TikTok Pixel\), bez souhlasu ne\./);
   assert.doesNotMatch(policy + rules + read("sdilet-pribeh/index.html"), /Dermacol/);
-  assert.match(read("sdilet-pribeh/index.html"), /Správce osobních údajů je Very Vera s\.r\.o\. Souhlas se zpracováním není souhlas se zveřejněním\./);
-  assert.match(read("mohu-pomoci/index.html"), /Správce osobních údajů je Very Vera s\.r\.o\. Formulář je pro lidi od 18 let\./);
-  assert.match(read("potrebuji-pomoc/index.html"), /Správce osobních údajů je Very Vera s\.r\.o\. Formulář je pro lidi od 18 let\./);
+  assert.match(read("sdilet-pribeh/index.html"), /Správce osobních údajů je Nadbytečná z\. ú\. Souhlas se zpracováním není souhlas se zveřejněním\./);
+  assert.match(read("mohu-pomoci/index.html"), /Správce osobních údajů je Nadbytečná z\. ú\. Formulář je pro lidi od 18 let\./);
+  assert.match(read("potrebuji-pomoc/index.html"), /Správce osobních údajů je Nadbytečná z\. ú\. Formulář je pro lidi od 18 let\./);
   const walkHtml = (d) => fs.readdirSync(d, { withFileTypes: true }).flatMap((e) => {
     const p = path.join(d, e.name);
     return e.isDirectory() ? walkHtml(p) : [p];
@@ -304,7 +307,12 @@ test("právní stránky mluví o souhlasu a kontakt není krizová linka", () =>
     const rel = path.relative(OUT, f);
     const html = fs.readFileSync(f, "utf8");
     assert.doesNotMatch(html, /\[(DOPLNIT|ROZHODNOUT|OVĚŘIT)[^\]]*\]/, rel);
-    assert.doesNotMatch(html, /30254442|Lázeňská|Nadbytečná z\. ú\./, rel);
+    assert.doesNotMatch(html, /Very Vera s\.r\.o\.|30245354|Dlouhá 713/, rel);
+    const skipOperator = rel === path.join("coming-soon", "index.html") || rel === path.join("admin", "index.html");
+    if (!skipOperator) {
+      assert.match(html, /Nadbytečná z\. ú\./, rel);
+      assert.match(html, /30254442/, rel);
+    }
   }
   assert.match(home, /src="\/cookies.js"/);
   const homeDesc = home.match(/<meta name="description" content="([^"]*)"/)[1];
@@ -365,9 +373,9 @@ test("indexace se zapne jen při ostrém buildu (index: true)", async () => {
   assert.match(off.pages["/"], /href="\/cookies\/"/);
   assert.match(off.pages["/"], /href="\/pravidla-zverejnovani\/"/);
   assert.doesNotMatch(off.pages["/"], /href="\/zasady\/"/);
-  assert.doesNotMatch(off.pages["/ochrana-osobnich-udaju/"] + off.pages["/pravidla-zverejnovani/"], /\[(DOPLNIT|ROZHODNOUT|OVĚŘIT)|class="draft"|30254442|Lázeňská/);
-  assert.match(off.pages["/ochrana-osobnich-udaju/"], /Very Vera s\.r\.o\., IČO 30245354/);
-  assert.match(off.pages["/"], /IČO: 30245354/);
+  assert.doesNotMatch(off.pages["/ochrana-osobnich-udaju/"] + off.pages["/pravidla-zverejnovani/"], /\[(DOPLNIT|ROZHODNOUT|OVĚŘIT)|class="draft"|Very Vera s\.r\.o\.|30245354|Dlouhá 713/);
+  assert.match(off.pages["/ochrana-osobnich-udaju/"], /Nadbytečná z\. ú\., IČO 30254442/);
+  assert.match(off.pages["/"], /IČO: 30254442/);
   assert.equal(off.robots, "User-agent: *\nDisallow: /\n");
   const on = renderPhase1({ ...args, draft: false, index: true });
   assert.match(on.pages["/"], /name="robots" content="index, follow, max-image-preview:large"/);
@@ -463,13 +471,14 @@ test("JSON-LD na úvodu, v tiskové zprávě a u videa", () => {
   const types = homeLd[0]["@graph"].map((item) => item["@type"]);
   assert.deepEqual(types, ["Organization", "WebSite"]);
   const org = homeLd[0]["@graph"][0];
-  assert.equal(org.name, "Very Vera s.r.o.");
+  assert.equal(org.name, "Nadbytečná z. ú.");
+  assert.equal(org.legalName, "Nadbytečná z. ú.");
   assert.equal(org.email, "veryvera@nadbytecna.cz");
-  assert.equal(org.identifier.value, "30245354");
-  assert.equal(org.address.streetAddress, "Dlouhá 713/34, Staré Město");
-  assert.equal(org.address.postalCode, "110 00");
+  assert.equal(org.identifier.value, "30254442");
+  assert.equal(org.address.streetAddress, "Lázeňská 289/9, Malá Strana");
+  assert.equal(org.address.postalCode, "118 00");
   assert.equal(org.address.addressLocality, "Praha 1");
-  assert.deepEqual(org.sameAs, ["https://veryvera22.cz"]);
+  assert.equal(org.sameAs, undefined);
   assert.equal(org.telephone, undefined);
   const article = blocks("tiskova-zprava/index.html")[0];
   assert.equal(article["@type"], "Article");
@@ -479,8 +488,12 @@ test("JSON-LD na úvodu, v tiskové zprávě a u videa", () => {
   assert.equal(video["@type"], "VideoObject");
   assert.equal(video.duration, "PT54S");
   assert.equal(video.contentUrl, "https://nadbytecna.cz/video/vera-pribeh-v16.mp4");
+  assert.equal(article.publisher.name, "Nadbytečná z. ú.");
+  assert.equal(video.publisher.name, "Nadbytečná z. ú.");
   const joined = JSON.stringify(homeLd) + JSON.stringify(article) + JSON.stringify(video);
-  assert.doesNotMatch(joined, /30254442|Lázeňská|Nadbytečná z\. ú\./);
+  assert.match(joined, /30254442/);
+  assert.match(joined, /Lázeňská 289\/9/);
+  assert.doesNotMatch(joined, /Very Vera s\.r\.o\.|30245354|Dlouhá 713/);
 });
 
 test("veřejné llms soubory jsou ty, které build zapíše", async () => {
@@ -502,7 +515,8 @@ test("llms.txt a llms-full.txt citují aktuální web a ne alias /zasady/", () =
   assert.match(llms, /1 889 Kč/);
   assert.match(llms, /14\. 12\. 2026/);
   assert.match(llms, /Expedujeme v týdnu od 14\. 12/);
-  assert.doesNotMatch(llms, /\/zasady\/|30254442|Lázeňská|Nadbytečná z\. ú\./);
+  assert.match(llms, /Správce osobních údajů: Nadbytečná z\. ú\., IČO 30254442, se sídlem Lázeňská 289\/9, Malá Strana, 118 00 Praha 1\./);
+  assert.doesNotMatch(llms, /\/zasady\/|Very Vera s\.r\.o\.|30245354|Dlouhá 713/);
   assert.match(full, /Pouze 11 minut stačilo mému manželovi/);
   assert.match(full, /Proč jsme vznikli\?/);
   assert.match(full, /Pojďme si pomoct\./);
